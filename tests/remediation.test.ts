@@ -34,6 +34,40 @@ describe('PR #2 remediation regressions', () => {
     );
   });
 
+  it('allows the same raw idempotency_key across different businesses', () => {
+    const sharedKey = 'cross-business-idempotency-key';
+
+    const salonAvailability = bookingService.getAvailability('northline-salon', {
+      service_id: 'svc_haircut',
+      start_date: '2026-08-29',
+      end_date: '2026-08-29',
+    });
+    const salonCreated = bookingService.createAppointment({
+      businessSlug: 'northline-salon',
+      service_id: 'svc_haircut',
+      slot_id: salonAvailability.data.slots[0].slot_id,
+      idempotency_key: sharedKey,
+      customer: { name: 'Salon Idempotency Customer' },
+    });
+    expect(salonCreated.ok).toBe(true);
+
+    const autoAvailability = bookingService.getAvailability('mesa-auto-service', {
+      service_id: 'svc_oil_change',
+      start_date: '2026-08-29',
+      end_date: '2026-08-29',
+      time_preference: 'morning',
+    });
+    const autoCreated = bookingService.createAppointment({
+      businessSlug: 'mesa-auto-service',
+      service_id: 'svc_oil_change',
+      slot_id: autoAvailability.data.slots[0].slot_id,
+      idempotency_key: sharedKey,
+      customer: { name: 'Auto Idempotency Customer' },
+    });
+    expect(autoCreated.ok).toBe(true);
+    expect(autoCreated.data.appointment_id).not.toBe(salonCreated.data.appointment_id);
+  });
+
   it('does not return create_appointment response when reusing idempotency key for cancel', () => {
     const availability = bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',

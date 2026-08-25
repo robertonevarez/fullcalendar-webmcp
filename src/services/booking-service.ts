@@ -248,7 +248,7 @@ export class BookingService {
       notes: input.notes,
       price_cents: slot.price.amount,
       currency: slot.price.currency,
-      idempotency_key: input.idempotency_key,
+      idempotency_key: scopeKey,
       resource_allocations: slot.resources,
     };
 

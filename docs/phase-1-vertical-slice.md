@@ -89,7 +89,7 @@ Exact names match Phase 1 spec (aligned with Phase 0 semantics):
 
 ## Idempotency
 
-Write tools require `idempotency_key`. Keys are scoped as `operation:businessSlug:idempotency_key` so the same client key can safely be reused across create, reschedule, and cancel without returning a stale response from a different operation.
+Write tools require `idempotency_key`. Keys are scoped as `operation:businessSlug:idempotency_key` so the same client key can safely be reused across create, reschedule, and cancel without returning a stale response from a different operation. Create appointments store that same scoped key on the appointment row (which remains `UNIQUE`), so identical raw keys across businesses do not collide.
 
 No `requestUserInteraction()` — agent-side confirmation is expected per Phase 0.
 
