@@ -113,10 +113,10 @@ export class BookingRepository {
       );
   }
 
-  getSlotToken(slotId: string): AvailabilitySlot | null {
-    const row = getDb().prepare('SELECT * FROM slot_tokens WHERE slot_id = ?').get(slotId) as
-      | Record<string, unknown>
-      | undefined;
+  getSlotTokenForBusiness(businessId: string, slotId: string): AvailabilitySlot | null {
+    const row = getDb()
+      .prepare('SELECT * FROM slot_tokens WHERE slot_id = ? AND business_id = ?')
+      .get(slotId, businessId) as Record<string, unknown> | undefined;
     if (!row) return null;
     if (new Date(String(row.expires_at)) < new Date()) {
       getDb().prepare('DELETE FROM slot_tokens WHERE slot_id = ?').run(slotId);
@@ -125,20 +125,20 @@ export class BookingRepository {
     return JSON.parse(String(row.payload_json)) as AvailabilitySlot;
   }
 
-  getIdempotencyResponse(key: string) {
-    const row = getDb().prepare('SELECT response_json FROM idempotency_records WHERE key = ?').get(key) as
-      | Record<string, unknown>
-      | undefined;
+  getIdempotencyResponse(scopeKey: string) {
+    const row = getDb()
+      .prepare('SELECT response_json FROM idempotency_records WHERE scope_key = ?')
+      .get(scopeKey) as Record<string, unknown> | undefined;
     return row ? JSON.parse(String(row.response_json)) : null;
   }
 
-  saveIdempotencyResponse(key: string, operation: string, response: unknown) {
+  saveIdempotencyResponse(scopeKey: string, operation: string, response: unknown) {
     getDb()
       .prepare(
-        `INSERT OR REPLACE INTO idempotency_records (key, operation, response_json, created_at)
+        `INSERT OR REPLACE INTO idempotency_records (scope_key, operation, response_json, created_at)
          VALUES (?, ?, ?, ?)`,
       )
-      .run(key, operation, JSON.stringify(response), new Date().toISOString());
+      .run(scopeKey, operation, JSON.stringify(response), new Date().toISOString());
   }
 
   insertAppointment(appointment: Appointment) {

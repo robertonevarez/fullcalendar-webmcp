@@ -37,7 +37,7 @@ describe('vertical compatibility flows', () => {
     expect(created.ok).toBe(true);
     const appointmentId = created.data.appointment_id;
 
-    const fetched = bookingService.getAppointment(appointmentId);
+    const fetched = bookingService.getAppointment('acme-hvac', appointmentId);
     expect(fetched.ok).toBe(true);
 
     const newAvailability = bookingService.getAvailability('acme-hvac', {
@@ -49,6 +49,7 @@ describe('vertical compatibility flows', () => {
     });
     const newSlot = newAvailability.data.slots[0];
     const rescheduled = bookingService.rescheduleAppointment({
+      businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       new_slot_id: newSlot.slot_id,
       idempotency_key: 'hvac-reschedule-1',
@@ -56,6 +57,7 @@ describe('vertical compatibility flows', () => {
     expect(rescheduled.ok).toBe(true);
 
     const cancelled = bookingService.cancelAppointment({
+      businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       idempotency_key: 'hvac-cancel-1',
       reason: 'customer_request',
@@ -64,6 +66,7 @@ describe('vertical compatibility flows', () => {
     expect(cancelled.data.status).toBe('cancelled');
 
     const cancelledAgain = bookingService.cancelAppointment({
+      businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       idempotency_key: 'hvac-cancel-2',
     });
@@ -122,7 +125,7 @@ describe('vertical compatibility flows', () => {
     });
     expect(created.ok).toBe(true);
 
-    const fetched = bookingService.getAppointment(created.data.appointment_id);
+    const fetched = bookingService.getAppointment('mesa-auto-service', created.data.appointment_id);
     expect(fetched.ok).toBe(true);
   });
 

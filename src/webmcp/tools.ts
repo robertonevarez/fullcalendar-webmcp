@@ -141,7 +141,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
       },
       annotations: { readOnlyHint: true },
       execute: async (input: { appointment_id: string }, { signal }: { signal: AbortSignal }) =>
-        postJson('/api/appointments/get', input, signal),
+        postJson(`${base}/appointments/get`, input, signal),
     },
     {
       name: 'reschedule_appointment',
@@ -157,7 +157,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
       },
       annotations: { readOnlyHint: false },
       execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson('/api/appointments/reschedule', input, signal),
+        postJson(`${base}/appointments/reschedule`, input, signal),
     },
     {
       name: 'cancel_appointment',
@@ -173,7 +173,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
       },
       annotations: { readOnlyHint: false },
       execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson('/api/appointments/cancel', input, signal),
+        postJson(`${base}/appointments/cancel`, input, signal),
     },
   ];
 }

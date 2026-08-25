@@ -1,3 +1,4 @@
+import { createHash, randomUUID } from 'crypto';
 import { AppError, ErrorCodes } from '@/domain/errors';
 import {
   Appointment,
@@ -19,7 +20,6 @@ import {
   utcToIso,
   zonedDateTimeToUtc,
 } from '@/lib/time';
-import { createHash, randomUUID } from 'crypto';
 
 const SLOT_INTERVAL_MINUTES = 15;
 const DEFAULT_SLOT_LIMIT = 8;
@@ -85,7 +85,7 @@ export function findAvailability(ctx: SchedulerContext, query: AvailabilityQuery
         continue;
       }
 
-      const allocation = findResourceAllocation(ctx, query, start, end);
+      const allocation = allocateResources(ctx, query, start, end);
       if (!allocation) continue;
 
       const slotId = buildSlotId(ctx.service.id, start, allocation);
@@ -107,7 +107,8 @@ export function findAvailability(ctx: SchedulerContext, query: AvailabilityQuery
   return slots;
 }
 
-function findResourceAllocation(
+/** Exported for domain tests — deterministic backtracking resource allocation. */
+export function allocateResources(
   ctx: SchedulerContext,
   query: AvailabilityQuery,
   start: Date,
@@ -116,44 +117,85 @@ function findResourceAllocation(
   const selected: SlotResourceAllocation[] = [];
   const usedResourceIds = new Set<string>();
 
-  for (const requirement of ctx.service.resource_requirements) {
-    const candidates = ctx.resources.filter((resource) => {
-      if (resource.resource_type !== requirement.resource_type) return false;
-      if (requirement.capability && !resource.capabilities.includes(requirement.capability)) {
-        return false;
-      }
-      if (requirement.preferred_resource_id && resource.id !== requirement.preferred_resource_id) {
-        return false;
-      }
-      if (query.preferred_resource_id && resource.is_human && resource.id !== query.preferred_resource_id) {
-        return false;
-      }
+  function backtrack(requirementIndex: number): boolean {
+    if (requirementIndex >= ctx.service.resource_requirements.length) {
       return true;
-    });
-
-    const picked: Resource[] = [];
-    for (const candidate of candidates) {
-      if (usedResourceIds.has(candidate.id)) continue;
-      if (!isResourceFree(ctx, candidate, start, end)) continue;
-      picked.push(candidate);
-      if (picked.length >= requirement.quantity) break;
     }
 
-    if (picked.length < requirement.quantity) {
-      return null;
+    const requirement = ctx.service.resource_requirements[requirementIndex];
+    const candidates = candidatesForRequirement(ctx, query, requirement, usedResourceIds, start, end);
+    const combos = combinations(candidates, requirement.quantity);
+
+    for (const combo of combos) {
+      for (const resource of combo) {
+        usedResourceIds.add(resource.id);
+        selected.push({
+          resource_id: resource.id,
+          resource_type: resource.resource_type,
+          resource_name: resource.name,
+        });
+      }
+
+      if (backtrack(requirementIndex + 1)) {
+        return true;
+      }
+
+      for (const resource of combo) {
+        usedResourceIds.delete(resource.id);
+        selected.pop();
+      }
     }
 
-    for (const resource of picked) {
-      usedResourceIds.add(resource.id);
-      selected.push({
-        resource_id: resource.id,
-        resource_type: resource.resource_type,
-        resource_name: resource.name,
-      });
+    return false;
+  }
+
+  return backtrack(0) ? selected : null;
+}
+
+function candidatesForRequirement(
+  ctx: SchedulerContext,
+  query: AvailabilityQuery,
+  requirement: ResourceRequirement,
+  usedResourceIds: Set<string>,
+  start: Date,
+  end: Date,
+): Resource[] {
+  return ctx.resources.filter((resource) => {
+    if (resource.resource_type !== requirement.resource_type) return false;
+    if (requirement.capability && !resource.capabilities.includes(requirement.capability)) {
+      return false;
+    }
+    if (requirement.preferred_resource_id && resource.id !== requirement.preferred_resource_id) {
+      return false;
+    }
+    if (query.preferred_resource_id && resource.is_human && resource.id !== query.preferred_resource_id) {
+      return false;
+    }
+    if (usedResourceIds.has(resource.id)) return false;
+    return isResourceFree(ctx, resource, start, end);
+  });
+}
+
+function combinations<T>(items: T[], size: number): T[][] {
+  if (size <= 0) return [[]];
+  if (items.length < size) return [];
+
+  const results: T[][] = [];
+
+  function build(startIndex: number, combo: T[]) {
+    if (combo.length === size) {
+      results.push([...combo]);
+      return;
+    }
+    for (let i = startIndex; i <= items.length - (size - combo.length); i += 1) {
+      combo.push(items[i]);
+      build(i + 1, combo);
+      combo.pop();
     }
   }
 
-  return selected.length ? selected : null;
+  build(0, []);
+  return results;
 }
 
 function isResourceFree(ctx: SchedulerContext, resource: Resource, start: Date, end: Date): boolean {
@@ -198,23 +240,14 @@ export function revalidateSlot(
 ): boolean {
   const start = new Date(slot.starts_at);
   const end = new Date(slot.ends_at);
-  const allocation = findResourceAllocation(ctx, query, start, end);
+  const allocation = allocateResources(ctx, query, start, end);
   if (!allocation) return false;
   const expected = buildSlotId(ctx.service.id, start, allocation);
   return expected === slot.slot_id;
 }
 
-export function decodeSlotPayload(slot: AvailabilitySlot) {
-  return {
-    service_id: slot.service_id,
-    starts_at: slot.starts_at,
-    ends_at: slot.ends_at,
-    resources: slot.resources,
-  };
-}
-
 export function newAppointmentId(): string {
-  return `appt_${randomUUID().slice(0, 8)}`;
+  return `appt_${randomUUID()}`;
 }
 
 export function requirementSummary(requirements: ResourceRequirement[]) {

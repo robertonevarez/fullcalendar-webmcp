@@ -118,7 +118,7 @@ function initializeSchema(database: Database.Database) {
     );
 
     CREATE TABLE IF NOT EXISTS idempotency_records (
-      key TEXT PRIMARY KEY,
+      scope_key TEXT PRIMARY KEY,
       operation TEXT NOT NULL,
       response_json TEXT NOT NULL,
       created_at TEXT NOT NULL

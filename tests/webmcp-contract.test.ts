@@ -29,5 +29,8 @@ describe('WebMCP contract', () => {
     const create = tools.find((tool) => tool.name === 'create_appointment')!;
     expect(create.inputSchema.required).toContain('idempotency_key');
     expect(create.inputSchema.required).toContain('slot_id');
+
+    const getAppointment = tools.find((tool) => tool.name === 'get_appointment')!;
+    expect(String(getAppointment.execute)).toContain('${base}/appointments/get');
   });
 });

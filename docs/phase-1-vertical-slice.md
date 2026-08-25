@@ -15,7 +15,7 @@ WebMCP callbacks are thin: they POST to same-origin API routes. Domain logic liv
 
 ## Business context scoping
 
-**Decision:** Each business exposes tools on its own page at `/businesses/{slug}`. Tool descriptions include the business name, and API routes are namespaced under `/api/businesses/{slug}/...`. Appointment retrieval/reschedule/cancel use global `/api/appointments/...` with `appointment_id`.
+**Decision:** Each business exposes tools on its own page at `/businesses/{slug}`. Tool descriptions include the business name, and API routes are namespaced under `/api/businesses/{slug}/...`, including appointment retrieval, reschedule, and cancel at `/api/businesses/{slug}/appointments/...`.
 
 This avoids forcing `business_id` on every tool call while keeping catalog and availability operations unambiguous.
 
@@ -87,7 +87,11 @@ Exact names match Phase 1 spec (aligned with Phase 0 semantics):
 | `reschedule_appointment` | false |
 | `cancel_appointment` | false |
 
-Write tools require `idempotency_key`. No `requestUserInteraction()` — agent-side confirmation is expected per Phase 0.
+## Idempotency
+
+Write tools require `idempotency_key`. Keys are scoped as `operation:businessSlug:idempotency_key` so the same client key can safely be reused across create, reschedule, and cancel without returning a stale response from a different operation.
+
+No `requestUserInteraction()` — agent-side confirmation is expected per Phase 0.
 
 ## Error taxonomy
 
@@ -134,7 +138,7 @@ Document results in submission demo video.
 - Business/provider hours and blocked time
 - Customer-location vs business-location services
 
-You would **not** need scheduler changes unless the new business introduced a constraint outside this model (e.g. travel-time routing, recurring series, or capacity pools beyond per-resource calendars).
+You would **not** need scheduler changes unless the new business introduced a constraint outside this model (e.g. travel-time routing, recurring series, or capacity pools beyond per-resource calendars). Overlapping resource requirements (e.g. generic stylist + color-specialist stylist from the same pool) are handled by deterministic backtracking in the allocator.
 
 ## Known limitations
 

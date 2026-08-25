@@ -12,10 +12,10 @@ import {
 import {
   Appointment,
   AvailabilityQuery,
-  AvailabilitySlot,
   CustomerInput,
   AppointmentNotes,
 } from '@/domain/types';
+import { buildIdempotencyScope } from '@/lib/idempotency';
 import { log } from '@/lib/logging';
 import { addMinutes } from '@/lib/time';
 
@@ -46,6 +46,49 @@ function serviceAreaMap(businessId: string) {
     map.set(zone.zone_id, zone.postal_codes);
   }
   return map;
+}
+
+function resolveEffectivePostalCode(input: { postal_code?: string; customer: CustomerInput }) {
+  return input.postal_code ?? input.customer.service_address?.postal_code;
+}
+
+function assertServiceAreaEligible(
+  businessId: string,
+  service: ReturnType<typeof buildSchedulerContext>['service'],
+  postalCode: string | undefined,
+) {
+  if (!service.service_area_required) return;
+
+  if (!postalCode) {
+    throw new AppError(
+      ErrorCodes.LOCATION_REQUIRED,
+      'Postal code is required for this service.',
+      false,
+      'postal_code',
+    );
+  }
+
+  const area = checkServiceArea(businessId, service, serviceAreaMap(businessId), postalCode);
+  if (area.status === 'ineligible') {
+    throw new AppError(ErrorCodes.OUTSIDE_SERVICE_AREA, area.message, false, 'postal_code');
+  }
+}
+
+function assertAppointmentInBusiness(
+  businessSlug: string,
+  businessId: string,
+  appointment: Appointment | null,
+  appointmentId: string,
+) {
+  if (!appointment) {
+    throw new AppError(ErrorCodes.APPOINTMENT_NOT_FOUND, `Appointment ${appointmentId} was not found.`);
+  }
+  if (appointment.business_id !== businessId) {
+    throw new AppError(
+      ErrorCodes.APPOINTMENT_NOT_FOUND,
+      `Appointment ${appointmentId} was not found for business ${businessSlug}.`,
+    );
+  }
 }
 
 export class BookingService {
@@ -115,16 +158,7 @@ export class BookingService {
 
     const ctx = buildSchedulerContext(business.id, query.service_id);
 
-    if (ctx.service.service_area_required && !query.postal_code) {
-      throw new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required for this service.', false, 'postal_code');
-    }
-
-    if (ctx.service.service_area_required && query.postal_code) {
-      const area = checkServiceArea(business.id, ctx.service, serviceAreaMap(business.id), query.postal_code);
-      if (area.status === 'ineligible') {
-        throw new AppError(ErrorCodes.OUTSIDE_SERVICE_AREA, area.message, false, 'postal_code');
-      }
-    }
+    assertServiceAreaEligible(business.id, ctx.service, query.postal_code);
 
     const slots = findAvailability(ctx, query);
     const expiresAt = addMinutes(new Date(), SLOT_TTL_MINUTES).toISOString();
@@ -155,13 +189,14 @@ export class BookingService {
     idempotency_key: string;
     postal_code?: string;
   }) {
-    const cached = bookingRepository.getIdempotencyResponse(input.idempotency_key);
+    const scopeKey = buildIdempotencyScope('create_appointment', input.businessSlug, input.idempotency_key);
+    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
     if (cached) return cached;
 
     const business = bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const slot = bookingRepository.getSlotToken(input.slot_id);
+    const slot = bookingRepository.getSlotTokenForBusiness(business.id, input.slot_id);
     if (!slot) {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'Slot is expired or invalid. Query availability again.', true);
     }
@@ -171,15 +206,19 @@ export class BookingService {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'slot_id does not match service_id.', false, 'slot_id');
     }
 
-    if (ctx.service.location_policy === 'CUSTOMER' && !input.customer.service_address && !input.postal_code) {
+    const effectivePostalCode = resolveEffectivePostalCode(input);
+
+    if (ctx.service.location_policy === 'CUSTOMER' && !input.customer.service_address && !effectivePostalCode) {
       throw new AppError(ErrorCodes.LOCATION_REQUIRED, 'Customer service address or postal code is required.', false);
     }
+
+    assertServiceAreaEligible(business.id, ctx.service, effectivePostalCode);
 
     const query: AvailabilityQuery = {
       service_id: input.service_id,
       start_date: slot.starts_at.slice(0, 10),
       end_date: slot.ends_at.slice(0, 10),
-      postal_code: input.postal_code ?? input.customer.service_address?.postal_code,
+      postal_code: effectivePostalCode,
     };
 
     if (!revalidateSlot(ctx, slot, query)) {
@@ -197,12 +236,12 @@ export class BookingService {
         ...input.customer,
         service_address:
           input.customer.service_address ??
-          (input.postal_code
+          (effectivePostalCode
             ? {
                 line1: 'Customer location',
                 city: 'Unknown',
                 region: 'TX',
-                postal_code: input.postal_code,
+                postal_code: effectivePostalCode,
               }
             : undefined),
       },
@@ -223,48 +262,57 @@ export class BookingService {
     }
 
     const response = ok(this.toPublicAppointment(appointment, ctx.service.name, business.name));
-    bookingRepository.saveIdempotencyResponse(input.idempotency_key, 'create_appointment', response);
+    bookingRepository.saveIdempotencyResponse(scopeKey, 'create_appointment', response);
     log('info', { business_id: business.id, operation: 'create_appointment', appointment_id: appointment.id });
     return response;
   }
 
-  getAppointment(appointmentId: string) {
+  getAppointment(businessSlug: string, appointmentId: string) {
+    const business = bookingRepository.getBusinessBySlug(businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
+
     const appointment = bookingRepository.getAppointment(appointmentId);
-    if (!appointment) {
-      throw new AppError(ErrorCodes.APPOINTMENT_NOT_FOUND, `Appointment ${appointmentId} was not found.`);
-    }
-    const business = bookingRepository.getBusinessById(appointment.business_id);
-    const service = bookingRepository.getService(appointment.business_id, appointment.service_id);
-    return ok(this.toPublicAppointment(appointment, service?.name ?? appointment.service_id, business?.name ?? ''));
+    assertAppointmentInBusiness(businessSlug, business.id, appointment, appointmentId);
+
+    const service = bookingRepository.getService(business.id, appointment!.service_id);
+    return ok(this.toPublicAppointment(appointment!, service?.name ?? appointment!.service_id, business.name));
   }
 
   rescheduleAppointment(input: {
+    businessSlug: string;
     appointment_id: string;
     new_slot_id: string;
     idempotency_key: string;
   }) {
-    const cached = bookingRepository.getIdempotencyResponse(input.idempotency_key);
+    const scopeKey = buildIdempotencyScope(
+      'reschedule_appointment',
+      input.businessSlug,
+      input.idempotency_key,
+    );
+    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
     if (cached) return cached;
 
+    const business = bookingRepository.getBusinessBySlug(input.businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
+
     const appointment = bookingRepository.getAppointment(input.appointment_id);
-    if (!appointment) {
-      throw new AppError(ErrorCodes.APPOINTMENT_NOT_FOUND, `Appointment ${input.appointment_id} was not found.`);
-    }
-    if (appointment.status === 'cancelled') {
+    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+    if (appointment!.status === 'cancelled') {
       throw new AppError(
         ErrorCodes.APPOINTMENT_NOT_RESCHEDULABLE,
         'Cancelled appointments cannot be rescheduled.',
       );
     }
 
-    const slot = bookingRepository.getSlotToken(input.new_slot_id);
+    const slot = bookingRepository.getSlotTokenForBusiness(business.id, input.new_slot_id);
     if (!slot) {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'New slot is expired or invalid.', true);
     }
 
-    const ctx = buildSchedulerContext(appointment.business_id, appointment.service_id);
+    const ctx = buildSchedulerContext(business.id, appointment!.service_id);
     const query: AvailabilityQuery = {
-      service_id: appointment.service_id,
+      service_id: appointment!.service_id,
       start_date: slot.starts_at.slice(0, 10),
       end_date: slot.ends_at.slice(0, 10),
     };
@@ -274,7 +322,7 @@ export class BookingService {
     }
 
     const updated: Appointment = {
-      ...appointment,
+      ...appointment!,
       starts_at: slot.starts_at,
       ends_at: slot.ends_at,
       resource_allocations: slot.resources,
@@ -282,9 +330,9 @@ export class BookingService {
 
     try {
       runInTransaction(() => {
-        this.assertResourcesFree(appointment.business_id, updated, appointment.id);
-        bookingRepository.updateAppointmentTimes(appointment.id, slot.starts_at, slot.ends_at);
-        bookingRepository.replaceAppointmentResources(appointment.id, slot.resources);
+        this.assertResourcesFree(business.id, updated, appointment!.id);
+        bookingRepository.updateAppointmentTimes(appointment!.id, slot.starts_at, slot.ends_at);
+        bookingRepository.replaceAppointmentResources(appointment!.id, slot.resources);
       });
     } catch {
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are unavailable for reschedule.', true);
@@ -293,60 +341,65 @@ export class BookingService {
     const response = ok(
       this.toPublicAppointment(updated, ctx.service.name, ctx.business.name),
     );
-    bookingRepository.saveIdempotencyResponse(input.idempotency_key, 'reschedule_appointment', response);
+    bookingRepository.saveIdempotencyResponse(scopeKey, 'reschedule_appointment', response);
     log('info', {
-      business_id: appointment.business_id,
+      business_id: business.id,
       operation: 'reschedule_appointment',
-      appointment_id: appointment.id,
+      appointment_id: appointment!.id,
     });
     return response;
   }
 
-  cancelAppointment(input: { appointment_id: string; idempotency_key: string; reason?: string }) {
-    const cached = bookingRepository.getIdempotencyResponse(input.idempotency_key);
+  cancelAppointment(input: {
+    businessSlug: string;
+    appointment_id: string;
+    idempotency_key: string;
+    reason?: string;
+  }) {
+    const scopeKey = buildIdempotencyScope('cancel_appointment', input.businessSlug, input.idempotency_key);
+    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
     if (cached) return cached;
 
-    const appointment = bookingRepository.getAppointment(input.appointment_id);
-    if (!appointment) {
-      throw new AppError(ErrorCodes.APPOINTMENT_NOT_FOUND, `Appointment ${input.appointment_id} was not found.`);
-    }
+    const business = bookingRepository.getBusinessBySlug(input.businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    if (appointment.status === 'cancelled') {
-      const business = bookingRepository.getBusinessById(appointment.business_id);
-      const service = bookingRepository.getService(appointment.business_id, appointment.service_id);
+    const appointment = bookingRepository.getAppointment(input.appointment_id);
+    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+    const service = bookingRepository.getService(business.id, appointment!.service_id);
+
+    if (appointment!.status === 'cancelled') {
       const response = ok({
-        appointment_id: appointment.id,
+        appointment_id: appointment!.id,
         status: 'cancelled',
         message: 'Appointment was already cancelled.',
         appointment: this.toPublicAppointment(
-          appointment,
-          service?.name ?? appointment.service_id,
-          business?.name ?? '',
+          appointment!,
+          service?.name ?? appointment!.service_id,
+          business.name,
         ),
       });
-      bookingRepository.saveIdempotencyResponse(input.idempotency_key, 'cancel_appointment', response);
+      bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', response);
       return response;
     }
 
-    bookingRepository.cancelAppointment(appointment.id);
-    appointment.status = 'cancelled';
-    const business = bookingRepository.getBusinessById(appointment.business_id);
-    const service = bookingRepository.getService(appointment.business_id, appointment.service_id);
+    bookingRepository.cancelAppointment(appointment!.id);
+    appointment!.status = 'cancelled';
     const response = ok({
-      appointment_id: appointment.id,
+      appointment_id: appointment!.id,
       status: 'cancelled',
       message: input.reason ? `Cancelled: ${input.reason}` : 'Appointment cancelled.',
       appointment: this.toPublicAppointment(
-        appointment,
-        service?.name ?? appointment.service_id,
-        business?.name ?? '',
+        appointment!,
+        service?.name ?? appointment!.service_id,
+        business.name,
       ),
     });
-    bookingRepository.saveIdempotencyResponse(input.idempotency_key, 'cancel_appointment', response);
+    bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', response);
     log('info', {
-      business_id: appointment.business_id,
+      business_id: business.id,
       operation: 'cancel_appointment',
-      appointment_id: appointment.id,
+      appointment_id: appointment!.id,
     });
     return response;
   }
