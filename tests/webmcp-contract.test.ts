@@ -32,5 +32,13 @@ describe('WebMCP contract', () => {
 
     const getAppointment = tools.find((tool) => tool.name === 'get_appointment')!;
     expect(typeof getAppointment.execute).toBe('function');
+
+    const checkArea = tools.find((tool) => tool.name === 'check_service_area')!;
+    expect(checkArea.description).toMatch(/before get_availability/i);
+    expect(checkArea.description).toMatch(/OUTSIDE_SERVICE_AREA/);
+
+    const availability = tools.find((tool) => tool.name === 'get_availability')!;
+    expect(availability.description).toMatch(/check_service_area/i);
+    expect(availability.description).toMatch(/outside the service area/i);
   });
 });

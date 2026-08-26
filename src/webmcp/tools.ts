@@ -15,6 +15,21 @@ export type ToolExecuteOptions = {
   signal?: AbortSignal;
 };
 
+/** Structured `{ ok: false, error: { code } }` payloads from booking APIs. */
+export function isStructuredDomainError(payload: unknown): boolean {
+  if (!payload || typeof payload !== 'object') return false;
+  const record = payload as { ok?: unknown; error?: unknown };
+  if (record.ok !== false || !record.error || typeof record.error !== 'object') return false;
+  const code = (record.error as { code?: unknown }).code;
+  return typeof code === 'string' && code.length > 0;
+}
+
+function logUnexpectedWebmcpFailure(details: Record<string, unknown>) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.error('[webmcp]', details);
+  }
+}
+
 /**
  * Shared WebMCP execute wrapper.
  *
@@ -22,27 +37,42 @@ export type ToolExecuteOptions = {
  * object (argc === 1). Spec/docs also allow a second options bag with
  * `signal`. Never require that second argument — destructuring it from
  * undefined throws before fetch and surfaces as a generic inspector error.
+ *
+ * Expected domain rejections (e.g. OUTSIDE_SERVICE_AREA) are successful tool
+ * executions that return structured `{ ok: false, error }` — do not console.error them.
  */
 export async function postJson<T>(
   url: string,
   body: unknown,
   options?: ToolExecuteOptions,
 ): Promise<T> {
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body ?? {}),
-    signal: options?.signal,
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body ?? {}),
+      signal: options?.signal,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Network request failed';
+    logUnexpectedWebmcpFailure({ url, message });
+    return {
+      ok: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Tool request failed before a response was received.',
+        retryable: true,
+      },
+    } as T;
+  }
 
   let payload: unknown;
   try {
     payload = await response.json();
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to parse JSON response';
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('[webmcp]', { url, status: response.status, message });
-    }
+    logUnexpectedWebmcpFailure({ url, status: response.status, message });
     return {
       ok: false,
       error: {
@@ -53,8 +83,9 @@ export async function postJson<T>(
     } as T;
   }
 
-  if (!response.ok && process.env.NODE_ENV !== 'production') {
-    console.error('[webmcp]', { url, status: response.status, payload });
+  // Structured domain outcomes (4xx with { ok:false, error.code }) are not runtime failures.
+  if (!response.ok && !isStructuredDomainError(payload)) {
+    logUnexpectedWebmcpFailure({ url, status: response.status, payload });
   }
 
   return payload as T;
@@ -95,7 +126,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'check_service_area',
-      description: `Check whether a postal code is eligible for field services at ${businessName}. Returns not_required for in-location services.`,
+      description: `Check whether a postal code is eligible for field services at ${businessName}. Call before get_availability when service_area_required is true. If OUTSIDE_SERVICE_AREA, do not request availability for that same service/location unless the user provides a different postal code. Returns not_required for in-location services.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -108,7 +139,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'get_availability',
-      description: `Return viable appointment slots for a ${businessName} service within a date range.`,
+      description: `Return viable appointment slots for a ${businessName} service within a date range. For services with service_area_required, call only after check_service_area confirms eligibility; skip when the current location is already outside the service area.`,
       inputSchema: {
         type: 'object',
         properties: {

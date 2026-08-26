@@ -113,9 +113,19 @@ After fix, Chrome CDP retest on `/businesses/acme-hvac` (Chrome 152 + WebMCP fea
 
 Automated tests: **24 passed**.
 
+## Final cleanup (domain logging + sequencing hints)
+
+After a successful human inspector negative-path test (`90210` → `OUTSIDE_SERVICE_AREA`):
+
+1. **Logging:** Expected structured domain rejections (`{ ok: false, error: { code } }`, including HTTP 4xx) no longer call `console.error`, so they do not trigger a misleading Next.js red development overlay. Unexpected failures (network errors, non-JSON bodies, non-domain HTTP failures) still use `console.error` in development.
+2. **Tool descriptions:** `check_service_area` and `get_availability` now state eligibility sequencing so agents skip availability for a known-ineligible service/location pair.
+3. **Manual rechecks:** Negative path (`90210`) and positive path (`78701`) were revalidated via Chrome `executeTool` after this cleanup.
+
+Do not start Phase 2 until the PR is merged and Phase 2 is intentionally kicked off.
+
 ## Remaining risks
 
 - Chrome may later always pass `{ signal }`; optional handling remains compatible.
 - Spec vs Chrome `executeTool` input type still differs (object vs JSON string). Inspector uses object-first with string fallback; callers should follow current Chrome docs/inspector.
-- Full Gemini-in-inspector natural-language pass and create/reschedule/cancel lifecycle still deserve a human confirmation pass in the Model Context Tool Inspector / ChatGPT in-app browser.
-- Do not start Phase 2 until that manual WebMCP confirmation is recorded.
+- Agents may still occasionally make one redundant availability call; descriptions reduce but cannot eliminate that without client-side orchestration.
+- Do not start Phase 2 until merge and an intentional Phase 2 kickoff.
