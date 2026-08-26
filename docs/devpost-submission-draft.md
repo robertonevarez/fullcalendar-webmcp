@@ -48,6 +48,6 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 
 ## Links
 
-- Repository: https://github.com/robertonevarez/schedulemcp _(rename to `protocoltooling` pending)_
-- Live URL: https://schedulemcp.vercel.app _(Vercel project rename to `protocoltooling` pending)_
+- Repository: https://github.com/robertonevarez/protocoltooling
+- Live URL: https://protocoltooling.vercel.app
 - Demo video: _add YouTube URL_

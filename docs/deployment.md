@@ -1,7 +1,6 @@
 # Deployment — Vercel + PlanetScale Postgres
 
-**Live URL:** https://schedulemcp.vercel.app  
-_(Deployed Vercel project is still named `schedulemcp`. Intended technical name: `protocoltooling` — rename in the Vercel dashboard is a manual follow-up.)_
+**Live URL:** https://protocoltooling.vercel.app
 
 Canonical production stack for Protocol Tooling:
 
@@ -33,8 +32,6 @@ pscale org switch <ORG>
 pscale region list
 pscale database create protocoltooling --region <REGION_SLUG> --engine postgres
 ```
-
-If an existing PlanetScale database was created as `schedulemcp`, keep using that connection string until you rename or recreate it externally. Do not drop production data solely for naming.
 
 3. Create role credentials (dashboard **Connect**, or `pscale role` / default role reset). Record host, username, password once.
 4. Build connection strings:
