@@ -2,14 +2,14 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(DB_DIR, 'schedulemcp.db');
+const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), 'data', 'schedulemcp.db');
+const DB_DIR = path.dirname(DB_PATH);
 
 let db: Database.Database | null = null;
 
 export function getDb(): Database.Database {
   if (!db) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
+    fs.mkdirSync(/* turbopackIgnore: true */ DB_DIR, { recursive: true });
     db = new Database(DB_PATH);
     db.pragma('journal_mode = WAL');
     db.pragma('foreign_keys = ON');
