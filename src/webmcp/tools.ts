@@ -242,10 +242,20 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
   ];
 }
 
-export function getModelContext(): { registerTool?: Function } | undefined {
+/** Browser ModelContext.registerTool — tool shape is owned by the WebMCP host. */
+export type RegisterTool = (
+  tool: unknown,
+  options?: { signal?: AbortSignal },
+) => void | Promise<void>;
+
+export type ModelContext = {
+  registerTool?: RegisterTool;
+};
+
+export function getModelContext(): ModelContext | undefined {
   if (typeof document === 'undefined') return undefined;
-  const doc = document as Document & { modelContext?: { registerTool?: Function } };
-  const nav = navigator as Navigator & { modelContext?: { registerTool?: Function } };
+  const doc = document as Document & { modelContext?: ModelContext };
+  const nav = navigator as Navigator & { modelContext?: ModelContext };
   return doc.modelContext ?? nav.modelContext;
 }
 

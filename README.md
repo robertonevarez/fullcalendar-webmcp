@@ -1,5 +1,7 @@
 # Protocol Tooling
 
+[![CI](https://github.com/robertonevarez/protocoltooling/actions/workflows/ci.yml/badge.svg)](https://github.com/robertonevarez/protocoltooling/actions/workflows/ci.yml)
+
 Protocol Tooling is infrastructure for the agent-native web.
 
 This repository demonstrates that concept through service-business scheduling and booking capabilities exposed to personal AI agents via WebMCP, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
