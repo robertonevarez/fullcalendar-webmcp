@@ -242,6 +242,19 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
   ];
 }
 
+export type RegistrationError = {
+  tool?: string;
+  message: string;
+};
+
+export type RegistrationResult = {
+  supported: boolean;
+  attempted: boolean;
+  registered: string[];
+  errors: RegistrationError[];
+  businessSlug: string;
+};
+
 export function getModelContext(): { registerTool?: Function } | undefined {
   if (typeof document === 'undefined') return undefined;
   const doc = document as Document & { modelContext?: { registerTool?: Function } };
@@ -249,16 +262,54 @@ export function getModelContext(): { registerTool?: Function } | undefined {
   return doc.modelContext ?? nav.modelContext;
 }
 
-export async function registerBusinessTools(businessSlug: string, businessName: string, signal: AbortSignal) {
+export function isWebMCPSupported(): boolean {
+  const modelContext = getModelContext();
+  return typeof modelContext?.registerTool === 'function';
+}
+
+function registrationErrorMessage(error: unknown): string {
+  if (error instanceof DOMException) return `${error.name}: ${error.message}`;
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+export { registrationErrorMessage };
+
+export async function registerBusinessTools(
+  businessSlug: string,
+  businessName: string,
+  signal: AbortSignal,
+): Promise<RegistrationResult> {
   const modelContext = getModelContext();
   if (!modelContext?.registerTool) {
-    return { supported: false, registered: [] as string[] };
+    return {
+      supported: false,
+      attempted: false,
+      registered: [],
+      errors: [],
+      businessSlug,
+    };
   }
 
   const tools = createBusinessTools(businessSlug, businessName);
+  const registered: string[] = [];
+  const errors: RegistrationError[] = [];
+
   for (const tool of tools) {
-    await modelContext.registerTool(tool, { signal });
+    if (signal.aborted) break;
+    try {
+      await modelContext.registerTool(tool, { signal });
+      registered.push(tool.name);
+    } catch (error) {
+      errors.push({ tool: tool.name, message: registrationErrorMessage(error) });
+    }
   }
 
-  return { supported: true, registered: tools.map((tool) => tool.name) };
+  return {
+    supported: true,
+    attempted: true,
+    registered,
+    errors,
+    businessSlug,
+  };
 }
