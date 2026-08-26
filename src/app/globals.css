@@ -66,3 +66,12 @@
     @apply min-h-screen bg-background text-foreground antialiased;
   }
 }
+
+.hero-rainbow {
+  background:
+    radial-gradient(ellipse 90% 60% at 50% 110%, oklch(0.92 0.06 15 / 0.45), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 15% 95%, oklch(0.93 0.07 85 / 0.35), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 85% 90%, oklch(0.93 0.06 145 / 0.35), transparent 50%),
+    radial-gradient(ellipse 80% 55% at 50% 100%, oklch(0.93 0.07 280 / 0.3), transparent 55%),
+    linear-gradient(to top, oklch(0.99 0.01 200 / 0.25) 0%, var(--background) 75%);
+}
