@@ -11,14 +11,57 @@ export const WEBMCP_TOOL_NAMES = [
 
 export type WebMCPToolName = (typeof WEBMCP_TOOL_NAMES)[number];
 
-async function postJson<T>(url: string, body: unknown, signal?: AbortSignal): Promise<T> {
+export type ToolExecuteOptions = {
+  signal?: AbortSignal;
+};
+
+/**
+ * Shared WebMCP execute wrapper.
+ *
+ * Chrome's current executeTool path invokes callbacks with only the input
+ * object (argc === 1). Spec/docs also allow a second options bag with
+ * `signal`. Never require that second argument — destructuring it from
+ * undefined throws before fetch and surfaces as a generic inspector error.
+ */
+export async function postJson<T>(
+  url: string,
+  body: unknown,
+  options?: ToolExecuteOptions,
+): Promise<T> {
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    signal,
+    body: JSON.stringify(body ?? {}),
+    signal: options?.signal,
   });
-  return response.json() as Promise<T>;
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to parse JSON response';
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('[webmcp]', { url, status: response.status, message });
+    }
+    return {
+      ok: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: `Tool HTTP response was not JSON (status ${response.status}).`,
+        retryable: true,
+      },
+    } as T;
+  }
+
+  if (!response.ok && process.env.NODE_ENV !== 'production') {
+    console.error('[webmcp]', { url, status: response.status, payload });
+  }
+
+  return payload as T;
+}
+
+function toolExecute<TInput extends object>(url: string) {
+  return async (input: TInput, options?: ToolExecuteOptions) => postJson(url, input ?? {}, options);
 }
 
 export function createBusinessTools(businessSlug: string, businessName: string) {
@@ -35,8 +78,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         },
       },
       annotations: { readOnlyHint: true },
-      execute: async (input: { query?: string }, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/search-services`, input, signal),
+      execute: toolExecute<{ query?: string }>(`${base}/search-services`),
     },
     {
       name: 'get_service_details',
@@ -49,8 +91,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['service_id'],
       },
       annotations: { readOnlyHint: true },
-      execute: async (input: { service_id: string }, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/get-service-details`, input, signal),
+      execute: toolExecute<{ service_id: string }>(`${base}/get-service-details`),
     },
     {
       name: 'check_service_area',
@@ -63,10 +104,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         },
       },
       annotations: { readOnlyHint: true },
-      execute: async (
-        input: { postal_code?: string; service_id?: string },
-        { signal }: { signal: AbortSignal },
-      ) => postJson(`${base}/check-service-area`, input, signal),
+      execute: toolExecute<{ postal_code?: string; service_id?: string }>(`${base}/check-service-area`),
     },
     {
       name: 'get_availability',
@@ -84,8 +122,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['service_id', 'start_date', 'end_date'],
       },
       annotations: { readOnlyHint: true },
-      execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/get-availability`, input, signal),
+      execute: toolExecute<Record<string, unknown>>(`${base}/get-availability`),
     },
     {
       name: 'create_appointment',
@@ -126,8 +163,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['service_id', 'slot_id', 'customer', 'idempotency_key'],
       },
       annotations: { readOnlyHint: false },
-      execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/create-appointment`, input, signal),
+      execute: toolExecute<Record<string, unknown>>(`${base}/create-appointment`),
     },
     {
       name: 'get_appointment',
@@ -140,8 +176,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['appointment_id'],
       },
       annotations: { readOnlyHint: true },
-      execute: async (input: { appointment_id: string }, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/appointments/get`, input, signal),
+      execute: toolExecute<{ appointment_id: string }>(`${base}/appointments/get`),
     },
     {
       name: 'reschedule_appointment',
@@ -156,8 +191,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['appointment_id', 'new_slot_id', 'idempotency_key'],
       },
       annotations: { readOnlyHint: false },
-      execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/appointments/reschedule`, input, signal),
+      execute: toolExecute<Record<string, unknown>>(`${base}/appointments/reschedule`),
     },
     {
       name: 'cancel_appointment',
@@ -172,8 +206,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
         required: ['appointment_id', 'idempotency_key'],
       },
       annotations: { readOnlyHint: false },
-      execute: async (input: Record<string, unknown>, { signal }: { signal: AbortSignal }) =>
-        postJson(`${base}/appointments/cancel`, input, signal),
+      execute: toolExecute<Record<string, unknown>>(`${base}/appointments/cancel`),
     },
   ];
 }
