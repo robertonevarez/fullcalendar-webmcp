@@ -1,8 +1,8 @@
 import type { Metadata } from 'next';
-import { SiteHeader } from '@/components/SiteHeader';
+import { SiteHeader } from '@/components/site-header';
+import { instrumentSans } from '@/lib/fonts';
+import { cn } from '@/lib/utils';
 import './globals.css';
-
-const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
 
 export const metadata: Metadata = {
   title: {
@@ -21,18 +21,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={cn('font-sans', instrumentSans.variable)}>
       <body>
-        <div className="site-shell">
-          <SiteHeader />
-          {children}
-          <footer className="site-footer">
-            <p>
-              Protocol Tooling ·{' '}
-              <a href={GITHUB_URL}>GitHub</a>
-            </p>
-          </footer>
-        </div>
+        <SiteHeader />
+        {children}
       </body>
     </html>
   );
