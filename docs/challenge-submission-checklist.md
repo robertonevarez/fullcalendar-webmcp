@@ -8,7 +8,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 |------|--------|-------|
 | Public GitHub repository | Done | https://github.com/robertonevarez/schedulemcp |
 | Open-source license (About-detectable) | Done | MIT `LICENSE` |
-| Live HTTPS URL | **Needs human** | Deploy Render blueprint (`render.yaml` / `Dockerfile`); set `DATABASE_PATH` on disk |
+| Live HTTPS URL | Done | https://schedulemcp.onrender.com |
 | WebMCP tools visible on business page | Done | 8 tools register when WebMCP-enabled |
 | Chrome inspector test | Done | Phase 1 + cleanup verification |
 | ChatGPT in-app browser test | **Needs human** | Confirm on deployed URL |
@@ -18,7 +18,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 | Demo video | **Needs human** | See `docs/demo-video-script.md` |
 | Devpost description | Drafted | See `docs/devpost-submission-draft.md` |
 | Repository URL on submission | Ready | Same as above |
-| Deployment URL on submission | **Needs human** | After Render deploy |
+| Deployment URL on submission | Ready | https://schedulemcp.onrender.com |
 
 ## Judge testing notes
 
@@ -29,8 +29,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 
 ## Remaining human actions
 
-1. Deploy to Render (or equivalent Node + persistent disk host).
-2. Paste live URL into README + this checklist.
-3. Confirm ChatGPT in-app browser against production.
-4. Record and upload YouTube demo (&lt;3 min).
-5. Submit on Devpost before the deadline.
+1. Confirm ChatGPT in-app browser against https://schedulemcp.onrender.com.
+2. Attach a Render persistent disk if appointments must survive redeploys (starter instances are otherwise ephemeral).
+3. Record and upload YouTube demo (&lt;3 min).
+4. Submit on Devpost before the deadline.

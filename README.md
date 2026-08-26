@@ -90,9 +90,9 @@ Developer tool reference: [/docs](/docs) when the app is running.
 
 ## Persistence & deployment
 
-Locally: SQLite at `data/schedulemcp.db` (or `DATABASE_PATH`).
-
-Production: Node.js host with a persistent disk (Render recommended). `better-sqlite3` requires a Node runtime and durable filesystem — not serverless ephemeral storage. See [docs/deployment.md](docs/deployment.md).
+- **Live demo:** https://schedulemcp.onrender.com
+- Locally: SQLite at `data/schedulemcp.db` (or `DATABASE_PATH`).
+- Production: Node.js / Docker on Render. `better-sqlite3` needs a Node runtime; attach a persistent disk for durable appointments across redeploys. See [docs/deployment.md](docs/deployment.md).
 
 ## License
 

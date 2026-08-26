@@ -49,5 +49,5 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 ## Links
 
 - Repository: https://github.com/robertonevarez/schedulemcp
-- Live URL: _add after Render deploy_
+- Live URL: https://schedulemcp.onrender.com
 - Demo video: _add YouTube URL_
