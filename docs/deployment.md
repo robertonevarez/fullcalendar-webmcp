@@ -1,8 +1,8 @@
 # Deployment — Vercel + PlanetScale Postgres
 
-**Live URL:** https://schedulemcp.vercel.app
+**Live URL:** https://protocoltooling.com
 
-Canonical production stack for ScheduleMCP:
+Canonical production stack for Protocol Tooling:
 
 ```
 Browser / personal agent
@@ -30,7 +30,7 @@ PlanetScale Postgres (PgBouncer :6432)
 ```bash
 pscale org switch <ORG>
 pscale region list
-pscale database create schedulemcp --region <REGION_SLUG> --engine postgres
+pscale database create protocoltooling --region <REGION_SLUG> --engine postgres
 ```
 
 3. Create role credentials (dashboard **Connect**, or `pscale role` / default role reset). Record host, username, password once.
@@ -63,7 +63,7 @@ npm run db:seed
 
 ## Vercel
 
-1. Import the GitHub repo into Vercel (framework: Next.js).
+1. Import the GitHub repo into Vercel (framework: Next.js). Preferred project name: `protocoltooling`.
 2. Set environment variables for Production (and Preview if desired):
 
 | Variable | Required | Notes |
@@ -87,14 +87,14 @@ Reset clears appointments / slot tokens / idempotency rows and restores seed con
 
 ```bash
 # Optional local Postgres for convenience (not production)
-createdb schedulemcp_dev
-export DATABASE_URL=postgresql://localhost:5432/schedulemcp_dev
+createdb protocoltooling_dev
+export DATABASE_URL=postgresql://localhost:5432/protocoltooling_dev
 npm run db:migrate
 npm run db:seed
 npm run dev
 ```
 
-Tests default to `postgresql://localhost:5432/schedulemcp_test` unless `DATABASE_URL` is set.
+Tests default to `postgresql://localhost:5432/protocoltooling_test` unless `DATABASE_URL` is set.
 
 ## Production smoke test
 

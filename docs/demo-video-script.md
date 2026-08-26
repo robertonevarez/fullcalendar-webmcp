@@ -8,10 +8,10 @@
 ### 0:00–0:20 — Problem
 Voiceover: “Booking websites force humans—and agents—to navigate forms, calendars, and service taxonomies.”
 
-Visual: landing page contrast section (Without WebMCP vs With ScheduleMCP).
+Visual: landing page contrast section (Without WebMCP vs With Protocol Tooling).
 
 ### 0:20–0:40 — Concept
-Voiceover: “ScheduleMCP lets service businesses expose scheduling capabilities directly through WebMCP.”
+Voiceover: “Protocol Tooling lets service businesses expose scheduling capabilities directly through WebMCP.”
 
 Visual: hero + flow Intent → Agent → WebMCP → Engine → Booked. Call out tools: `search_services`, `check_service_area`, `get_availability`, `create_appointment`.
 

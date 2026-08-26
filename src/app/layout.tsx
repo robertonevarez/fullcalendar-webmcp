@@ -24,15 +24,15 @@ const ibmPlexMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'ScheduleMCP — Agent-native scheduling infrastructure',
-    template: '%s · ScheduleMCP',
+    default: 'Protocol Tooling — Infrastructure for the agent-native web',
+    template: '%s · Protocol Tooling',
   },
   description:
-    'Expose services, availability, and appointment workflows directly to AI agents through WebMCP.',
+    'Infrastructure for the agent-native web. This implementation exposes service-business scheduling and booking capabilities to personal AI agents through WebMCP.',
   openGraph: {
-    title: 'ScheduleMCP — Agent-native scheduling infrastructure',
+    title: 'Protocol Tooling — Infrastructure for the agent-native web',
     description:
-      'Expose services, availability, and appointment workflows directly to AI agents through WebMCP.',
+      'Infrastructure for the agent-native web. This implementation exposes service-business scheduling and booking capabilities to personal AI agents through WebMCP.',
     type: 'website',
   },
 };
@@ -46,7 +46,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <footer className="site-footer">
             <p>
-              ScheduleMCP — MIT licensed prototype for the{' '}
+              Protocol Tooling — MIT licensed prototype for the{' '}
               <a href="https://webmcp.devpost.com/">OpenAI WebMCP Challenge</a>. The agent is the
               interface; this site explains the capability surface.
             </p>

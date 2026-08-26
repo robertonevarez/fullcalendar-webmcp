@@ -16,12 +16,13 @@ export default async function HomePage() {
     <main>
       <section className="hero" aria-labelledby="hero-brand">
         <p id="hero-brand" className="hero-brand">
-          ScheduleMCP
+          Protocol Tooling
         </p>
         <h1>Your customers have agents. Let them book you.</h1>
         <p className="hero-lead">
-          ScheduleMCP exposes services, availability, and appointment actions directly to AI agents
-          through WebMCP — so people express intent instead of navigating booking funnels.
+          Protocol Tooling is infrastructure for the agent-native web. This demo exposes services,
+          availability, and appointment actions directly to AI agents through WebMCP — so people
+          express intent instead of navigating booking funnels.
         </p>
         <div className="cta-row">
           <Link className="button button-primary" href="/businesses/acme-hvac">
@@ -36,7 +37,7 @@ export default async function HomePage() {
       <section className="section" aria-labelledby="flow-heading">
         <h2 id="flow-heading">From intent to booked</h2>
         <p className="section-lead">
-          The personal agent is the interface. ScheduleMCP is deterministic business truth.
+          The personal agent is the interface. Protocol Tooling is deterministic business truth.
         </p>
         <ol className="flow">
           <li>
@@ -84,7 +85,7 @@ export default async function HomePage() {
             </ul>
           </div>
           <div className="contrast-col good">
-            <h3>With ScheduleMCP</h3>
+            <h3>With Protocol Tooling</h3>
             <ul>
               <li>
                 <code>search_services</code>
