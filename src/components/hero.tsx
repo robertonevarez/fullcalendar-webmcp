@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown } from 'lucide-react';
 import { HeroVideoBackground } from '@/components/hero-video-background';
 import { Button } from '@/components/ui/button';
 import { playpenSansHebrew } from '@/lib/fonts';
@@ -55,6 +55,7 @@ export function Hero() {
             <div className={cn('flex flex-wrap items-center justify-center pt-2', spacing.gap)}>
               <Button nativeButton={false} render={<Link href={DEMO_URL} />} size="xl" className={"drop-shadow-lg"}>
                 Start with ChatGPT
+                <ArrowRight />
               </Button>
             </div>
           </div>
