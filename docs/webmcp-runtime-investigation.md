@@ -128,4 +128,5 @@ Do not start Phase 2 until the PR is merged and Phase 2 is intentionally kicked 
 - Chrome may later always pass `{ signal }`; optional handling remains compatible.
 - Spec vs Chrome `executeTool` input type still differs (object vs JSON string). Inspector uses object-first with string fallback; callers should follow current Chrome docs/inspector.
 - Agents may still occasionally make one redundant availability call; descriptions reduce but cannot eliminate that without client-side orchestration.
-- Do not start Phase 2 until merge and an intentional Phase 2 kickoff.
+- ChatGPT production in-app browser should be confirmed against the Phase 2 deployed HTTPS URL (Chrome inspector + executeTool paths are already verified).
+- Do not start speculative Phase 3 product work until the challenge submission is complete.

@@ -8,7 +8,7 @@
                      →  fetch /api/... 
                      →  BookingService
                      →  scheduler + search (domain)
-                     →  SQLite (better-sqlite3)
+                     →  PlanetScale Postgres (`pg`)
 ```
 
 WebMCP callbacks are thin: they POST to same-origin API routes. Domain logic lives in `src/domain/` and is tested without a browser.
@@ -49,7 +49,7 @@ The scheduler:
 3. Verifies no overlap with appointments or blocked periods for the full service duration.
 4. Emits a deterministic `slot_id` hash from service, start time, and resource IDs.
 
-`create_appointment` and `reschedule_appointment` revalidate the slot token and assert resources remain free inside a SQLite transaction before writing.
+`create_appointment` and `reschedule_appointment` revalidate the slot token and assert resources remain free inside a Postgres transaction (with `SELECT … FOR UPDATE`) before writing.
 
 ## Scheduling algorithm
 
@@ -101,9 +101,9 @@ Retryable: `NO_AVAILABILITY`, `SLOT_UNAVAILABLE`, `RESOURCE_UNAVAILABLE`, `INTER
 
 ## Persistence
 
-- **Store:** SQLite via `better-sqlite3`
-- **Path:** `data/schedulemcp.db`
-- **Why:** Smallest persistent datastore with transactional guarantees and no external service for challenge demo
+- **Store:** PlanetScale Postgres via `pg` (see `docs/deployment.md`)
+- **Connection:** `DATABASE_URL` (PgBouncer `:6432` in production)
+- **Why:** Durable transactional appointments on hosted Postgres without a local filesystem dependency
 
 ## Local development
 
@@ -117,17 +117,23 @@ Reset seed data: `npm run seed`
 
 ## Manual WebMCP verification
 
-**Not performed in CI/automation environment** (no ChatGPT in-app browser or flagged Chrome in this build agent).
+**Completed for Phase 1** across automated, direct-tool, and human inspector paths.
 
-Recommended manual steps:
+| Path | Status |
+|------|--------|
+| Automated Vitest suite | Passing (domain, e2e lifecycle, remediation, WebMCP contract/execute) |
+| Direct `document.modelContext.executeTool` (Chrome + WebMCP) | Full HVAC lifecycle: search → details → area → availability → create → get → reschedule → cancel |
+| Human Model Context Tool Inspector + natural-language agent | Tool discovery, selection, execution; negative `90210` → `OUTSIDE_SERVICE_AREA`; positive `78701` eligibility + availability |
+| ChatGPT production in-app browser | Not separately recorded in Phase 1; primary judge path for Phase 2 submission |
 
-1. Enable WebMCP in Chrome or use ChatGPT in-app browser.
-2. Open `/businesses/acme-hvac`.
-3. Confirm eight tools appear in Model Context Tool Inspector.
-4. Run HVAC flow (search → area → availability → create).
-5. Repeat on `/businesses/northline-salon` or `/businesses/mesa-auto-service`.
+Recommended judge steps remain:
 
-Document results in submission demo video.
+1. Open `/businesses/acme-hvac` in ChatGPT's in-app browser or Chrome with WebMCP enabled.
+2. Confirm eight tools appear in Model Context Tool Inspector.
+3. Run HVAC flow (search → area → availability → create).
+4. Spot-check `/businesses/northline-salon` or `/businesses/mesa-auto-service`.
+
+See [webmcp-runtime-investigation.md](./webmcp-runtime-investigation.md) for the runtime execution fix and verification evidence.
 
 ## Could a sixth business be added via seed/config only?
 
@@ -150,8 +156,4 @@ You would **not** need scheduler changes unless the new business introduced a co
 
 ## Phase 2 recommendations
 
-- Deploy to HTTPS (Vercel/Render) for judge testing
-- Record demo video with ChatGPT in-app browser
-- Optional in-page confirmation modal for consequential tools
-- Pagination for large slot lists
-- Judge test account if auth added
+Phase 2 turns this infrastructure into a challenge-ready public demo (HTTPS deploy, landing/docs, submission materials). Scheduling primitives above are intentionally stable.

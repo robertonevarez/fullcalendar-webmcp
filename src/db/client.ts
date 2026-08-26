@@ -1,137 +1,114 @@
-import Database from 'better-sqlite3';
-import fs from 'fs';
-import path from 'path';
+import { AsyncLocalStorage } from 'async_hooks';
+import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(DB_DIR, 'schedulemcp.db');
+/**
+ * Postgres client for ScheduleMCP.
+ *
+ * Driver: `pg` (PlanetScale first-party recommendation for Node.js / Vercel).
+ * Production: DATABASE_URL with PlanetScale PgBouncer port 6432 + sslmode=verify-full.
+ * Pool: module-level Pool reused across warm serverless instances.
+ * On Vercel: attachDatabasePool closes idle connections before Fluid suspension.
+ */
 
-let db: Database.Database | null = null;
+export type Queryable = {
+  query<T extends QueryResultRow = QueryResultRow>(
+    text: string,
+    params?: unknown[],
+  ): Promise<QueryResult<T>>;
+};
 
-export function getDb(): Database.Database {
-  if (!db) {
-    fs.mkdirSync(DB_DIR, { recursive: true });
-    db = new Database(DB_PATH);
-    db.pragma('journal_mode = WAL');
-    db.pragma('foreign_keys = ON');
-    initializeSchema(db);
+const txStorage = new AsyncLocalStorage<PoolClient>();
+
+let pool: Pool | null = null;
+let attachAttempted = false;
+
+function requiresSsl(connectionString: string): boolean {
+  if (connectionString.includes('localhost') || connectionString.includes('127.0.0.1')) {
+    return false;
   }
-  return db;
+  return true;
 }
 
-export function resetDbForTests() {
-  if (db) {
-    db.close();
-    db = null;
+export function getPool(): Pool {
+  if (pool) return pool;
+
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error('DATABASE_URL is required. Use PlanetScale Postgres (port 6432 for app traffic).');
   }
-  for (const suffix of ['', '-wal', '-shm']) {
-    const filePath = `${DB_PATH}${suffix}`;
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+
+  pool = new Pool({
+    connectionString,
+    ssl: requiresSsl(connectionString) ? { rejectUnauthorized: true } : undefined,
+    // Small pool: PgBouncer is the real multiplexer; keep serverless clients light.
+    max: Number(process.env.PG_POOL_MAX ?? 5),
+    idleTimeoutMillis: 10_000,
+    connectionTimeoutMillis: 10_000,
+  });
+
+  if (!attachAttempted && process.env.VERCEL) {
+    attachAttempted = true;
+    void import('@vercel/functions')
+      .then((mod) => {
+        mod.attachDatabasePool(pool!);
+      })
+      .catch(() => {
+        // Optional in non-Vercel / test environments.
+      });
+  }
+
+  return pool;
+}
+
+export function getQueryable(): Queryable {
+  return txStorage.getStore() ?? getPool();
+}
+
+export async function query<T extends QueryResultRow = QueryResultRow>(
+  text: string,
+  params?: unknown[],
+): Promise<QueryResult<T>> {
+  return getQueryable().query<T>(text, params);
+}
+
+export async function runInTransaction<T>(fn: () => Promise<T>): Promise<T> {
+  const existing = txStorage.getStore();
+  if (existing) {
+    return fn();
+  }
+
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const result = await txStorage.run(client, fn);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      // ignore rollback errors
     }
+    throw error;
+  } finally {
+    client.release();
   }
 }
 
-function initializeSchema(database: Database.Database) {
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS businesses (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      timezone TEXT NOT NULL,
-      location_mode TEXT NOT NULL,
-      working_hours_json TEXT NOT NULL,
-      address_json TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS services (
-      id TEXT PRIMARY KEY,
-      business_id TEXT NOT NULL REFERENCES businesses(id),
-      name TEXT NOT NULL,
-      description TEXT NOT NULL,
-      duration_minutes INTEGER NOT NULL,
-      price_cents INTEGER NOT NULL,
-      currency TEXT NOT NULL,
-      keywords_json TEXT NOT NULL,
-      location_policy TEXT NOT NULL,
-      service_area_required INTEGER NOT NULL,
-      resource_requirements_json TEXT NOT NULL,
-      intake_fields_json TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS resources (
-      id TEXT PRIMARY KEY,
-      business_id TEXT NOT NULL REFERENCES businesses(id),
-      name TEXT NOT NULL,
-      resource_type TEXT NOT NULL,
-      capabilities_json TEXT NOT NULL,
-      working_hours_json TEXT NOT NULL,
-      is_human INTEGER NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS service_area_zones (
-      id TEXT PRIMARY KEY,
-      business_id TEXT NOT NULL REFERENCES businesses(id),
-      zone_id TEXT NOT NULL,
-      postal_codes_json TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS blocked_times (
-      id TEXT PRIMARY KEY,
-      resource_id TEXT NOT NULL REFERENCES resources(id),
-      starts_at TEXT NOT NULL,
-      ends_at TEXT NOT NULL,
-      reason TEXT
-    );
-
-    CREATE TABLE IF NOT EXISTS appointments (
-      id TEXT PRIMARY KEY,
-      business_id TEXT NOT NULL REFERENCES businesses(id),
-      service_id TEXT NOT NULL REFERENCES services(id),
-      status TEXT NOT NULL,
-      starts_at TEXT NOT NULL,
-      ends_at TEXT NOT NULL,
-      customer_name TEXT NOT NULL,
-      customer_email TEXT,
-      customer_phone TEXT,
-      service_address_json TEXT,
-      notes_json TEXT,
-      price_cents INTEGER NOT NULL,
-      currency TEXT NOT NULL,
-      idempotency_key TEXT UNIQUE,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS appointment_resources (
-      appointment_id TEXT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
-      resource_id TEXT NOT NULL REFERENCES resources(id),
-      resource_type TEXT NOT NULL,
-      PRIMARY KEY (appointment_id, resource_id)
-    );
-
-    CREATE TABLE IF NOT EXISTS slot_tokens (
-      slot_id TEXT PRIMARY KEY,
-      business_id TEXT NOT NULL REFERENCES businesses(id),
-      service_id TEXT NOT NULL REFERENCES services(id),
-      payload_json TEXT NOT NULL,
-      expires_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS idempotency_records (
-      scope_key TEXT PRIMARY KEY,
-      operation TEXT NOT NULL,
-      response_json TEXT NOT NULL,
-      created_at TEXT NOT NULL
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_appointments_business ON appointments(business_id);
-    CREATE INDEX IF NOT EXISTS idx_appointments_time ON appointments(starts_at, ends_at);
-    CREATE INDEX IF NOT EXISTS idx_appointment_resources_resource ON appointment_resources(resource_id);
-  `);
+/** Close pool (tests / scripts). */
+export async function closePool(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
+    attachAttempted = false;
+  }
 }
 
-export function runInTransaction<T>(fn: () => T): T {
-  const database = getDb();
-  const tx = database.transaction(fn);
-  return tx();
+/** Reset module pool between tests when DATABASE_URL changes. */
+export function resetPoolForTests(): void {
+  if (pool) {
+    void pool.end();
+    pool = null;
+    attachAttempted = false;
+  }
 }

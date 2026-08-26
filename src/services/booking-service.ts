@@ -21,26 +21,26 @@ import { addMinutes } from '@/lib/time';
 
 const SLOT_TTL_MINUTES = 30;
 
-function buildSchedulerContext(businessId: string, serviceId: string) {
-  const business = bookingRepository.getBusinessById(businessId);
+async function buildSchedulerContext(businessId: string, serviceId: string) {
+  const business = await bookingRepository.getBusinessById(businessId);
   if (!business) {
     throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessId} was not found.`);
   }
-  const service = bookingRepository.getService(businessId, serviceId);
+  const service = await bookingRepository.getService(businessId, serviceId);
   if (!service) {
     throw new AppError(ErrorCodes.SERVICE_NOT_FOUND, `Service ${serviceId} was not found.`, false, 'service_id');
   }
   return {
     business,
     service,
-    resources: bookingRepository.listResources(businessId),
-    appointments: bookingRepository.listAppointments(businessId),
-    blockedTimes: bookingRepository.listBlockedTimes(businessId),
+    resources: await bookingRepository.listResources(businessId),
+    appointments: await bookingRepository.listAppointments(businessId),
+    blockedTimes: await bookingRepository.listBlockedTimes(businessId),
   };
 }
 
-function serviceAreaMap(businessId: string) {
-  const zones = bookingRepository.listServiceAreaZones(businessId);
+async function serviceAreaMap(businessId: string) {
+  const zones = await bookingRepository.listServiceAreaZones(businessId);
   const map = new Map<string, string[]>();
   for (const zone of zones) {
     map.set(zone.zone_id, zone.postal_codes);
@@ -52,9 +52,9 @@ function resolveEffectivePostalCode(input: { postal_code?: string; customer: Cus
   return input.postal_code ?? input.customer.service_address?.postal_code;
 }
 
-function assertServiceAreaEligible(
+async function assertServiceAreaEligible(
   businessId: string,
-  service: ReturnType<typeof buildSchedulerContext>['service'],
+  service: Awaited<ReturnType<typeof buildSchedulerContext>>['service'],
   postalCode: string | undefined,
 ) {
   if (!service.service_area_required) return;
@@ -68,7 +68,7 @@ function assertServiceAreaEligible(
     );
   }
 
-  const area = checkServiceArea(businessId, service, serviceAreaMap(businessId), postalCode);
+  const area = checkServiceArea(businessId, service, await serviceAreaMap(businessId), postalCode);
   if (area.status === 'ineligible') {
     throw new AppError(ErrorCodes.OUTSIDE_SERVICE_AREA, area.message, false, 'postal_code');
   }
@@ -92,10 +92,10 @@ function assertAppointmentInBusiness(
 }
 
 export class BookingService {
-  searchServices(businessSlug: string, query?: string) {
-    const business = bookingRepository.getBusinessBySlug(businessSlug);
+  async searchServices(businessSlug: string, query?: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
-    const services = bookingRepository.listServices(business.id);
+    const services = await bookingRepository.listServices(business.id);
     const results = searchServices(services, query);
     log('info', { business_id: business.id, operation: 'search_services', query, count: results.length });
     return ok({
@@ -104,10 +104,10 @@ export class BookingService {
     });
   }
 
-  getServiceDetails(businessSlug: string, serviceId: string) {
-    const business = bookingRepository.getBusinessBySlug(businessSlug);
+  async getServiceDetails(businessSlug: string, serviceId: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
-    const service = bookingRepository.getService(business.id, serviceId);
+    const service = await bookingRepository.getService(business.id, serviceId);
     if (!service) throw new AppError(ErrorCodes.SERVICE_NOT_FOUND, `Service ${serviceId} was not found.`);
 
     return ok({
@@ -124,20 +124,20 @@ export class BookingService {
     });
   }
 
-  checkServiceArea(businessSlug: string, postalCode?: string, serviceId?: string) {
-    const business = bookingRepository.getBusinessBySlug(businessSlug);
+  async checkServiceArea(businessSlug: string, postalCode?: string, serviceId?: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
 
     const service =
       serviceId != null
-        ? bookingRepository.getService(business.id, serviceId)
-        : bookingRepository.listServices(business.id)[0];
+        ? await bookingRepository.getService(business.id, serviceId)
+        : (await bookingRepository.listServices(business.id))[0];
     if (!service) throw new AppError(ErrorCodes.SERVICE_NOT_FOUND, 'No services configured for this business.');
 
     const result = checkServiceArea(
       business.id,
       service,
-      serviceAreaMap(business.id),
+      await serviceAreaMap(business.id),
       postalCode,
     );
 
@@ -152,18 +152,18 @@ export class BookingService {
     });
   }
 
-  getAvailability(businessSlug: string, query: AvailabilityQuery) {
-    const business = bookingRepository.getBusinessBySlug(businessSlug);
+  async getAvailability(businessSlug: string, query: AvailabilityQuery) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
 
-    const ctx = buildSchedulerContext(business.id, query.service_id);
+    const ctx = await buildSchedulerContext(business.id, query.service_id);
 
-    assertServiceAreaEligible(business.id, ctx.service, query.postal_code);
+    await assertServiceAreaEligible(business.id, ctx.service, query.postal_code);
 
     const slots = findAvailability(ctx, query);
     const expiresAt = addMinutes(new Date(), SLOT_TTL_MINUTES).toISOString();
     for (const slot of slots) {
-      bookingRepository.saveSlotToken(business.id, slot, expiresAt);
+      await bookingRepository.saveSlotToken(business.id, slot, expiresAt);
     }
 
     log('info', {
@@ -180,7 +180,7 @@ export class BookingService {
     return ok({ slots });
   }
 
-  createAppointment(input: {
+  async createAppointment(input: {
     businessSlug: string;
     service_id: string;
     slot_id: string;
@@ -190,18 +190,18 @@ export class BookingService {
     postal_code?: string;
   }) {
     const scopeKey = buildIdempotencyScope('create_appointment', input.businessSlug, input.idempotency_key);
-    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached;
+    const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
+    if (cached) return cached as ReturnType<typeof ok>;
 
-    const business = bookingRepository.getBusinessBySlug(input.businessSlug);
+    const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const slot = bookingRepository.getSlotTokenForBusiness(business.id, input.slot_id);
+    const slot = await bookingRepository.getSlotTokenForBusiness(business.id, input.slot_id);
     if (!slot) {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'Slot is expired or invalid. Query availability again.', true);
     }
 
-    const ctx = buildSchedulerContext(business.id, input.service_id);
+    const ctx = await buildSchedulerContext(business.id, input.service_id);
     if (slot.service_id !== input.service_id) {
       throw new AppError(ErrorCodes.VALIDATION_ERROR, 'slot_id does not match service_id.', false, 'slot_id');
     }
@@ -212,7 +212,7 @@ export class BookingService {
       throw new AppError(ErrorCodes.LOCATION_REQUIRED, 'Customer service address or postal code is required.', false);
     }
 
-    assertServiceAreaEligible(business.id, ctx.service, effectivePostalCode);
+    await assertServiceAreaEligible(business.id, ctx.service, effectivePostalCode);
 
     const query: AvailabilityQuery = {
       service_id: input.service_id,
@@ -253,32 +253,41 @@ export class BookingService {
     };
 
     try {
-      runInTransaction(() => {
-        this.assertResourcesFree(business.id, appointment, appointment.id);
-        bookingRepository.insertAppointment(appointment);
+      const response = await runInTransaction(async () => {
+        // Acquire resource locks first so concurrent same-key retries serialize,
+        // then re-check idempotency before treating a conflict as failure.
+        await this.lockResourcesForAppointment(appointment);
+        const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+        if (raced) return raced as ReturnType<typeof ok>;
+
+        await this.assertResourcesFree(business.id, appointment, appointment.id, { alreadyLocked: true });
+        await bookingRepository.insertAppointment(appointment);
+        const created = ok(this.toPublicAppointment(appointment, ctx.service.name, business.name));
+        await bookingRepository.saveIdempotencyResponse(scopeKey, 'create_appointment', created);
+        return created;
       });
-    } catch {
+      log('info', { business_id: business.id, operation: 'create_appointment', appointment_id: appointment.id });
+      return response;
+    } catch (error) {
+      const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+      if (raced) return raced as ReturnType<typeof ok>;
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are no longer available.', true);
     }
-
-    const response = ok(this.toPublicAppointment(appointment, ctx.service.name, business.name));
-    bookingRepository.saveIdempotencyResponse(scopeKey, 'create_appointment', response);
-    log('info', { business_id: business.id, operation: 'create_appointment', appointment_id: appointment.id });
-    return response;
   }
 
-  getAppointment(businessSlug: string, appointmentId: string) {
-    const business = bookingRepository.getBusinessBySlug(businessSlug);
+  async getAppointment(businessSlug: string, appointmentId: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
 
-    const appointment = bookingRepository.getAppointment(appointmentId);
+    const appointment = await bookingRepository.getAppointment(appointmentId);
     assertAppointmentInBusiness(businessSlug, business.id, appointment, appointmentId);
 
-    const service = bookingRepository.getService(business.id, appointment!.service_id);
+    const service = await bookingRepository.getService(business.id, appointment!.service_id);
     return ok(this.toPublicAppointment(appointment!, service?.name ?? appointment!.service_id, business.name));
   }
 
-  rescheduleAppointment(input: {
+  async rescheduleAppointment(input: {
     businessSlug: string;
     appointment_id: string;
     new_slot_id: string;
@@ -289,30 +298,23 @@ export class BookingService {
       input.businessSlug,
       input.idempotency_key,
     );
-    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached;
+    const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
+    if (cached) return cached as ReturnType<typeof ok>;
 
-    const business = bookingRepository.getBusinessBySlug(input.businessSlug);
+    const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const appointment = bookingRepository.getAppointment(input.appointment_id);
-    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+    const existing = await bookingRepository.getAppointment(input.appointment_id);
+    assertAppointmentInBusiness(input.businessSlug, business.id, existing, input.appointment_id);
 
-    if (appointment!.status === 'cancelled') {
-      throw new AppError(
-        ErrorCodes.APPOINTMENT_NOT_RESCHEDULABLE,
-        'Cancelled appointments cannot be rescheduled.',
-      );
-    }
-
-    const slot = bookingRepository.getSlotTokenForBusiness(business.id, input.new_slot_id);
+    const slot = await bookingRepository.getSlotTokenForBusiness(business.id, input.new_slot_id);
     if (!slot) {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'New slot is expired or invalid.', true);
     }
 
-    const ctx = buildSchedulerContext(business.id, appointment!.service_id);
+    const ctx = await buildSchedulerContext(business.id, existing!.service_id);
     const query: AvailabilityQuery = {
-      service_id: appointment!.service_id,
+      service_id: existing!.service_id,
       start_date: slot.starts_at.slice(0, 10),
       end_date: slot.ends_at.slice(0, 10),
     };
@@ -321,94 +323,144 @@ export class BookingService {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'New slot is no longer available.', true);
     }
 
-    const updated: Appointment = {
-      ...appointment!,
-      starts_at: slot.starts_at,
-      ends_at: slot.ends_at,
-      resource_allocations: slot.resources,
-    };
-
     try {
-      runInTransaction(() => {
-        this.assertResourcesFree(business.id, updated, appointment!.id);
-        bookingRepository.updateAppointmentTimes(appointment!.id, slot.starts_at, slot.ends_at);
-        bookingRepository.replaceAppointmentResources(appointment!.id, slot.resources);
+      const response = await runInTransaction(async () => {
+        // Lock appointment row first so cancel/reschedule serialize on lifecycle state.
+        const appointment = await bookingRepository.getAppointmentForUpdate(input.appointment_id);
+        assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+        if (appointment!.status === 'cancelled') {
+          throw new AppError(
+            ErrorCodes.APPOINTMENT_NOT_RESCHEDULABLE,
+            'Cancelled appointments cannot be rescheduled.',
+          );
+        }
+
+        const updated: Appointment = {
+          ...appointment!,
+          starts_at: slot.starts_at,
+          ends_at: slot.ends_at,
+          resource_allocations: slot.resources,
+        };
+
+        await this.lockResourcesForAppointment(updated);
+        const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+        if (raced) return raced as ReturnType<typeof ok>;
+
+        await this.assertResourcesFree(business.id, updated, appointment!.id, { alreadyLocked: true });
+        await bookingRepository.updateAppointmentTimes(appointment!.id, slot.starts_at, slot.ends_at);
+        await bookingRepository.replaceAppointmentResources(appointment!.id, slot.resources);
+        const body = ok(this.toPublicAppointment(updated, ctx.service.name, ctx.business.name));
+        await bookingRepository.saveIdempotencyResponse(scopeKey, 'reschedule_appointment', body);
+        return body;
       });
-    } catch {
+      log('info', {
+        business_id: business.id,
+        operation: 'reschedule_appointment',
+        appointment_id: input.appointment_id,
+      });
+      return response;
+    } catch (error) {
+      const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+      if (raced) return raced as ReturnType<typeof ok>;
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are unavailable for reschedule.', true);
     }
-
-    const response = ok(
-      this.toPublicAppointment(updated, ctx.service.name, ctx.business.name),
-    );
-    bookingRepository.saveIdempotencyResponse(scopeKey, 'reschedule_appointment', response);
-    log('info', {
-      business_id: business.id,
-      operation: 'reschedule_appointment',
-      appointment_id: appointment!.id,
-    });
-    return response;
   }
 
-  cancelAppointment(input: {
+  async cancelAppointment(input: {
     businessSlug: string;
     appointment_id: string;
     idempotency_key: string;
     reason?: string;
   }) {
     const scopeKey = buildIdempotencyScope('cancel_appointment', input.businessSlug, input.idempotency_key);
-    const cached = bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached;
+    const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
+    if (cached) return cached as ReturnType<typeof ok>;
 
-    const business = bookingRepository.getBusinessBySlug(input.businessSlug);
+    const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const appointment = bookingRepository.getAppointment(input.appointment_id);
-    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+    const preview = await bookingRepository.getAppointment(input.appointment_id);
+    assertAppointmentInBusiness(input.businessSlug, business.id, preview, input.appointment_id);
 
-    const service = bookingRepository.getService(business.id, appointment!.service_id);
+    const service = await bookingRepository.getService(business.id, preview!.service_id);
 
-    if (appointment!.status === 'cancelled') {
-      const response = ok({
+    const response = await runInTransaction(async () => {
+      const appointment = await bookingRepository.getAppointmentForUpdate(input.appointment_id);
+      assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+      const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+      if (raced) return raced as ReturnType<typeof ok>;
+
+      if (appointment!.status === 'cancelled') {
+        const body = ok({
+          appointment_id: appointment!.id,
+          status: 'cancelled',
+          message: 'Appointment was already cancelled.',
+          appointment: this.toPublicAppointment(
+            appointment!,
+            service?.name ?? appointment!.service_id,
+            business.name,
+          ),
+        });
+        await bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', body);
+        return body;
+      }
+
+      await bookingRepository.cancelAppointment(appointment!.id);
+      appointment!.status = 'cancelled';
+      const body = ok({
         appointment_id: appointment!.id,
         status: 'cancelled',
-        message: 'Appointment was already cancelled.',
+        message: input.reason ? `Cancelled: ${input.reason}` : 'Appointment cancelled.',
         appointment: this.toPublicAppointment(
           appointment!,
           service?.name ?? appointment!.service_id,
           business.name,
         ),
       });
-      bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', response);
-      return response;
-    }
-
-    bookingRepository.cancelAppointment(appointment!.id);
-    appointment!.status = 'cancelled';
-    const response = ok({
-      appointment_id: appointment!.id,
-      status: 'cancelled',
-      message: input.reason ? `Cancelled: ${input.reason}` : 'Appointment cancelled.',
-      appointment: this.toPublicAppointment(
-        appointment!,
-        service?.name ?? appointment!.service_id,
-        business.name,
-      ),
+      await bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', body);
+      return body;
     });
-    bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', response);
     log('info', {
       business_id: business.id,
       operation: 'cancel_appointment',
-      appointment_id: appointment!.id,
+      appointment_id: input.appointment_id,
     });
     return response;
   }
 
-  private assertResourcesFree(businessId: string, appointment: Appointment, excludeAppointmentId?: string) {
-    const appointments = bookingRepository
-      .listAppointments(businessId)
-      .filter((item) => item.id !== excludeAppointmentId);
-    const blocked = bookingRepository.listBlockedTimes(businessId);
+  private async lockResourcesForAppointment(appointment: Appointment) {
+    const resourceIds = appointment.resource_allocations.map((a) => a.resource_id);
+    await bookingRepository.lockResources(resourceIds);
+    await bookingRepository.lockOverlappingAppointments(
+      appointment.business_id,
+      resourceIds,
+      appointment.starts_at,
+      appointment.ends_at,
+      appointment.id,
+    );
+  }
+
+  private async assertResourcesFree(
+    businessId: string,
+    appointment: Appointment,
+    excludeAppointmentId?: string,
+    options?: { alreadyLocked?: boolean },
+  ) {
+    if (!options?.alreadyLocked) {
+      await this.lockResourcesForAppointment({
+        ...appointment,
+        id: excludeAppointmentId ?? appointment.id,
+        business_id: businessId,
+      });
+    }
+
+    const appointments = (await bookingRepository.listAppointments(businessId)).filter(
+      (item) => item.id !== excludeAppointmentId,
+    );
+    const blocked = await bookingRepository.listBlockedTimes(businessId);
     const start = new Date(appointment.starts_at);
     const end = new Date(appointment.ends_at);
 

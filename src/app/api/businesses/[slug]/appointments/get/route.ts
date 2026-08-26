@@ -2,15 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ensureDatabaseSeeded } from '@/db/init';
 import { bookingService, handleServiceError } from '@/services/booking-service';
 
+export const runtime = 'nodejs';
+
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
-  ensureDatabaseSeeded();
+  await ensureDatabaseSeeded();
   const { slug } = await context.params;
   const body = await request.json();
   try {
-    const result = bookingService.getAppointment(slug, body.appointment_id);
+    const result = await bookingService.getAppointment(slug, body.appointment_id);
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });

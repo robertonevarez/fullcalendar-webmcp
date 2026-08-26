@@ -4,19 +4,25 @@ Agent-native scheduling infrastructure for service businesses, built for the [Op
 
 Personal AI agents discover and invoke structured WebMCP tools on a per-business page. The scheduling engine is generic across field service, salon, clinic, and multi-resource auto workflows.
 
+> Your customers have agents. Let them book you.
+
 ## Quick start
 
 ```bash
 npm install
+cp .env.example .env.local
+# Set DATABASE_URL (PlanetScale :6432, or local Postgres for dev)
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and choose a seeded business. Each business page registers eight WebMCP tools scoped to that business.
+Open [http://localhost:3000](http://localhost:3000). The landing page explains the product; each business page at `/businesses/{slug}` registers eight WebMCP tools.
 
 ```bash
 npm test
 npm run build
-npm run seed   # reset SQLite seed data
+npm run db:seed   # intentional catalog / conflict reseed
 ```
 
 ## Seeded businesses
@@ -42,38 +48,56 @@ npm run seed   # reset SQLite seed data
 
 Business context is determined by the page URL: `/businesses/{slug}`.
 
-## Manual WebMCP testing
+## WebMCP verification status
 
-1. **Primary:** Open a business page in **ChatGPT's in-app browser** (WebMCP supported out of the box).
-2. **Secondary:** Chrome with `chrome://flags/#enable-webmcp-testing` enabled.
-3. Use the **Model Context Tool Inspector** extension to list and invoke tools.
+| Path | Status |
+|------|--------|
+| Automated tests | Passing |
+| Chrome `executeTool` lifecycle | Verified (create / get / reschedule / cancel) |
+| Model Context Tool Inspector + NL agent | Verified (positive `78701`, negative `90210`) |
+| ChatGPT in-app browser | Primary judge path — confirm on the deployed HTTPS URL |
 
-Example HVAC demo path:
+### Manual testing
 
-1. Visit `/businesses/acme-hvac`
-2. `search_services` → `"AC not cooling"`
-3. `get_service_details` → selected `service_id`
-4. `check_service_area` → `78701`
-5. `get_availability` → `2026-08-26`, `time_preference: "after 16:00"`
-6. `create_appointment` with `slot_id`, customer, and `idempotency_key`
+1. **Primary:** Open a business page in **ChatGPT's in-app browser**.
+2. **Secondary:** Chrome with `chrome://flags/#enable-webmcp-testing` + Model Context Tool Inspector.
+3. Visit `/businesses/acme-hvac` and try:
+
+```text
+I need someone to look at my AC tomorrow after 4.
+The upstairs isn't cooling.
+I'm in 78701.
+Find the right service and tell me what's available.
+```
+
+Negative constraint check:
+
+```text
+I need an AC tune-up in 90210.
+```
 
 ## Architecture
 
 ```
-WebMCP registration (browser)
-        ↓ fetch
-Application service (BookingService)
+Browser / personal agent
+        ↓ WebMCP
+Vercel-hosted Next.js 16
         ↓
-Scheduling domain (scheduler, search)
+BookingService + deterministic scheduler
         ↓
-SQLite persistence
+PlanetScale Postgres (PgBouncer)
 ```
 
-See [docs/phase-1-vertical-slice.md](docs/phase-1-vertical-slice.md) for full design notes.
+See [docs/deployment.md](docs/deployment.md), [docs/postgres-migration.md](docs/postgres-migration.md), and [docs/phase-1-vertical-slice.md](docs/phase-1-vertical-slice.md).
 
-## Persistence
+Developer tool reference: [/docs](/docs) when the app is running.
 
-SQLite database at `data/schedulemcp.db` (created on first run). Appointments store multiple resources via `appointment_resources`.
+## Persistence & deployment
+
+- **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
+- **Live demo:** https://schedulemcp.vercel.app
+- **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
+- Details: [docs/deployment.md](docs/deployment.md).
 
 ## License
 
