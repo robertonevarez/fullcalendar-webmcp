@@ -87,6 +87,18 @@ export class BookingRepository {
     return row ? this.hydrateAppointment(row as Record<string, unknown>) : null;
   }
 
+  /**
+   * Lock and re-read an appointment row inside the current transaction.
+   * Callers must be inside `runInTransaction`.
+   */
+  async getAppointmentForUpdate(appointmentId: string): Promise<Appointment | null> {
+    const result = await query('SELECT * FROM appointments WHERE id = $1 FOR UPDATE', [
+      appointmentId,
+    ]);
+    const row = result.rows[0];
+    return row ? this.hydrateAppointment(row as Record<string, unknown>) : null;
+  }
+
   private async hydrateAppointment(row: Record<string, unknown>): Promise<Appointment> {
     const resources = await query(
       `SELECT ar.resource_id, ar.resource_type, r.name as resource_name

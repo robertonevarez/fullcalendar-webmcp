@@ -254,7 +254,13 @@ export class BookingService {
 
     try {
       const response = await runInTransaction(async () => {
-        await this.assertResourcesFree(business.id, appointment, appointment.id);
+        // Acquire resource locks first so concurrent same-key retries serialize,
+        // then re-check idempotency before treating a conflict as failure.
+        await this.lockResourcesForAppointment(appointment);
+        const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+        if (raced) return raced as ReturnType<typeof ok>;
+
+        await this.assertResourcesFree(business.id, appointment, appointment.id, { alreadyLocked: true });
         await bookingRepository.insertAppointment(appointment);
         const created = ok(this.toPublicAppointment(appointment, ctx.service.name, business.name));
         await bookingRepository.saveIdempotencyResponse(scopeKey, 'create_appointment', created);
@@ -263,10 +269,9 @@ export class BookingService {
       log('info', { business_id: business.id, operation: 'create_appointment', appointment_id: appointment.id });
       return response;
     } catch (error) {
-      if (error instanceof AppError) throw error;
-      // Concurrent create with same idempotency key: return stored response.
       const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
       if (raced) return raced as ReturnType<typeof ok>;
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are no longer available.', true);
     }
   }
@@ -299,24 +304,17 @@ export class BookingService {
     const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const appointment = await bookingRepository.getAppointment(input.appointment_id);
-    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
-
-    if (appointment!.status === 'cancelled') {
-      throw new AppError(
-        ErrorCodes.APPOINTMENT_NOT_RESCHEDULABLE,
-        'Cancelled appointments cannot be rescheduled.',
-      );
-    }
+    const existing = await bookingRepository.getAppointment(input.appointment_id);
+    assertAppointmentInBusiness(input.businessSlug, business.id, existing, input.appointment_id);
 
     const slot = await bookingRepository.getSlotTokenForBusiness(business.id, input.new_slot_id);
     if (!slot) {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'New slot is expired or invalid.', true);
     }
 
-    const ctx = await buildSchedulerContext(business.id, appointment!.service_id);
+    const ctx = await buildSchedulerContext(business.id, existing!.service_id);
     const query: AvailabilityQuery = {
-      service_id: appointment!.service_id,
+      service_id: existing!.service_id,
       start_date: slot.starts_at.slice(0, 10),
       end_date: slot.ends_at.slice(0, 10),
     };
@@ -325,16 +323,31 @@ export class BookingService {
       throw new AppError(ErrorCodes.SLOT_UNAVAILABLE, 'New slot is no longer available.', true);
     }
 
-    const updated: Appointment = {
-      ...appointment!,
-      starts_at: slot.starts_at,
-      ends_at: slot.ends_at,
-      resource_allocations: slot.resources,
-    };
-
     try {
       const response = await runInTransaction(async () => {
-        await this.assertResourcesFree(business.id, updated, appointment!.id);
+        // Lock appointment row first so cancel/reschedule serialize on lifecycle state.
+        const appointment = await bookingRepository.getAppointmentForUpdate(input.appointment_id);
+        assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+        if (appointment!.status === 'cancelled') {
+          throw new AppError(
+            ErrorCodes.APPOINTMENT_NOT_RESCHEDULABLE,
+            'Cancelled appointments cannot be rescheduled.',
+          );
+        }
+
+        const updated: Appointment = {
+          ...appointment!,
+          starts_at: slot.starts_at,
+          ends_at: slot.ends_at,
+          resource_allocations: slot.resources,
+        };
+
+        await this.lockResourcesForAppointment(updated);
+        const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+        if (raced) return raced as ReturnType<typeof ok>;
+
+        await this.assertResourcesFree(business.id, updated, appointment!.id, { alreadyLocked: true });
         await bookingRepository.updateAppointmentTimes(appointment!.id, slot.starts_at, slot.ends_at);
         await bookingRepository.replaceAppointmentResources(appointment!.id, slot.resources);
         const body = ok(this.toPublicAppointment(updated, ctx.service.name, ctx.business.name));
@@ -344,13 +357,13 @@ export class BookingService {
       log('info', {
         business_id: business.id,
         operation: 'reschedule_appointment',
-        appointment_id: appointment!.id,
+        appointment_id: input.appointment_id,
       });
       return response;
     } catch (error) {
-      if (error instanceof AppError) throw error;
       const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
       if (raced) return raced as ReturnType<typeof ok>;
+      if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are unavailable for reschedule.', true);
     }
   }
@@ -368,27 +381,33 @@ export class BookingService {
     const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
 
-    const appointment = await bookingRepository.getAppointment(input.appointment_id);
-    assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+    const preview = await bookingRepository.getAppointment(input.appointment_id);
+    assertAppointmentInBusiness(input.businessSlug, business.id, preview, input.appointment_id);
 
-    const service = await bookingRepository.getService(business.id, appointment!.service_id);
-
-    if (appointment!.status === 'cancelled') {
-      const response = ok({
-        appointment_id: appointment!.id,
-        status: 'cancelled',
-        message: 'Appointment was already cancelled.',
-        appointment: this.toPublicAppointment(
-          appointment!,
-          service?.name ?? appointment!.service_id,
-          business.name,
-        ),
-      });
-      await bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', response);
-      return response;
-    }
+    const service = await bookingRepository.getService(business.id, preview!.service_id);
 
     const response = await runInTransaction(async () => {
+      const appointment = await bookingRepository.getAppointmentForUpdate(input.appointment_id);
+      assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
+
+      const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
+      if (raced) return raced as ReturnType<typeof ok>;
+
+      if (appointment!.status === 'cancelled') {
+        const body = ok({
+          appointment_id: appointment!.id,
+          status: 'cancelled',
+          message: 'Appointment was already cancelled.',
+          appointment: this.toPublicAppointment(
+            appointment!,
+            service?.name ?? appointment!.service_id,
+            business.name,
+          ),
+        });
+        await bookingRepository.saveIdempotencyResponse(scopeKey, 'cancel_appointment', body);
+        return body;
+      }
+
       await bookingRepository.cancelAppointment(appointment!.id);
       appointment!.status = 'cancelled';
       const body = ok({
@@ -407,25 +426,36 @@ export class BookingService {
     log('info', {
       business_id: business.id,
       operation: 'cancel_appointment',
-      appointment_id: appointment!.id,
+      appointment_id: input.appointment_id,
     });
     return response;
+  }
+
+  private async lockResourcesForAppointment(appointment: Appointment) {
+    const resourceIds = appointment.resource_allocations.map((a) => a.resource_id);
+    await bookingRepository.lockResources(resourceIds);
+    await bookingRepository.lockOverlappingAppointments(
+      appointment.business_id,
+      resourceIds,
+      appointment.starts_at,
+      appointment.ends_at,
+      appointment.id,
+    );
   }
 
   private async assertResourcesFree(
     businessId: string,
     appointment: Appointment,
     excludeAppointmentId?: string,
+    options?: { alreadyLocked?: boolean },
   ) {
-    const resourceIds = appointment.resource_allocations.map((a) => a.resource_id);
-    await bookingRepository.lockResources(resourceIds);
-    await bookingRepository.lockOverlappingAppointments(
-      businessId,
-      resourceIds,
-      appointment.starts_at,
-      appointment.ends_at,
-      excludeAppointmentId,
-    );
+    if (!options?.alreadyLocked) {
+      await this.lockResourcesForAppointment({
+        ...appointment,
+        id: excludeAppointmentId ?? appointment.id,
+        business_id: businessId,
+      });
+    }
 
     const appointments = (await bookingRepository.listAppointments(businessId)).filter(
       (item) => item.id !== excludeAppointmentId,

@@ -102,8 +102,8 @@ Retryable: `NO_AVAILABILITY`, `SLOT_UNAVAILABLE`, `RESOURCE_UNAVAILABLE`, `INTER
 ## Persistence
 
 - **Store:** PlanetScale Postgres via `pg` (see `docs/deployment.md`)
-- **Path:** `data/schedulemcp.db`
-- **Why:** Smallest persistent datastore with transactional guarantees and no external service for challenge demo
+- **Connection:** `DATABASE_URL` (PgBouncer `:6432` in production)
+- **Why:** Durable transactional appointments on hosted Postgres without a local filesystem dependency
 
 ## Local development
 
