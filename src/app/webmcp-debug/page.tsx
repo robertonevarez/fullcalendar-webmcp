@@ -49,11 +49,11 @@ export default function WebMCPDebugPage() {
 
   return (
     <main>
-      <section className="business-hero">
+      <section className="page-intro">
         <h1>WebMCP debug</h1>
         <p className="meta-line">
-          Minimal diagnostic surface: one read-only <code>ping</code> tool. Use this page to verify client
-          discovery independently of business-page complexity.
+          Minimal diagnostic surface: one read-only <code>ping</code> tool. Use this page to verify
+          client discovery independently of business-page complexity.
         </p>
       </section>
 

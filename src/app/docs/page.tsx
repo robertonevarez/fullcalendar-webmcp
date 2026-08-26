@@ -89,31 +89,32 @@ const TOOLS = [
 
 export default function DocsPage() {
   return (
-    <div className="docs-layout">
-      <nav className="docs-nav" aria-label="Docs sections">
-        <a href="#overview">Overview</a>
-        <a href="#flow">Canonical flow</a>
-        {TOOLS.map((tool) => (
-          <a key={tool.id} href={`#${tool.id}`}>
-            {tool.id}
-          </a>
-        ))}
-        <Link href="/businesses/acme-hvac">Open HVAC demo</Link>
-      </nav>
+    <div className="docs-shell">
+      <div className="docs-layout">
+        <nav className="docs-nav" aria-label="Docs sections">
+          <a href="#overview">Overview</a>
+          <a href="#flow">How it works</a>
+          {TOOLS.map((tool) => (
+            <a key={tool.id} href={`#${tool.id}`}>
+              {tool.id}
+            </a>
+          ))}
+          <Link href="/businesses/acme-hvac">Open HVAC demo</Link>
+        </nav>
 
-      <article className="docs-content">
-        <h1 id="overview">WebMCP tools</h1>
-        <p>
-          Each business page registers eight tools on <code>document.modelContext</code>. Catalog and
-          mutations are scoped to <code>/businesses/&#123;slug&#125;</code>. Write tools require an{' '}
-          <code>idempotency_key</code> and should run only after the agent obtains human confirmation.
-        </p>
+        <article className="docs-content">
+          <h1 id="overview">WebMCP tools</h1>
+          <p>
+            Each business page registers eight tools on <code>document.modelContext</code>. Catalog and
+            mutations are scoped to <code>/businesses/&#123;slug&#125;</code>. Write tools require an{' '}
+            <code>idempotency_key</code> and should run only after the agent obtains human confirmation.
+          </p>
 
-        <h2 id="flow">Canonical HVAC flow</h2>
-        <p>
-          User: “I need someone to look at my AC tomorrow after 4. I&apos;m in 78701.”
-        </p>
-        <pre>{`search_services
+          <h2 id="flow">How it works</h2>
+          <p>
+            User: “I need someone to look at my AC tomorrow after 4. I&apos;m in 78701.”
+          </p>
+          <pre>{`search_services
   → get_service_details
   → check_service_area
   → get_availability
@@ -122,26 +123,25 @@ Human: "Yes."
   → create_appointment
 Later: reschedule_appointment / cancel_appointment`}</pre>
 
-        {TOOLS.map((tool) => (
-          <section key={tool.id} id={tool.id}>
-            <h2>
-              <code>{tool.id}</code>{' '}
-              <span className={`badge ${tool.readOnly ? 'badge-read' : 'badge-write'}`}>
-                {tool.readOnly ? 'read-only' : 'consequential'}
-              </span>
-            </h2>
-            <p>{tool.purpose}</p>
-            <h3>Arguments</h3>
-            <p>{tool.args}</p>
-            <h3>Example input</h3>
-            <pre>{tool.input}</pre>
-            <h3>Example result</h3>
-            <pre>{tool.result}</pre>
-            <h3>Common errors</h3>
-            <p>{tool.errors}</p>
-          </section>
-        ))}
-      </article>
+          {TOOLS.map((tool) => (
+            <section key={tool.id} id={tool.id}>
+              <h2>
+                <code>{tool.id}</code>{' '}
+                <span className="badge">{tool.readOnly ? 'read-only' : 'consequential'}</span>
+              </h2>
+              <p>{tool.purpose}</p>
+              <h3>Arguments</h3>
+              <p>{tool.args}</p>
+              <h3>Example input</h3>
+              <pre>{tool.input}</pre>
+              <h3>Example result</h3>
+              <pre>{tool.result}</pre>
+              <h3>Common errors</h3>
+              <p>{tool.errors}</p>
+            </section>
+          ))}
+        </article>
+      </div>
     </div>
   );
 }

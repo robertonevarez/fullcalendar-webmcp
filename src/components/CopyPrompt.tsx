@@ -18,8 +18,8 @@ export function CopyPrompt({ text, label = 'Copy prompt' }: { text: string; labe
   return (
     <div className="prompt-block">
       <pre>{text}</pre>
-      <p style={{ margin: '0.85rem 0 0' }}>
-        <button type="button" className="button button-secondary" onClick={onCopy}>
+      <p className="prompt-block-actions">
+        <button type="button" className="button" onClick={onCopy}>
           {copied ? 'Copied' : label}
         </button>
       </p>

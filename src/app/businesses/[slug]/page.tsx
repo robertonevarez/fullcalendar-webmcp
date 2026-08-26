@@ -46,39 +46,35 @@ export default async function BusinessPage({
   return (
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
       <main>
-        <section className="business-hero">
+        <section className="page-intro">
           <p>
-            <Link href="/">← All businesses</Link>
-          </p>
-          <p className="meta-line mono" style={{ letterSpacing: '0.06em', fontSize: '0.8rem' }}>
-            AGENT-BOOKABLE SURFACE
+            <Link href="/">← Home</Link>
           </p>
           <h1>{business.name}</h1>
           <p className="meta-line">
             {archetype?.label ?? business.location_mode.replaceAll('_', ' ')}
             {archetype ? ` — ${archetype.proves}` : null}
           </p>
+          <p className="meta-line">Agent-ready via WebMCP</p>
           <p className="meta-line">
             Timezone <code>{business.timezone}</code> · Location mode{' '}
             <code>{business.location_mode}</code>
           </p>
           <p className="meta-line">
-            This page registers WebMCP tools for <code>/businesses/{business.slug}</code>. There is no
-            booking form — your agent is the interface.
+            This page registers WebMCP tools for <code>/businesses/{business.slug}</code>. There is
+            no booking form — your agent is the interface.
           </p>
         </section>
 
-        <section className="section" style={{ paddingTop: '1.5rem' }} aria-labelledby="services-heading">
+        <section className="section" aria-labelledby="services-heading">
           <h2 id="services-heading">Services</h2>
-          <ul>
+          <ul className="item-list">
             {services.map((service) => (
-              <li key={service.id} style={{ marginBottom: '0.65rem' }}>
+              <li key={service.id}>
                 <strong>{service.name}</strong> · {service.duration_minutes} min · $
                 {(service.price_cents / 100).toFixed(0)} · <code>{service.id}</code>
                 {service.service_area_required ? (
-                  <span className="badge" style={{ marginLeft: '0.5rem' }}>
-                    service area
-                  </span>
+                  <span className="badge"> service area</span>
                 ) : null}
               </li>
             ))}
@@ -88,7 +84,7 @@ export default async function BusinessPage({
         <section className="section" aria-labelledby="resources-heading">
           <h2 id="resources-heading">Resources</h2>
           <p className="section-lead">Humans and physical assets share one allocation model.</p>
-          <ul>
+          <ul className="item-list">
             {resources.map((resource) => (
               <li key={resource.id}>
                 {resource.name} — <code>{resource.resource_type}</code>
@@ -102,7 +98,7 @@ export default async function BusinessPage({
 
         {isAcme ? (
           <section className="section" aria-labelledby="try-heading">
-            <h2 id="try-heading">Try with an agent</h2>
+            <h2 id="try-heading">Example prompt</h2>
             <p className="section-lead">
               Paste into ChatGPT (in-app browser) or exercise tools in the Model Context Tool
               Inspector.
@@ -112,7 +108,10 @@ export default async function BusinessPage({
           </section>
         ) : null}
 
-        <WebMCPStatus businessSlug={business.slug} businessName={business.name} />
+        <section className="diagnostics" aria-labelledby="diagnostics-heading">
+          <h2 id="diagnostics-heading">Developer diagnostics</h2>
+          <WebMCPStatus businessSlug={business.slug} businessName={business.name} />
+        </section>
       </main>
     </WebMCPBusinessProvider>
   );

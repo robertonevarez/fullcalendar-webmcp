@@ -36,8 +36,8 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
     process.env.NODE_ENV !== 'production' && state.phase === 'failed' && state.errors.length > 0;
 
   return (
-    <section className="status-panel" aria-labelledby="webmcp-status-heading">
-      <h2 id="webmcp-status-heading">WebMCP status</h2>
+    <div className="status-panel" aria-labelledby="webmcp-status-heading">
+      <h3 id="webmcp-status-heading">WebMCP status</h3>
       <p>
         <strong>Business context:</strong> {businessName} (<code>{businessSlug}</code>)
       </p>
@@ -76,8 +76,8 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
       {state.phase === 'failed' && !state.supported && !state.attempted && (
         <p className="meta-line">
           Use ChatGPT&apos;s in-app browser (GPT-5.6 Sol or Terra) or Chrome with{' '}
-          <code>chrome://flags/#enable-webmcp-testing</code>. Site tools require a compatible client —
-          not a conventional browser tab.
+          <code>chrome://flags/#enable-webmcp-testing</code>. Site tools require a compatible client
+          — not a conventional browser tab.
         </p>
       )}
       {showDevErrors && (
@@ -98,14 +98,12 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
           </ul>
         </details>
       )}
-      <p style={{ marginTop: '1rem' }}>
-        Expected tools:{' '}
+      <p className="expected-tools">
+        <strong>Expected tools:</strong>{' '}
         {WEBMCP_TOOL_NAMES.map((name) => (
-          <code key={name} style={{ marginRight: '0.45rem' }}>
-            {name}
-          </code>
+          <code key={name}>{name}</code>
         ))}
       </p>
-    </section>
+    </div>
   );
 }
