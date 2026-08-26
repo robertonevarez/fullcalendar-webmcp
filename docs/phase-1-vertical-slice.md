@@ -117,17 +117,23 @@ Reset seed data: `npm run seed`
 
 ## Manual WebMCP verification
 
-**Not performed in CI/automation environment** (no ChatGPT in-app browser or flagged Chrome in this build agent).
+**Completed for Phase 1** across automated, direct-tool, and human inspector paths.
 
-Recommended manual steps:
+| Path | Status |
+|------|--------|
+| Automated Vitest suite | Passing (domain, e2e lifecycle, remediation, WebMCP contract/execute) |
+| Direct `document.modelContext.executeTool` (Chrome + WebMCP) | Full HVAC lifecycle: search → details → area → availability → create → get → reschedule → cancel |
+| Human Model Context Tool Inspector + natural-language agent | Tool discovery, selection, execution; negative `90210` → `OUTSIDE_SERVICE_AREA`; positive `78701` eligibility + availability |
+| ChatGPT production in-app browser | Not separately recorded in Phase 1; primary judge path for Phase 2 submission |
 
-1. Enable WebMCP in Chrome or use ChatGPT in-app browser.
-2. Open `/businesses/acme-hvac`.
-3. Confirm eight tools appear in Model Context Tool Inspector.
-4. Run HVAC flow (search → area → availability → create).
-5. Repeat on `/businesses/northline-salon` or `/businesses/mesa-auto-service`.
+Recommended judge steps remain:
 
-Document results in submission demo video.
+1. Open `/businesses/acme-hvac` in ChatGPT's in-app browser or Chrome with WebMCP enabled.
+2. Confirm eight tools appear in Model Context Tool Inspector.
+3. Run HVAC flow (search → area → availability → create).
+4. Spot-check `/businesses/northline-salon` or `/businesses/mesa-auto-service`.
+
+See [webmcp-runtime-investigation.md](./webmcp-runtime-investigation.md) for the runtime execution fix and verification evidence.
 
 ## Could a sixth business be added via seed/config only?
 
@@ -150,8 +156,4 @@ You would **not** need scheduler changes unless the new business introduced a co
 
 ## Phase 2 recommendations
 
-- Deploy to HTTPS (Vercel/Render) for judge testing
-- Record demo video with ChatGPT in-app browser
-- Optional in-page confirmation modal for consequential tools
-- Pagination for large slot lists
-- Judge test account if auth added
+Phase 2 turns this infrastructure into a challenge-ready public demo (HTTPS deploy, landing/docs, submission materials). Scheduling primitives above are intentionally stable.

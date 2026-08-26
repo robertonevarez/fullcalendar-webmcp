@@ -37,23 +37,30 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
   }, [businessSlug, businessName]);
 
   return (
-    <section style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid #ddd', borderRadius: 8 }}>
-      <h2>WebMCP status</h2>
+    <section className="status-panel" aria-labelledby="webmcp-status-heading">
+      <h2 id="webmcp-status-heading">WebMCP status</h2>
       <p>
-        <strong>Business context:</strong> {businessName} ({businessSlug})
+        <strong>Business context:</strong> {businessName} (<code>{businessSlug}</code>)
       </p>
       <p>
         <strong>Registration:</strong>{' '}
-        {status === 'checking' && 'Checking browser support...'}
-        {status === 'registered' && 'Tools registered on this page.'}
-        {status === 'unsupported' && 'WebMCP API not available in this browser. Use ChatGPT in-app browser or Chrome with WebMCP testing enabled.'}
+        {status === 'checking' && 'Checking browser support…'}
+        {status === 'registered' && (
+          <span className="status-ok">Tools registered on this page.</span>
+        )}
+        {status === 'unsupported' && (
+          <span className="status-warn">
+            WebMCP API not available here. Use ChatGPT&apos;s in-app browser or Chrome with{' '}
+            <code>chrome://flags/#enable-webmcp-testing</code>.
+          </span>
+        )}
       </p>
       {status === 'registered' && (
         <>
           <p>
-            <strong>Tools ({tools.length}):</strong>
+            <strong>Registered tools ({tools.length}):</strong>
           </p>
-          <ul>
+          <ul className="tool-list">
             {tools.map((tool) => (
               <li key={tool}>
                 <code>{tool}</code>
@@ -63,11 +70,11 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
         </>
       )}
       <p style={{ marginTop: '1rem' }}>
-        Expected tools: {WEBMCP_TOOL_NAMES.join(', ')}
-      </p>
-      <p>
-        Manual test: open this page in ChatGPT&apos;s in-app browser or Chrome with{' '}
-        <code>chrome://flags/#enable-webmcp-testing</code>, then use the Model Context Tool Inspector.
+        Expected tools: {WEBMCP_TOOL_NAMES.map((name) => (
+          <code key={name} style={{ marginRight: '0.45rem' }}>
+            {name}
+          </code>
+        ))}
       </p>
     </section>
   );

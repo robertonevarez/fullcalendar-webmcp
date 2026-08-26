@@ -101,7 +101,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
   return [
     {
       name: 'search_services',
-      description: `Search the ${businessName} service catalog using deterministic keyword matching. Returns ranked services for the current business.`,
+      description: `Search the ${businessName} service catalog using deterministic keyword matching. Returns ranked services with reusable service_id values for the current business.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -139,7 +139,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'get_availability',
-      description: `Return viable appointment slots for a ${businessName} service within a date range. For services with service_area_required, call only after check_service_area confirms eligibility; skip when the current location is already outside the service area.`,
+      description: `Return viable appointment slots for a ${businessName} service within a date range. Each slot includes a reusable slot_id for create_appointment or reschedule_appointment. For services with service_area_required, call only after check_service_area confirms eligibility; skip when the current location is already outside the service area.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -157,7 +157,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'create_appointment',
-      description: `Create a confirmed ${businessName} appointment after human confirmation. Revalidates slot and resources atomically.`,
+      description: `Create a confirmed ${businessName} appointment after human confirmation. Requires slot_id from get_availability; returns reusable appointment_id. Revalidates service area, slot, and resources atomically.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -198,7 +198,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'get_appointment',
-      description: 'Retrieve a compact appointment summary by appointment_id.',
+      description: 'Retrieve a compact appointment summary by appointment_id for the current business.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -211,7 +211,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'reschedule_appointment',
-      description: 'Reschedule an appointment to a new slot_id after human confirmation.',
+      description: 'Reschedule an appointment to a new slot_id after human confirmation. Use a fresh slot_id from get_availability.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -226,7 +226,7 @@ export function createBusinessTools(businessSlug: string, businessName: string) 
     },
     {
       name: 'cancel_appointment',
-      description: 'Cancel an appointment and release all resource allocations.',
+      description: 'Cancel an appointment after human confirmation and release all resource allocations.',
       inputSchema: {
         type: 'object',
         properties: {

@@ -25,7 +25,7 @@ export function resetDbForTests() {
   }
   for (const suffix of ['', '-wal', '-shm']) {
     const filePath = `${DB_PATH}${suffix}`;
-    if (fs.existsSync(filePath)) {
+    if (fs.existsSync(/* turbopackIgnore: true */ filePath)) {
       fs.unlinkSync(filePath);
     }
   }
