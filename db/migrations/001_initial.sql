@@ -1,4 +1,4 @@
--- ScheduleMCP initial schema (PlanetScale Postgres / Postgres 15+)
+-- Protocol Tooling initial schema (PlanetScale Postgres / Postgres 15+)
 -- Applied via: npm run db:migrate
 
 CREATE TABLE IF NOT EXISTS schema_migrations (

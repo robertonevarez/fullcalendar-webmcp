@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'WebMCP tools',
-  description: 'ScheduleMCP WebMCP capability surface for agent-native booking.',
+  description: 'Protocol Tooling WebMCP capability surface for agent-native booking.',
 };
 
 const TOOLS = [

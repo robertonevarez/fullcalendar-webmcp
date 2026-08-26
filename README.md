@@ -1,6 +1,8 @@
-# ScheduleMCP
+# Protocol Tooling
 
-Agent-native scheduling infrastructure for service businesses, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
+Protocol Tooling is infrastructure for the agent-native web.
+
+This repository demonstrates that concept through service-business scheduling and booking capabilities exposed to personal AI agents via WebMCP, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
 
 Personal AI agents discover and invoke structured WebMCP tools on a per-business page. The scheduling engine is generic across field service, salon, clinic, and multi-resource auto workflows.
 
@@ -95,9 +97,17 @@ Developer tool reference: [/docs](/docs) when the app is running.
 ## Persistence & deployment
 
 - **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
-- **Live demo:** https://schedulemcp.vercel.app
+- **Live demo:** https://protocoltooling.com
+- **Repository:** https://github.com/robertonevarez/protocoltooling
 - **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
 - Details: [docs/deployment.md](docs/deployment.md).
+
+## Project identity
+
+| Surface | Canonical form |
+|---------|----------------|
+| Human-facing brand | **Protocol Tooling** |
+| Technical identifier | `protocoltooling` |
 
 ## License
 

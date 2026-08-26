@@ -6,9 +6,9 @@ Video: public YouTube, **under 3 minutes**, with audio
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Public GitHub repository | Done | https://github.com/robertonevarez/schedulemcp |
+| Public GitHub repository | Done | https://github.com/robertonevarez/protocoltooling |
 | Open-source license (About-detectable) | Done | MIT `LICENSE` |
-| Live HTTPS URL | Done | https://schedulemcp.vercel.app |
+| Live HTTPS URL | Done | https://protocoltooling.com |
 | WebMCP tools visible on business page | Done | 8 tools register when WebMCP-enabled |
 | Chrome inspector test | Done | Phase 1 + cleanup verification |
 | ChatGPT in-app browser test | **Needs human** | Confirm on Vercel URL |
@@ -18,7 +18,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 | Demo video | **Needs human** | See `docs/demo-video-script.md` |
 | Devpost description | Drafted | See `docs/devpost-submission-draft.md` |
 | Repository URL on submission | Ready | Same as above |
-| Deployment URL on submission | Ready | https://schedulemcp.vercel.app |
+| Deployment URL on submission | Ready | https://protocoltooling.com |
 
 ## Judge testing notes
 
@@ -30,6 +30,6 @@ Video: public YouTube, **under 3 minutes**, with audio
 
 ## Remaining human actions
 
-1. Confirm ChatGPT in-app browser against https://schedulemcp.vercel.app (create → reload → get same appointment).
+1. Confirm ChatGPT in-app browser against https://protocoltooling.com (create → reload → get same appointment).
 2. Record and upload YouTube demo (&lt;3 min).
 3. Submit on Devpost before the deadline.
