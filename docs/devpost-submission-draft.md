@@ -2,11 +2,11 @@
 
 ## Project name
 
-ScheduleMCP
+Protocol Tooling
 
 ## One-sentence description
 
-Agent-native booking infrastructure that lets personal AI agents discover services, check real availability, and manage appointments directly through WebMCP.
+Infrastructure for the agent-native web — demonstrated here as agent-native booking that lets personal AI agents discover services, check real availability, and manage appointments directly through WebMCP.
 
 ## Why WebMCP is a strong fit
 
@@ -14,7 +14,7 @@ Service booking is full of brittle UI: calendars, service taxonomies, address fo
 
 ## Better user experience
 
-People say what they need (“AC tomorrow after 4, upstairs, 78701”) instead of operating a funnel. The agent invokes ScheduleMCP tools, presents options, confirms, and books. Business rules (service area, resources, hours) stay deterministic.
+People say what they need (“AC tomorrow after 4, upstairs, 78701”) instead of operating a funnel. The agent invokes Protocol Tooling tools, presents options, confirms, and books. Business rules (service area, resources, hours) stay deterministic.
 
 ## What people and agents can do together
 
@@ -25,7 +25,7 @@ People say what they need (“AC tomorrow after 4, upstairs, 78701”) instead o
 
 ## How WebMCP was implemented
 
-On each `/businesses/{slug}` page, ScheduleMCP registers eight tools via `document.modelContext.registerTool`. Tool `execute` callbacks POST to same-origin API routes that call a BookingService over a generic scheduler and PlanetScale Postgres. Consequential tools require agent-side human confirmation and `idempotency_key` values scoped by operation and business.
+On each `/businesses/{slug}` page, Protocol Tooling registers eight tools via `document.modelContext.registerTool`. Tool `execute` callbacks POST to same-origin API routes that call a BookingService over a generic scheduler and PlanetScale Postgres. Consequential tools require agent-side human confirmation and `idempotency_key` values scoped by operation and business.
 
 ## Technical implementation (short)
 
@@ -40,7 +40,7 @@ Chrome’s `executeTool` path currently invokes callbacks with only the input ar
 
 ## Impact
 
-ScheduleMCP is a prototype of agent-native commerce infrastructure for local services: the website explains the product; the product is the capability surface agents call.
+Protocol Tooling is a prototype of agent-native commerce infrastructure for local services: the website explains the product; the product is the capability surface agents call.
 
 ## Future direction (not in scope for the challenge)
 
@@ -48,6 +48,6 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 
 ## Links
 
-- Repository: https://github.com/robertonevarez/schedulemcp
-- Live URL: https://schedulemcp.vercel.app
+- Repository: https://github.com/robertonevarez/schedulemcp _(rename to `protocoltooling` pending)_
+- Live URL: https://schedulemcp.vercel.app _(Vercel project rename to `protocoltooling` pending)_
 - Demo video: _add YouTube URL_

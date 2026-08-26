@@ -2,7 +2,7 @@ import { AsyncLocalStorage } from 'async_hooks';
 import { Pool, PoolClient, QueryResult, QueryResultRow } from 'pg';
 
 /**
- * Postgres client for ScheduleMCP.
+ * Postgres client for Protocol Tooling.
  *
  * Driver: `pg` (PlanetScale first-party recommendation for Node.js / Vercel).
  * Production: DATABASE_URL with PlanetScale PgBouncer port 6432 + sslmode=verify-full.
