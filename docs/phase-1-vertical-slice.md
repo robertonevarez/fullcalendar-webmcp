@@ -102,7 +102,7 @@ Retryable: `NO_AVAILABILITY`, `SLOT_UNAVAILABLE`, `RESOURCE_UNAVAILABLE`, `INTER
 ## Persistence
 
 - **Store:** SQLite via `better-sqlite3`
-- **Path:** `data/schedulemcp.db`
+- **Path:** `data/protocoltooling.db`
 - **Why:** Smallest persistent datastore with transactional guarantees and no external service for challenge demo
 
 ## Local development

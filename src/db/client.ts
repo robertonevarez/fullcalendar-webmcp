@@ -2,7 +2,7 @@ import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
 
-const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), 'data', 'schedulemcp.db');
+const DB_PATH = process.env.DATABASE_PATH ?? path.join(process.cwd(), 'data', 'protocoltooling.db');
 const DB_DIR = path.dirname(DB_PATH);
 
 let db: Database.Database | null = null;

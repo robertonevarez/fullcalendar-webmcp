@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: schedulemcp
+    name: protocoltooling
     runtime: docker
     plan: starter
     healthCheckPath: /
@@ -8,10 +8,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_PATH
-        value: /var/data/schedulemcp.db
+        value: /var/data/protocoltooling.db
       - key: DEMO_RESET_TOKEN
         sync: false
     disk:
-      name: schedulemcp-data
+      name: protocoltooling-data
       mountPath: /var/data
       sizeGB: 1

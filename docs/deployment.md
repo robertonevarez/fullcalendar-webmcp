@@ -21,7 +21,7 @@ Browser (WebMCP)
 
 | Variable | Required | Purpose |
 |----------|----------|---------|
-| `DATABASE_PATH` | Yes in prod | Absolute path on persistent disk, e.g. `/var/data/schedulemcp.db` |
+| `DATABASE_PATH` | Yes in prod | Absolute path on persistent disk, e.g. `/var/data/protocoltooling.db` |
 | `DEMO_RESET_TOKEN` | Optional | If set, enables `POST /api/demo/reset` with matching bearer token |
 | `NODE_ENV` | Set by host | `production` |
 
@@ -32,7 +32,8 @@ See `.env.example`.
 1. Create a **Web Service** from this repo.
 2. Runtime: **Docker** (see `Dockerfile`) or Node with `npm install && npm run build && npm start`.
 3. Attach a **persistent disk** mounted at `/var/data`.
-4. Set `DATABASE_PATH=/var/data/schedulemcp.db`.
+4. Set `DATABASE_PATH=/var/data/protocoltooling.db`.
+   Existing deployments that already store data at `/var/data/schedulemcp.db` should either rename the file on disk or keep `DATABASE_PATH` pointed at the old path until migrated.
 5. Optionally set `DEMO_RESET_TOKEN` to a long random secret for maintained demos.
 6. Health check: `GET /`.
 

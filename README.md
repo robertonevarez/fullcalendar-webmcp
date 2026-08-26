@@ -1,6 +1,6 @@
-# ScheduleMCP
+# Protocol Tooling
 
-Agent-native scheduling infrastructure for service businesses, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
+Infrastructure and tooling for the agent-native web. This repository’s first domain demo exposes service-business scheduling and booking to AI agents through WebMCP, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
 
 Personal AI agents discover and invoke structured WebMCP tools on a per-business page. The scheduling engine is generic across field service, salon, clinic, and multi-resource auto workflows.
 
@@ -90,8 +90,8 @@ Developer tool reference: [/docs](/docs) when the app is running.
 
 ## Persistence & deployment
 
-- **Live demo:** https://schedulemcp.onrender.com
-- Locally: SQLite at `data/schedulemcp.db` (or `DATABASE_PATH`).
+- **Live demo:** https://schedulemcp.onrender.com _(Render service name still `schedulemcp` until manually renamed)_
+- Locally: SQLite at `data/protocoltooling.db` (or `DATABASE_PATH`).
 - Production: Node.js / Docker on Render. `better-sqlite3` needs a Node runtime; attach a persistent disk for durable appointments across redeploys. See [docs/deployment.md](docs/deployment.md).
 
 ## License

@@ -20,7 +20,7 @@ FROM node:22-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV DATABASE_PATH=/var/data/schedulemcp.db
+ENV DATABASE_PATH=/var/data/protocoltooling.db
 RUN apt-get update && apt-get install -y --no-install-recommends libstdc++6 \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /var/data

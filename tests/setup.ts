@@ -5,7 +5,7 @@ import path from 'path';
 import os from 'os';
 import fs from 'fs';
 
-const testDbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'schedulemcp-test-'));
+const testDbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'protocoltooling-test-'));
 process.env.DATABASE_PATH = path.join(testDbDir, 'test.db');
 
 beforeEach(() => {

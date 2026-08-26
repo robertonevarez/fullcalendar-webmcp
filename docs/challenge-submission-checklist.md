@@ -6,9 +6,9 @@ Video: public YouTube, **under 3 minutes**, with audio
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Public GitHub repository | Done | https://github.com/robertonevarez/schedulemcp |
+| Public GitHub repository | Done | https://github.com/robertonevarez/schedulemcp _(rename to `protocoltooling` pending)_ |
 | Open-source license (About-detectable) | Done | MIT `LICENSE` |
-| Live HTTPS URL | Done | https://schedulemcp.onrender.com |
+| Live HTTPS URL | Done | https://schedulemcp.onrender.com _(Render rename pending)_ |
 | WebMCP tools visible on business page | Done | 8 tools register when WebMCP-enabled |
 | Chrome inspector test | Done | Phase 1 + cleanup verification |
 | ChatGPT in-app browser test | **Needs human** | Confirm on deployed URL |
@@ -33,3 +33,4 @@ Video: public YouTube, **under 3 minutes**, with audio
 2. Attach a Render persistent disk if appointments must survive redeploys (starter instances are otherwise ephemeral).
 3. Record and upload YouTube demo (&lt;3 min).
 4. Submit on Devpost before the deadline.
+5. Manual identity follow-up (outside this repo): rename the GitHub repository to `protocoltooling`, rename the Render web service / disk labels, and migrate or retarget `DATABASE_PATH` if the live SQLite file is still `/var/data/schedulemcp.db`.

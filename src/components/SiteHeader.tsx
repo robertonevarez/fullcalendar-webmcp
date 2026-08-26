@@ -15,7 +15,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link href="/" className="brand">
-        ScheduleMCP
+        Protocol Tooling
       </Link>
       <nav className="nav" aria-label="Primary">
         {LINKS.map((link) => {
