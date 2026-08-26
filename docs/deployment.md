@@ -1,5 +1,7 @@
 # Deployment — Vercel + PlanetScale Postgres
 
+**Live URL:** https://schedulemcp.vercel.app
+
 Canonical production stack for ScheduleMCP:
 
 ```

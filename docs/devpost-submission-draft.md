@@ -49,5 +49,5 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 ## Links
 
 - Repository: https://github.com/robertonevarez/schedulemcp
-- Live URL: _add Vercel production URL after deploy_
+- Live URL: https://schedulemcp.vercel.app
 - Demo video: _add YouTube URL_

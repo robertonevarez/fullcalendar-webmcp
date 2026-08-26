@@ -8,7 +8,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 |------|--------|-------|
 | Public GitHub repository | Done | https://github.com/robertonevarez/schedulemcp |
 | Open-source license (About-detectable) | Done | MIT `LICENSE` |
-| Live HTTPS URL | **Pending Vercel + PlanetScale** | Replace after deploy |
+| Live HTTPS URL | Done | https://schedulemcp.vercel.app |
 | WebMCP tools visible on business page | Done | 8 tools register when WebMCP-enabled |
 | Chrome inspector test | Done | Phase 1 + cleanup verification |
 | ChatGPT in-app browser test | **Needs human** | Confirm on Vercel URL |
@@ -18,7 +18,7 @@ Video: public YouTube, **under 3 minutes**, with audio
 | Demo video | **Needs human** | See `docs/demo-video-script.md` |
 | Devpost description | Drafted | See `docs/devpost-submission-draft.md` |
 | Repository URL on submission | Ready | Same as above |
-| Deployment URL on submission | **Pending** | Vercel production URL |
+| Deployment URL on submission | Ready | https://schedulemcp.vercel.app |
 
 ## Judge testing notes
 
@@ -30,9 +30,6 @@ Video: public YouTube, **under 3 minutes**, with audio
 
 ## Remaining human actions
 
-1. `pscale auth login` and create PlanetScale **Postgres** database + role credentials.
-2. Set `DATABASE_URL` (port **6432**) and optional `DATABASE_MIGRATE_URL` (port **5432**); run `npm run db:migrate` and `npm run db:seed`.
-3. Deploy to Vercel with `DATABASE_URL`; confirm live HTTPS URL.
-4. Confirm ChatGPT in-app browser against the Vercel URL (create → reload → get same appointment).
-5. Record and upload YouTube demo (&lt;3 min).
-6. Submit on Devpost before the deadline.
+1. Confirm ChatGPT in-app browser against https://schedulemcp.vercel.app (create → reload → get same appointment).
+2. Record and upload YouTube demo (&lt;3 min).
+3. Submit on Devpost before the deadline.

@@ -95,7 +95,7 @@ Developer tool reference: [/docs](/docs) when the app is running.
 ## Persistence & deployment
 
 - **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
-- **Live demo:** set after Vercel deploy (see PR / checklist).
+- **Live demo:** https://schedulemcp.vercel.app
 - **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
 - Details: [docs/deployment.md](docs/deployment.md).
 
