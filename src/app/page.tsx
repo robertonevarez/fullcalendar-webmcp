@@ -4,9 +4,11 @@ import { ensureDatabaseSeeded } from '@/db/init';
 import { bookingRepository } from '@/db/repository';
 import { BUSINESS_ARCHETYPES, hvacNegativePrompt, hvacPositivePrompt } from '@/lib/demo-prompts';
 
-export default function HomePage() {
-  ensureDatabaseSeeded();
-  const businesses = bookingRepository.listBusinesses();
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  await ensureDatabaseSeeded();
+  const businesses = await bookingRepository.listBusinesses();
   const positive = hvacPositivePrompt();
   const negative = hvacNegativePrompt();
 

@@ -10,14 +10,16 @@ import {
   hvacPositivePrompt,
 } from '@/lib/demo-prompts';
 
+export const dynamic = 'force-dynamic';
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  ensureDatabaseSeeded();
+  await ensureDatabaseSeeded();
   const { slug } = await params;
-  const business = bookingRepository.getBusinessBySlug(slug);
+  const business = await bookingRepository.getBusinessBySlug(slug);
   if (!business) return { title: 'Business' };
   return {
     title: business.name,
@@ -30,13 +32,13 @@ export default async function BusinessPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  ensureDatabaseSeeded();
+  await ensureDatabaseSeeded();
   const { slug } = await params;
-  const business = bookingRepository.getBusinessBySlug(slug);
+  const business = await bookingRepository.getBusinessBySlug(slug);
   if (!business) notFound();
 
-  const services = bookingRepository.listServices(business.id);
-  const resources = bookingRepository.listResources(business.id);
+  const services = await bookingRepository.listServices(business.id);
+  const resources = await bookingRepository.listResources(business.id);
   const archetype = BUSINESS_ARCHETYPES[business.slug];
   const isAcme = business.slug === 'acme-hvac';
 

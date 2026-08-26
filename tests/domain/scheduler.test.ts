@@ -3,27 +3,32 @@ import { bookingRepository } from '@/db/repository';
 import { checkServiceArea, findAvailability } from '@/domain/scheduler';
 import { AppError } from '@/domain/errors';
 
-function schedulerContext(businessId: string, serviceId: string) {
-  const business = bookingRepository.getBusinessById(businessId)!;
-  const service = bookingRepository.getService(businessId, serviceId)!;
+async function schedulerContext(businessId: string, serviceId: string) {
+  const business = (await bookingRepository.getBusinessById(businessId))!;
+  const service = (await bookingRepository.getService(businessId, serviceId))!;
   return {
     business,
     service,
-    resources: bookingRepository.listResources(businessId),
-    appointments: bookingRepository.listAppointments(businessId),
-    blockedTimes: bookingRepository.listBlockedTimes(businessId),
+    resources: await bookingRepository.listResources(businessId),
+    appointments: await bookingRepository.listAppointments(businessId),
+    blockedTimes: await bookingRepository.listBlockedTimes(businessId),
   };
 }
 
-function zoneMap(businessId: string) {
-  const zones = bookingRepository.listServiceAreaZones(businessId);
+async function zoneMap(businessId: string) {
+  const zones = await bookingRepository.listServiceAreaZones(businessId);
   return new Map(zones.map((zone) => [zone.zone_id, zone.postal_codes]));
 }
 
 describe('scheduler', () => {
-  it('validates HVAC service area and after-4 availability', () => {
-    const ctx = schedulerContext('biz_acme_hvac', 'svc_ac_diagnostic');
-    const area = checkServiceArea('biz_acme_hvac', ctx.service, zoneMap('biz_acme_hvac'), '78701');
+  it('validates HVAC service area and after-4 availability', async () => {
+    const ctx = await schedulerContext('biz_acme_hvac', 'svc_ac_diagnostic');
+    const area = checkServiceArea(
+      'biz_acme_hvac',
+      ctx.service,
+      await zoneMap('biz_acme_hvac'),
+      '78701',
+    );
     expect(area.status).toBe('eligible');
 
     const slots = findAvailability(ctx, {
@@ -40,14 +45,18 @@ describe('scheduler', () => {
     }
   });
 
-  it('returns not_required for salon service area', () => {
-    const ctx = schedulerContext('biz_northline_salon', 'svc_haircut');
-    const area = checkServiceArea('biz_northline_salon', ctx.service, zoneMap('biz_northline_salon'));
+  it('returns not_required for salon service area', async () => {
+    const ctx = await schedulerContext('biz_northline_salon', 'svc_haircut');
+    const area = checkServiceArea(
+      'biz_northline_salon',
+      ctx.service,
+      await zoneMap('biz_northline_salon'),
+    );
     expect(area.status).toBe('not_required');
   });
 
-  it('requires technician and service bay for oil change', () => {
-    const ctx = schedulerContext('biz_mesa_auto', 'svc_oil_change');
+  it('requires technician and service bay for oil change', async () => {
+    const ctx = await schedulerContext('biz_mesa_auto', 'svc_oil_change');
     const slots = findAvailability(ctx, {
       service_id: 'svc_oil_change',
       start_date: '2026-08-29',
@@ -62,8 +71,8 @@ describe('scheduler', () => {
     }
   });
 
-  it('respects existing auto appointment conflicts', () => {
-    const ctx = schedulerContext('biz_mesa_auto', 'svc_oil_change');
+  it('respects existing auto appointment conflicts', async () => {
+    const ctx = await schedulerContext('biz_mesa_auto', 'svc_oil_change');
     const slots = findAvailability(ctx, {
       service_id: 'svc_oil_change',
       start_date: '2026-08-29',
@@ -79,14 +88,19 @@ describe('scheduler', () => {
     expect(conflict).toBeUndefined();
   });
 
-  it('rejects outside service area postal codes', () => {
-    const ctx = schedulerContext('biz_blue_pipe', 'svc_drain_cleaning');
-    const area = checkServiceArea('biz_blue_pipe', ctx.service, zoneMap('biz_blue_pipe'), '73301');
+  it('rejects outside service area postal codes', async () => {
+    const ctx = await schedulerContext('biz_blue_pipe', 'svc_drain_cleaning');
+    const area = checkServiceArea(
+      'biz_blue_pipe',
+      ctx.service,
+      await zoneMap('biz_blue_pipe'),
+      '73301',
+    );
     expect(area.status).toBe('ineligible');
   });
 
-  it('allocates therapist and room for clinic service', () => {
-    const ctx = schedulerContext('biz_harbor_pt', 'svc_pt_eval');
+  it('allocates therapist and room for clinic service', async () => {
+    const ctx = await schedulerContext('biz_harbor_pt', 'svc_pt_eval');
     const slots = findAvailability(ctx, {
       service_id: 'svc_pt_eval',
       start_date: '2026-08-27',
@@ -100,8 +114,8 @@ describe('scheduler', () => {
 });
 
 describe('scheduler errors', () => {
-  it('throws for invalid date range', () => {
-    const ctx = schedulerContext('biz_acme_hvac', 'svc_ac_diagnostic');
+  it('throws for invalid date range', async () => {
+    const ctx = await schedulerContext('biz_acme_hvac', 'svc_ac_diagnostic');
     expect(() =>
       findAvailability(ctx, {
         service_id: 'svc_ac_diagnostic',

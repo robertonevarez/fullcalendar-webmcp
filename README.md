@@ -10,6 +10,10 @@ Personal AI agents discover and invoke structured WebMCP tools on a per-business
 
 ```bash
 npm install
+cp .env.example .env.local
+# Set DATABASE_URL (PlanetScale :6432, or local Postgres for dev)
+npm run db:migrate
+npm run db:seed
 npm run dev
 ```
 
@@ -18,7 +22,7 @@ Open [http://localhost:3000](http://localhost:3000). The landing page explains t
 ```bash
 npm test
 npm run build
-npm run seed   # reset SQLite seed data
+npm run db:seed   # intentional catalog / conflict reseed
 ```
 
 ## Seeded businesses
@@ -75,24 +79,25 @@ I need an AC tune-up in 90210.
 ## Architecture
 
 ```
-WebMCP registration (browser)
-        ↓ fetch
-Application service (BookingService)
+Browser / personal agent
+        ↓ WebMCP
+Vercel-hosted Next.js 16
         ↓
-Scheduling domain (scheduler, search)
+BookingService + deterministic scheduler
         ↓
-SQLite persistence
+PlanetScale Postgres (PgBouncer)
 ```
 
-See [docs/phase-1-vertical-slice.md](docs/phase-1-vertical-slice.md) and [docs/webmcp-runtime-investigation.md](docs/webmcp-runtime-investigation.md).
+See [docs/deployment.md](docs/deployment.md), [docs/postgres-migration.md](docs/postgres-migration.md), and [docs/phase-1-vertical-slice.md](docs/phase-1-vertical-slice.md).
 
 Developer tool reference: [/docs](/docs) when the app is running.
 
 ## Persistence & deployment
 
-- **Live demo:** https://schedulemcp.onrender.com
-- Locally: SQLite at `data/schedulemcp.db` (or `DATABASE_PATH`).
-- Production: Node.js / Docker on Render. `better-sqlite3` needs a Node runtime; attach a persistent disk for durable appointments across redeploys. See [docs/deployment.md](docs/deployment.md).
+- **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
+- **Live demo:** set after Vercel deploy (see PR / checklist).
+- **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
+- Details: [docs/deployment.md](docs/deployment.md).
 
 ## License
 

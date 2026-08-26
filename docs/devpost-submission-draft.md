@@ -25,13 +25,13 @@ People say what they need (“AC tomorrow after 4, upstairs, 78701”) instead o
 
 ## How WebMCP was implemented
 
-On each `/businesses/{slug}` page, ScheduleMCP registers eight tools via `document.modelContext.registerTool`. Tool `execute` callbacks POST to same-origin API routes that call a BookingService over a generic scheduler and SQLite. Consequential tools require agent-side human confirmation and `idempotency_key` values scoped by operation and business.
+On each `/businesses/{slug}` page, ScheduleMCP registers eight tools via `document.modelContext.registerTool`. Tool `execute` callbacks POST to same-origin API routes that call a BookingService over a generic scheduler and PlanetScale Postgres. Consequential tools require agent-side human confirmation and `idempotency_key` values scoped by operation and business.
 
 ## Technical implementation (short)
 
-- Next.js App Router + Node runtime
+- Next.js App Router on Vercel (Node runtime)
 - Domain scheduler with multi-resource backtracking allocation
-- SQLite (`better-sqlite3`) on a persistent disk for production
+- PlanetScale Postgres via `pg` + PgBouncer (`DATABASE_URL` port 6432)
 - Five seeded verticals sharing one model
 
 ## What was difficult
@@ -49,5 +49,5 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 ## Links
 
 - Repository: https://github.com/robertonevarez/schedulemcp
-- Live URL: https://schedulemcp.onrender.com
+- Live URL: _add Vercel production URL after deploy_
 - Demo video: _add YouTube URL_

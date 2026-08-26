@@ -1,14 +1,11 @@
 import { beforeEach } from 'vitest';
-import { resetDbForTests } from '@/db/client';
 import { seedDatabase } from '@/db/seed';
-import path from 'path';
-import os from 'os';
-import fs from 'fs';
+import { resetInitFlagForTests } from '@/db/init';
 
-const testDbDir = fs.mkdtempSync(path.join(os.tmpdir(), 'schedulemcp-test-'));
-process.env.DATABASE_PATH = path.join(testDbDir, 'test.db');
+process.env.DATABASE_URL =
+  process.env.DATABASE_URL ?? 'postgresql://localhost:5432/schedulemcp_test';
 
-beforeEach(() => {
-  resetDbForTests();
-  seedDatabase(true);
+beforeEach(async () => {
+  resetInitFlagForTests();
+  await seedDatabase(true);
 });

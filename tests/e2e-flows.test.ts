@@ -3,19 +3,19 @@ import { bookingService } from '@/services/booking-service';
 import { AppError } from '@/domain/errors';
 
 describe('vertical compatibility flows', () => {
-  it('Flow A — HVAC search to cancel', () => {
-    const search = bookingService.searchServices('acme-hvac', 'AC not cooling');
+  it('Flow A — HVAC search to cancel', async () => {
+    const search = await bookingService.searchServices('acme-hvac', 'AC not cooling');
     expect(search.ok).toBe(true);
     const serviceId = search.data.services[0].service_id;
 
-    const details = bookingService.getServiceDetails('acme-hvac', serviceId);
+    const details = await bookingService.getServiceDetails('acme-hvac', serviceId);
     expect(details.ok).toBe(true);
     expect(details.data.service_area_required).toBe(true);
 
-    const area = bookingService.checkServiceArea('acme-hvac', '78701', serviceId);
+    const area = await bookingService.checkServiceArea('acme-hvac', '78701', serviceId);
     expect(area.ok).toBe(true);
 
-    const availability = bookingService.getAvailability('acme-hvac', {
+    const availability = await bookingService.getAvailability('acme-hvac', {
       service_id: serviceId,
       start_date: '2026-08-26',
       end_date: '2026-08-26',
@@ -25,7 +25,7 @@ describe('vertical compatibility flows', () => {
     expect(availability.ok).toBe(true);
     const slot = availability.data.slots[0];
 
-    const created = bookingService.createAppointment({
+    const created = await bookingService.createAppointment({
       businessSlug: 'acme-hvac',
       service_id: serviceId,
       slot_id: slot.slot_id,
@@ -37,10 +37,10 @@ describe('vertical compatibility flows', () => {
     expect(created.ok).toBe(true);
     const appointmentId = created.data.appointment_id;
 
-    const fetched = bookingService.getAppointment('acme-hvac', appointmentId);
+    const fetched = await bookingService.getAppointment('acme-hvac', appointmentId);
     expect(fetched.ok).toBe(true);
 
-    const newAvailability = bookingService.getAvailability('acme-hvac', {
+    const newAvailability = await bookingService.getAvailability('acme-hvac', {
       service_id: serviceId,
       start_date: '2026-08-29',
       end_date: '2026-08-29',
@@ -48,7 +48,7 @@ describe('vertical compatibility flows', () => {
       time_preference: 'morning',
     });
     const newSlot = newAvailability.data.slots[0];
-    const rescheduled = bookingService.rescheduleAppointment({
+    const rescheduled = await bookingService.rescheduleAppointment({
       businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       new_slot_id: newSlot.slot_id,
@@ -56,7 +56,7 @@ describe('vertical compatibility flows', () => {
     });
     expect(rescheduled.ok).toBe(true);
 
-    const cancelled = bookingService.cancelAppointment({
+    const cancelled = await bookingService.cancelAppointment({
       businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       idempotency_key: 'hvac-cancel-1',
@@ -65,7 +65,7 @@ describe('vertical compatibility flows', () => {
     expect(cancelled.ok).toBe(true);
     expect(cancelled.data.status).toBe('cancelled');
 
-    const cancelledAgain = bookingService.cancelAppointment({
+    const cancelledAgain = await bookingService.cancelAppointment({
       businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       idempotency_key: 'hvac-cancel-2',
@@ -73,16 +73,16 @@ describe('vertical compatibility flows', () => {
     expect(cancelledAgain.ok).toBe(true);
   });
 
-  it('Flow B — Salon haircut without service area', () => {
-    const search = bookingService.searchServices('northline-salon', 'haircut');
+  it('Flow B — Salon haircut without service area', async () => {
+    const search = await bookingService.searchServices('northline-salon', 'haircut');
     const serviceId = search.data.services[0].service_id;
-    const details = bookingService.getServiceDetails('northline-salon', serviceId);
+    const details = await bookingService.getServiceDetails('northline-salon', serviceId);
     expect(details.data.service_area_required).toBe(false);
 
-    const area = bookingService.checkServiceArea('northline-salon');
+    const area = await bookingService.checkServiceArea('northline-salon');
     expect(area.data.status).toBe('not_required');
 
-    const availability = bookingService.getAvailability('northline-salon', {
+    const availability = await bookingService.getAvailability('northline-salon', {
       service_id: serviceId,
       start_date: '2026-08-29',
       end_date: '2026-08-29',
@@ -90,7 +90,7 @@ describe('vertical compatibility flows', () => {
     });
     expect(availability.ok).toBe(true);
 
-    const created = bookingService.createAppointment({
+    const created = await bookingService.createAppointment({
       businessSlug: 'northline-salon',
       service_id: serviceId,
       slot_id: availability.data.slots[0].slot_id,
@@ -101,10 +101,10 @@ describe('vertical compatibility flows', () => {
     expect(created.data.provider).toBeTruthy();
   });
 
-  it('Flow C — Auto oil change allocates technician and bay', () => {
-    const search = bookingService.searchServices('mesa-auto-service', 'oil change');
+  it('Flow C — Auto oil change allocates technician and bay', async () => {
+    const search = await bookingService.searchServices('mesa-auto-service', 'oil change');
     const serviceId = search.data.services[0].service_id;
-    const availability = bookingService.getAvailability('mesa-auto-service', {
+    const availability = await bookingService.getAvailability('mesa-auto-service', {
       service_id: serviceId,
       start_date: '2026-08-29',
       end_date: '2026-08-29',
@@ -116,7 +116,7 @@ describe('vertical compatibility flows', () => {
       'service_bay',
     ]);
 
-    const created = bookingService.createAppointment({
+    const created = await bookingService.createAppointment({
       businessSlug: 'mesa-auto-service',
       service_id: serviceId,
       slot_id: slot.slot_id,
@@ -125,18 +125,18 @@ describe('vertical compatibility flows', () => {
     });
     expect(created.ok).toBe(true);
 
-    const fetched = bookingService.getAppointment('mesa-auto-service', created.data.appointment_id);
+    const fetched = await bookingService.getAppointment('mesa-auto-service', created.data.appointment_id);
     expect(fetched.ok).toBe(true);
   });
 
-  it('prevents double booking on same slot', () => {
-    const availability = bookingService.getAvailability('northline-salon', {
+  it('prevents double booking on same slot', async () => {
+    const availability = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
       start_date: '2026-08-29',
       end_date: '2026-08-29',
     });
     const slot = availability.data.slots[0];
-    bookingService.createAppointment({
+    await bookingService.createAppointment({
       businessSlug: 'northline-salon',
       service_id: 'svc_haircut',
       slot_id: slot.slot_id,
@@ -144,7 +144,7 @@ describe('vertical compatibility flows', () => {
       customer: { name: 'First Customer' },
     });
 
-    expect(() =>
+    await expect(
       bookingService.createAppointment({
         businessSlug: 'northline-salon',
         service_id: 'svc_haircut',
@@ -152,6 +152,35 @@ describe('vertical compatibility flows', () => {
         idempotency_key: 'double-2',
         customer: { name: 'Second Customer' },
       }),
-    ).toThrow(AppError);
+    ).rejects.toThrow(AppError);
+  });
+
+  it('rejects concurrent double booking attempts on the same resources', async () => {
+    const availability = await bookingService.getAvailability('northline-salon', {
+      service_id: 'svc_haircut',
+      start_date: '2026-08-29',
+      end_date: '2026-08-29',
+    });
+    const slot = availability.data.slots[0];
+    const results = await Promise.allSettled([
+      bookingService.createAppointment({
+        businessSlug: 'northline-salon',
+        service_id: 'svc_haircut',
+        slot_id: slot.slot_id,
+        idempotency_key: 'concurrent-1',
+        customer: { name: 'Concurrent A' },
+      }),
+      bookingService.createAppointment({
+        businessSlug: 'northline-salon',
+        service_id: 'svc_haircut',
+        slot_id: slot.slot_id,
+        idempotency_key: 'concurrent-2',
+        customer: { name: 'Concurrent B' },
+      }),
+    ]);
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
+    const rejected = results.filter((r) => r.status === 'rejected');
+    expect(fulfilled.length).toBe(1);
+    expect(rejected.length).toBe(1);
   });
 });

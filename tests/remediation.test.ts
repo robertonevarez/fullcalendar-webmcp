@@ -5,11 +5,11 @@ import { allocateResources, findAvailability, newAppointmentId } from '@/domain/
 import { Business, Resource, Service } from '@/domain/types';
 
 describe('PR #2 remediation regressions', () => {
-  it('rejects create_appointment when postal code is outside service area', () => {
-    const search = bookingService.searchServices('acme-hvac', 'AC');
+  it('rejects create_appointment when postal code is outside service area', async () => {
+    const search = await bookingService.searchServices('acme-hvac', 'AC');
     const serviceId = search.data.services[0].service_id;
 
-    const availability = bookingService.getAvailability('acme-hvac', {
+    const availability = await bookingService.getAvailability('acme-hvac', {
       service_id: serviceId,
       start_date: '2026-08-26',
       end_date: '2026-08-26',
@@ -18,7 +18,7 @@ describe('PR #2 remediation regressions', () => {
     });
     const slot = availability.data.slots[0];
 
-    expect(() =>
+    await expect(
       bookingService.createAppointment({
         businessSlug: 'acme-hvac',
         service_id: serviceId,
@@ -27,22 +27,20 @@ describe('PR #2 remediation regressions', () => {
         postal_code: '73301',
         customer: { name: 'Out of Area Customer' },
       }),
-    ).toThrow(
-      expect.objectContaining({
-        code: ErrorCodes.OUTSIDE_SERVICE_AREA,
-      }),
-    );
+    ).rejects.toMatchObject({
+      code: ErrorCodes.OUTSIDE_SERVICE_AREA,
+    });
   });
 
-  it('allows the same raw idempotency_key across different businesses', () => {
+  it('allows the same raw idempotency_key across different businesses', async () => {
     const sharedKey = 'cross-business-idempotency-key';
 
-    const salonAvailability = bookingService.getAvailability('northline-salon', {
+    const salonAvailability = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
       start_date: '2026-08-29',
       end_date: '2026-08-29',
     });
-    const salonCreated = bookingService.createAppointment({
+    const salonCreated = await bookingService.createAppointment({
       businessSlug: 'northline-salon',
       service_id: 'svc_haircut',
       slot_id: salonAvailability.data.slots[0].slot_id,
@@ -51,13 +49,13 @@ describe('PR #2 remediation regressions', () => {
     });
     expect(salonCreated.ok).toBe(true);
 
-    const autoAvailability = bookingService.getAvailability('mesa-auto-service', {
+    const autoAvailability = await bookingService.getAvailability('mesa-auto-service', {
       service_id: 'svc_oil_change',
       start_date: '2026-08-29',
       end_date: '2026-08-29',
       time_preference: 'morning',
     });
-    const autoCreated = bookingService.createAppointment({
+    const autoCreated = await bookingService.createAppointment({
       businessSlug: 'mesa-auto-service',
       service_id: 'svc_oil_change',
       slot_id: autoAvailability.data.slots[0].slot_id,
@@ -68,8 +66,8 @@ describe('PR #2 remediation regressions', () => {
     expect(autoCreated.data.appointment_id).not.toBe(salonCreated.data.appointment_id);
   });
 
-  it('does not return create_appointment response when reusing idempotency key for cancel', () => {
-    const availability = bookingService.getAvailability('northline-salon', {
+  it('does not return create_appointment response when reusing idempotency key for cancel', async () => {
+    const availability = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
       start_date: '2026-08-29',
       end_date: '2026-08-29',
@@ -77,7 +75,7 @@ describe('PR #2 remediation regressions', () => {
     const slot = availability.data.slots[0];
     const sharedKey = 'shared-idempotency-key';
 
-    const created = bookingService.createAppointment({
+    const created = await bookingService.createAppointment({
       businessSlug: 'northline-salon',
       service_id: 'svc_haircut',
       slot_id: slot.slot_id,
@@ -86,7 +84,7 @@ describe('PR #2 remediation regressions', () => {
     });
     expect(created.ok).toBe(true);
 
-    const cancelled = bookingService.cancelAppointment({
+    const cancelled = await bookingService.cancelAppointment({
       businessSlug: 'northline-salon',
       appointment_id: created.data.appointment_id,
       idempotency_key: sharedKey,
@@ -102,13 +100,13 @@ describe('PR #2 remediation regressions', () => {
     expect(id).toMatch(/^appt_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
   });
 
-  it('scopes get/reschedule/cancel to the current business', () => {
-    const salonAvailability = bookingService.getAvailability('northline-salon', {
+  it('scopes get/reschedule/cancel to the current business', async () => {
+    const salonAvailability = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
       start_date: '2026-08-29',
       end_date: '2026-08-29',
     });
-    const salonAppointment = bookingService.createAppointment({
+    const salonAppointment = await bookingService.createAppointment({
       businessSlug: 'northline-salon',
       service_id: 'svc_haircut',
       slot_id: salonAvailability.data.slots[0].slot_id,
@@ -116,20 +114,20 @@ describe('PR #2 remediation regressions', () => {
       customer: { name: 'Salon Customer' },
     });
 
-    expect(() =>
+    await expect(
       bookingService.getAppointment('acme-hvac', salonAppointment.data.appointment_id),
-    ).toThrow(AppError);
+    ).rejects.toThrow(AppError);
 
-    expect(() =>
+    await expect(
       bookingService.cancelAppointment({
         businessSlug: 'acme-hvac',
         appointment_id: salonAppointment.data.appointment_id,
         idempotency_key: 'business-scope-cancel',
       }),
-    ).toThrow(AppError);
+    ).rejects.toThrow(AppError);
 
     expect(
-      bookingService.getAppointment('northline-salon', salonAppointment.data.appointment_id).ok,
+      (await bookingService.getAppointment('northline-salon', salonAppointment.data.appointment_id)).ok,
     ).toBe(true);
   });
 

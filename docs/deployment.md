@@ -1,59 +1,111 @@
-# Production deployment
+# Deployment — Vercel + PlanetScale Postgres
 
-## Decision
-
-**Host:** Render Web Service (Node.js)  
-**Datastore:** SQLite via `better-sqlite3` on a **persistent disk**  
-**Why not Vercel/Netlify serverless:** `better-sqlite3` needs a native Node addon and durable filesystem. Ephemeral serverless instances would lose appointments on cold start / redeploy.
-
-Acceptance criterion: a judge can create an appointment, reload, and still see it via `get_appointment`.
-
-## Architecture
+Canonical production stack for ScheduleMCP:
 
 ```
-Browser (WebMCP)
-  → HTTPS Next.js (Node runtime)
-  → BookingService / domain
-  → SQLite file on mounted disk (DATABASE_PATH)
+Browser / personal agent
+        ↓ WebMCP
+Vercel-hosted Next.js 16 (Node runtime)
+        ↓ BookingService
+Deterministic scheduling domain
+        ↓
+PlanetScale Postgres (PgBouncer :6432)
 ```
 
-## Environment
+## Architecture notes
 
-| Variable | Required | Purpose |
-|----------|----------|---------|
-| `DATABASE_PATH` | Yes in prod | Absolute path on persistent disk, e.g. `/var/data/schedulemcp.db` |
-| `DEMO_RESET_TOKEN` | Optional | If set, enables `POST /api/demo/reset` with matching bearer token |
-| `NODE_ENV` | Set by host | `production` |
+- Persistence uses the `pg` driver with a module-level Pool.
+- Application traffic uses PlanetScale’s **local PgBouncer** endpoint on port **6432**.
+- On Vercel, `attachDatabasePool` from `@vercel/functions` registers the pool so idle connections close before Fluid compute suspension.
+- Schema is applied only via committed SQL migrations (`npm run db:migrate`), never on request startup.
+- Demo seed is separate (`npm run db:seed`). Startup may fill an empty catalog once; it never wipes production data.
 
-See `.env.example`.
+## PlanetScale setup
 
-## Render setup
-
-1. Create a **Web Service** from this repo.
-2. Runtime: **Docker** (see `Dockerfile`) or Node with `npm install && npm run build && npm start`.
-3. Attach a **persistent disk** mounted at `/var/data`.
-4. Set `DATABASE_PATH=/var/data/schedulemcp.db`.
-5. Optionally set `DEMO_RESET_TOKEN` to a long random secret for maintained demos.
-6. Health check: `GET /`.
-
-`render.yaml` is a blueprint starting point.
-
-## Demo reset
-
-Judges may create many appointments. If availability becomes noisy:
+1. Sign in: `pscale auth login` (interactive browser confirmation).
+2. Create a **Postgres** database (not Vitess/MySQL):
 
 ```bash
-curl -X POST "$ORIGIN/api/demo/reset" \
+pscale org switch <ORG>
+pscale region list
+pscale database create schedulemcp --region <REGION_SLUG> --engine postgres
+```
+
+3. Create role credentials (dashboard **Connect**, or `pscale role` / default role reset). Record host, username, password once.
+4. Build connection strings:
+
+```text
+# App / Vercel (pooled)
+DATABASE_URL=postgresql://USER:PASSWORD@HOST:6432/postgres?sslmode=verify-full
+
+# Migrations / DDL (direct)
+DATABASE_MIGRATE_URL=postgresql://USER:PASSWORD@HOST:5432/postgres?sslmode=verify-full
+```
+
+TLS: Node `pg` uses `ssl: { rejectUnauthorized: true }` for non-localhost URLs (equivalent to `sslmode=verify-full`).
+
+Official references:
+
+- https://planetscale.com/docs/postgres/connecting
+- https://planetscale.com/docs/postgres/tutorials/planetscale-postgres-node
+- https://planetscale.com/docs/postgres/connecting/pgbouncer
+
+## Migrate and seed
+
+```bash
+export DATABASE_MIGRATE_URL='postgresql://...@HOST:5432/postgres?sslmode=verify-full'
+export DATABASE_URL='postgresql://...@HOST:6432/postgres?sslmode=verify-full'
+npm run db:migrate
+npm run db:seed
+```
+
+## Vercel
+
+1. Import the GitHub repo into Vercel (framework: Next.js).
+2. Set environment variables for Production (and Preview if desired):
+
+| Variable | Required | Notes |
+|---|---|---|
+| `DATABASE_URL` | Yes | PlanetScale PgBouncer URL (`:6432`) |
+| `DEMO_RESET_TOKEN` | No | Enables protected demo reset |
+
+3. Deploy. Node runtime is used for API routes (`export const runtime = 'nodejs'`).
+4. After first deploy (or whenever schema changes): run migrate + seed against PlanetScale from a trusted machine using the env vars above.
+
+Optional demo reset:
+
+```bash
+curl -X POST "$LIVE_URL/api/demo/reset" \
   -H "Authorization: Bearer $DEMO_RESET_TOKEN"
 ```
 
-This force-reseeds SQLite. Without `DEMO_RESET_TOKEN`, the endpoint returns 404.
+Reset clears appointments / slot tokens / idempotency rows and restores seed conflict appointments. It does **not** drop schema.
 
-For low challenge traffic, redeploy / empty the disk and restart is also sufficient. Seeded conflict appointments use fixed 2026-08 dates for automated tests; they do not block availability on later challenge dates.
-
-## Local production-like check
+## Local development
 
 ```bash
-npm run build
-DATABASE_PATH=./data/prod-like.db npm start
+# Optional local Postgres for convenience (not production)
+createdb schedulemcp_dev
+export DATABASE_URL=postgresql://localhost:5432/schedulemcp_dev
+npm run db:migrate
+npm run db:seed
+npm run dev
 ```
+
+Tests default to `postgresql://localhost:5432/schedulemcp_test` unless `DATABASE_URL` is set.
+
+## Production smoke test
+
+1. `GET /` → 200  
+2. `GET /docs` → 200  
+3. `GET /businesses/acme-hvac` → 200  
+4. WebMCP / API: `search_services` → ok  
+5. `check_service_area` with `90210` → `OUTSIDE_SERVICE_AREA`  
+6. `check_service_area` with `78701` → eligible  
+7. `get_availability` → slots  
+8. `create_appointment` → confirmed  
+9. Reload / new call → `get_appointment` returns the same id  
+10. `reschedule_appointment` → ok  
+11. `cancel_appointment` → cancelled  
+
+Persistence across reload is the acceptance criterion.

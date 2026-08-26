@@ -8,7 +8,7 @@
                      →  fetch /api/... 
                      →  BookingService
                      →  scheduler + search (domain)
-                     →  SQLite (better-sqlite3)
+                     →  PlanetScale Postgres (`pg`)
 ```
 
 WebMCP callbacks are thin: they POST to same-origin API routes. Domain logic lives in `src/domain/` and is tested without a browser.
@@ -49,7 +49,7 @@ The scheduler:
 3. Verifies no overlap with appointments or blocked periods for the full service duration.
 4. Emits a deterministic `slot_id` hash from service, start time, and resource IDs.
 
-`create_appointment` and `reschedule_appointment` revalidate the slot token and assert resources remain free inside a SQLite transaction before writing.
+`create_appointment` and `reschedule_appointment` revalidate the slot token and assert resources remain free inside a Postgres transaction (with `SELECT … FOR UPDATE`) before writing.
 
 ## Scheduling algorithm
 
@@ -101,7 +101,7 @@ Retryable: `NO_AVAILABILITY`, `SLOT_UNAVAILABLE`, `RESOURCE_UNAVAILABLE`, `INTER
 
 ## Persistence
 
-- **Store:** SQLite via `better-sqlite3`
+- **Store:** PlanetScale Postgres via `pg` (see `docs/deployment.md`)
 - **Path:** `data/schedulemcp.db`
 - **Why:** Smallest persistent datastore with transactional guarantees and no external service for challenge demo
 

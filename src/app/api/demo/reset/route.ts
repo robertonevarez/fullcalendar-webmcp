@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/db/client';
-import { seedDatabase } from '@/db/seed';
+import { resetDemoMutableState } from '@/db/seed';
 
 export const runtime = 'nodejs';
 
 /**
- * Force-reseeds the demo SQLite database.
+ * Restores mutable demo booking state (appointments / tokens / idempotency).
+ * Does not drop schema or catalog seed data.
  * Disabled unless DEMO_RESET_TOKEN is configured.
  */
 export async function POST(request: NextRequest) {
@@ -23,7 +23,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  getDb();
-  const result = seedDatabase(true);
+  const result = await resetDemoMutableState();
   return NextResponse.json({ ok: true, data: { reseeds: true, ...result } });
 }
