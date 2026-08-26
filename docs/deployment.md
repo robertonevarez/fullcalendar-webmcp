@@ -1,6 +1,6 @@
 # Deployment — Vercel + PlanetScale Postgres
 
-**Live URL:** https://protocoltooling.vercel.app
+**Live URL:** https://protocoltooling.com
 
 Canonical production stack for Protocol Tooling:
 

@@ -97,7 +97,7 @@ Developer tool reference: [/docs](/docs) when the app is running.
 ## Persistence & deployment
 
 - **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
-- **Live demo:** https://protocoltooling.vercel.app
+- **Live demo:** https://protocoltooling.com
 - **Repository:** https://github.com/robertonevarez/protocoltooling
 - **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
 - Details: [docs/deployment.md](docs/deployment.md).

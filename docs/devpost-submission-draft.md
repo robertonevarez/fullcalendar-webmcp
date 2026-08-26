@@ -49,5 +49,5 @@ Auth, payments, notifications, admin configuration UI, and travel-time routing.
 ## Links
 
 - Repository: https://github.com/robertonevarez/protocoltooling
-- Live URL: https://protocoltooling.vercel.app
+- Live URL: https://protocoltooling.com
 - Demo video: _add YouTube URL_
