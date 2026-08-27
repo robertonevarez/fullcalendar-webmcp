@@ -31,11 +31,11 @@ export function Hero() {
           'relative z-10 w-full',
           ds.layout.container,
           spacing.page,
-          'pt-10 pb-16 md:pt-14 md:pb-20',
+          'pt-8 pb-10 md:pt-10 md:pb-12',
         )}
       >
         <div className="relative mx-auto max-w-4xl">
-          <div className="relative flex flex-col items-center gap-6 text-center md:gap-8">
+          <div className="relative flex flex-col items-center gap-4 text-center md:gap-6">
             <h1
               className={cn(
                 playpenSansHebrew.className,

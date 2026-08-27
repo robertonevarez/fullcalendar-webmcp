@@ -14,9 +14,9 @@ export const spacing = {
   gap: 'gap-3',
   stack: 'space-y-3',
   /** Vertical rhythm for marketing page sections below the hero. */
-  sectionY: 'py-16 md:py-24',
+  sectionY: 'py-12 md:py-16',
   /** Stack gap inside marketing sections. */
-  sectionStack: 'space-y-8 md:space-y-10',
+  sectionStack: 'space-y-6 md:space-y-8',
 } as const;
 
 export const layout = {

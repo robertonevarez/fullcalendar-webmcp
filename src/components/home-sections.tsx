@@ -79,22 +79,14 @@ function SectionHeading({
 }
 
 function SectionLead({ children }: { children: React.ReactNode }) {
-  return <p className="max-w-2xl text-base text-muted-foreground md:text-lg">{children}</p>;
-}
-
-function ToolHint({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="shrink-0 font-mono text-xs tracking-tight text-muted-foreground">
-      {children}
-    </span>
-  );
+  return <p className="max-w-2xl text-base tracking-tight text-muted-foreground md:text-lg">{children}</p>;
 }
 
 export function LiveInteractionSection() {
   return (
     <HomeSection id="how-it-works">
-      <div className={spacing.sectionStack}>
-        <div className={cn(spacing.stack, 'max-w-2xl')}>
+      <div className="grid items-start gap-6 md:grid-cols-2 md:gap-10">
+        <div className={cn(spacing.stack, 'max-w-xl')}>
           <SectionHeading>One request. A confirmed appointment.</SectionHeading>
           <SectionLead>
             The customer says what they need in plain language. Their agent works with Protocol
@@ -102,55 +94,15 @@ export function LiveInteractionSection() {
           </SectionLead>
         </div>
 
-        <div className="mx-auto grid w-full max-w-3xl gap-8 md:gap-10">
-          <div className={spacing.stack}>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Customer
-            </p>
-            <blockquote className="border-l border-border pl-4 text-lg tracking-tight text-balance md:text-xl">
-              My AC isn&apos;t cooling upstairs.
-              <br />
-              I&apos;m free tomorrow after 4.
-              <br />
-              I&apos;m in 78701.
-            </blockquote>
-          </div>
-
-          <div className={spacing.stack}>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Agent
-            </p>
-            <ol className={cn(spacing.stack, 'text-sm text-muted-foreground md:text-base')}>
-              <li>Finding the right service</li>
-              <li>Checking your location</li>
-              <li>Finding available times</li>
-            </ol>
-          </div>
-
-          <div className={spacing.stack}>
-            <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              Protocol Tooling
-            </p>
-            <ul className="divide-y divide-border border-y border-border">
-              <li className={cn('flex items-baseline justify-between gap-4 py-3', spacing.gap)}>
-                <span className="text-sm font-medium md:text-base">AC Diagnostic Visit</span>
-                <ToolHint>search_services</ToolHint>
-              </li>
-              <li className={cn('flex items-baseline justify-between gap-4 py-3', spacing.gap)}>
-                <span className="text-sm md:text-base">78701 eligible</span>
-                <ToolHint>check_service_area</ToolHint>
-              </li>
-              <li className={cn('flex items-baseline justify-between gap-4 py-3', spacing.gap)}>
-                <span className="text-sm md:text-base">4:30 PM · 6:00 PM · $89</span>
-                <ToolHint>get_availability</ToolHint>
-              </li>
-              <li className={cn('flex items-baseline justify-between gap-4 py-3', spacing.gap)}>
-                <span className="text-sm font-medium md:text-base">Confirmed</span>
-                <ToolHint>create_appointment</ToolHint>
-              </li>
-            </ul>
-          </div>
-        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/how-it-works.jpg"
+          alt="A customer asks their agent to book an AC diagnostic visit. Protocol Tooling returns the service, confirms 78701 is eligible, offers 4:30 PM or 6:00 PM for $89, and confirms the appointment."
+          width={2048}
+          height={2048}
+          decoding="async"
+          className="w-full self-start justify-self-end rounded-xl shadow-lg"
+        />
       </div>
     </HomeSection>
   );
@@ -168,7 +120,7 @@ export function BookingFunnelsSection() {
         </SectionLead>
       </div>
 
-      <div className="grid gap-10 md:grid-cols-2 md:gap-16">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-10">
         <div className={spacing.stack}>
           <p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
             Traditional booking
@@ -240,7 +192,7 @@ export function BusinessControlSection() {
         </SectionLead>
       </div>
 
-      <dl className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {primitives.map((item) => (
           <div key={item.title} className={spacing.stack}>
             <dt className="text-sm font-medium">{item.title}</dt>
@@ -268,7 +220,7 @@ export function MultiVerticalSection() {
           <li key={vertical.slug}>
             <Link
               href={`/businesses/${vertical.slug}`}
-              className="flex flex-col gap-1 py-4 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
+              className="flex flex-col gap-1 py-3 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex-row sm:items-baseline sm:justify-between sm:gap-6"
             >
               <span className="text-sm font-medium md:text-base">{vertical.name}</span>
               <span className="text-sm text-muted-foreground">{vertical.constraint}</span>
