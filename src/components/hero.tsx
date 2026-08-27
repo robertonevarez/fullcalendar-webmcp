@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ArrowRight, ChevronDown } from 'lucide-react';
-import { HeroVideoBackground } from '@/components/hero-video-background';
+import { ArrowRight } from 'lucide-react';
+import { HeroImageBackground } from '@/components/hero-image-background';
 import { Button } from '@/components/ui/button';
 import { playpenSansHebrew } from '@/lib/fonts';
 import { ds, spacing } from '@/lib/design-system';
@@ -16,7 +16,7 @@ const heroCopyGlow =
 export function Hero() {
   return (
     <section className="relative flex h-[80svh] w-full items-start overflow-hidden border-b bg-background">
-      <HeroVideoBackground className="z-0" opacity={0.8} />
+      <HeroImageBackground className="z-0" opacity={1} />
       <div
         aria-hidden
         className={cn('pointer-events-none absolute inset-0 z-[1]', heroScrim)}

@@ -65,4 +65,5 @@
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
   }
+
 }
