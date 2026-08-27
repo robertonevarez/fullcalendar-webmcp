@@ -30,12 +30,12 @@ function IMessageBlueCursorSVG() {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width={36}
-      height={40}
+      width={42}
+      height={46}
       viewBox="0 0 50 54"
       fill="none"
       className="drop-shadow-[0_2px_5px_rgba(0,122,255,0.3)]"
-      style={{ scale: 0.36, transformOrigin: 'top left' }}
+      style={{ scale: 0.42, transformOrigin: 'top left' }}
     >
       <g filter="url(#imessage_cursor_filter)">
         <path
