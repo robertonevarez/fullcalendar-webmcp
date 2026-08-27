@@ -37,7 +37,10 @@ export async function POST(request: Request) {
     conversation: body.conversation ?? {
       phase: 'idle',
       appointments: [],
+      serviceQuery: null,
+      pendingService: null,
       pendingOffer: null,
+      selectedSlotId: null,
       lastBooking: null,
     },
     message: body.message,

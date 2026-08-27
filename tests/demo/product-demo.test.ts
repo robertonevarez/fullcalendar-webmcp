@@ -32,7 +32,7 @@ describe('demo presets', () => {
     expect(getDefaultPreset().id).toBe('acme-hvac');
     expect(getDefaultPreset().config.businessName).toBe('Acme Heating & Air');
     expect(DEFAULT_DEMO_CONFIG.archetype).toBe('field_service');
-    expect(DEFAULT_CUSTOMER_PROMPT).toMatch(/78701/);
+    expect(DEFAULT_CUSTOMER_PROMPT).toBe("What's happening with my AC?");
   });
 
   it('normalizes each archetype into domain objects', () => {
@@ -178,118 +178,223 @@ describe('demo scheduling reuse', () => {
   });
 });
 
-describe('demo conversation confirmation gate', () => {
-  it('does not create an appointment on the initial availability request', () => {
+describe('demo conversation state machine', () => {
+  it('starts with a conversational suggestion and no business tools', () => {
     const config = getDefaultPreset().config;
     const result = processDemoTurn({
       config,
       conversation: emptyConversationState(),
-      message: getDefaultPreset().customerPrompt,
+      message: "What's happening with my AC?",
     });
-    expect(result.ok).toBe(true);
-    expect(result.conversation.phase).toBe('awaiting_confirmation');
+
+    expect(result.conversation.phase).toBe('awaiting_service_confirmation');
     expect(result.conversation.appointments).toHaveLength(0);
-    expect(result.reply).toMatch(/\$89/);
-    expect(result.activity.map((s) => s.label)).toEqual([
-      'Search services',
-      'Check service area',
-      'Find availability',
-    ]);
-    expect(result.activity.map((s) => s.target)).toEqual([
-      'services',
-      'service_area',
-      'availability',
-    ]);
-    expect(result.activity[0]?.detail).toMatch(/AC Diagnostic/);
-    expect(result.activity[0]?.result?.service_name).toMatch(/AC Diagnostic/);
-    expect(result.activity[1]?.detail).toMatch(/78701 eligible/);
-    expect(result.activity[1]?.result?.eligible).toBe(true);
-    expect(result.activity[2]?.detail).toMatch(/time/);
-    expect(result.activity[2]?.result?.slot_labels?.length).toBeGreaterThan(0);
+    expect(result.activity).toEqual([]);
+    expect(result.reply).toMatch(/technician should inspect/i);
+    expect(result.reply).toMatch(/find someone nearby/i);
   });
 
-  it('creates an appointment only after confirmation using real domain logic', () => {
+  it('progressively gathers location, groups business reads, and gates booking', () => {
     const config = getDefaultPreset().config;
-    const offered = processDemoTurn({
+    const started = processDemoTurn({
       config,
       conversation: emptyConversationState(),
       message: getDefaultPreset().customerPrompt,
     });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'Yeah.' });
+    expect(consent.conversation.phase).toBe('awaiting_location');
+    expect(consent.reply).toBe("What's your ZIP code?");
+    expect(consent.activity).toEqual([]);
 
-    const booked = processDemoTurn({
-      config,
-      conversation: offered.conversation,
-      message: '4:30 works.',
-    });
+    const discovered = processDemoTurn({ config, conversation: consent.conversation, message: '78701' });
+    expect(discovered.conversation.phase).toBe('awaiting_availability_permission');
+    expect(discovered.activity.map((step) => step.tool)).toEqual(['search_services', 'check_service_area']);
+    expect(discovered.reply).toMatch(/AC Diagnostic Visit is \$89\.00/);
+    expect(discovered.reply).toMatch(/90 minutes/);
+    expect(discovered.conversation.pendingService?.service_id).toBe(config.services[0].id);
 
-    const confirmed =
-      booked.conversation.phase === 'booked'
-        ? booked
-        : processDemoTurn({
-            config,
-            conversation: offered.conversation,
-            message: 'Yes, book the first one.',
-          });
+    const availability = processDemoTurn({ config, conversation: discovered.conversation, message: 'Sure.' });
+    expect(availability.conversation.phase).toBe('awaiting_slot_choice');
+    expect(availability.activity.map((step) => step.tool)).toEqual(['get_availability']);
+    expect(availability.conversation.pendingOffer?.slots.length).toBeGreaterThan(0);
+    expect(availability.reply).toMatch(/Which works best/);
 
+    const selected = processDemoTurn({ config, conversation: availability.conversation, message: '4:30 works.' });
+    expect(selected.conversation.phase).toBe('awaiting_booking_confirmation');
+    expect(selected.conversation.appointments).toHaveLength(0);
+    expect(selected.activity).toEqual([]);
+    expect(selected.reply).toMatch(/4:30 PM works/);
+    expect(selected.reply).toMatch(/book it/i);
+
+    const confirmed = processDemoTurn({ config, conversation: selected.conversation, message: 'Yes.' });
     expect(confirmed.conversation.phase).toBe('booked');
     expect(confirmed.conversation.appointments).toHaveLength(1);
     expect(confirmed.businessNotice?.notification_email).toBe('hello@acme.example');
     expect(confirmed.businessNotice?.headline).toBe('Appointment received');
-    expect(confirmed.activity.map((s) => s.label)).toEqual(['Create appointment']);
-    expect(confirmed.activity[0]?.target).toBe('booking');
-    expect(confirmed.activity[0]?.detail).toBe('Confirmed');
+    expect(confirmed.activity.map((step) => step.tool)).toEqual(['create_appointment']);
+    expect(confirmed.activity[0]?.result?.service_id).toBe(config.services[0].id);
     expect(confirmed.activity[0]?.result?.when_label).toBeTruthy();
+    expect(confirmed.reply).toMatch(/You're booked with Acme Heating & Air/);
   });
 
-  it('books salon preset through confirmation gate', () => {
+  it.each(['yes', 'yeah', 'sure', 'please', 'do it'])('recognizes the affirmation "%s"', (message) => {
+    const config = getDefaultPreset().config;
+    const started = processDemoTurn({ config, conversation: emptyConversationState(), message: getDefaultPreset().customerPrompt });
+    const result = processDemoTurn({ config, conversation: started.conversation, message });
+    expect(result.conversation.phase).toBe('awaiting_location');
+  });
+
+  it('supports change of mind before booking without writing', () => {
+    const config = getDefaultPreset().config;
+    const started = processDemoTurn({ config, conversation: emptyConversationState(), message: getDefaultPreset().customerPrompt });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'yes' });
+    const discovered = processDemoTurn({ config, conversation: consent.conversation, message: '78701' });
+    const availability = processDemoTurn({ config, conversation: discovered.conversation, message: 'sure' });
+    const canceled = processDemoTurn({ config, conversation: availability.conversation, message: 'Never mind.' });
+
+    expect(canceled.conversation.phase).toBe('idle');
+    expect(canceled.conversation.pendingOffer).toBeNull();
+    expect(canceled.conversation.appointments).toHaveLength(0);
+    expect(canceled.activity).toEqual([]);
+  });
+
+  it('supports weekday corrections and ordinal slot choices', () => {
+    const config = getDefaultPreset().config;
+    const started = processDemoTurn({ config, conversation: emptyConversationState(), message: getDefaultPreset().customerPrompt });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'yeah' });
+    const discovered = processDemoTurn({ config, conversation: consent.conversation, message: '78701' });
+    const availability = processDemoTurn({ config, conversation: discovered.conversation, message: 'sure' });
+    const corrected = processDemoTurn({ config, conversation: availability.conversation, message: 'Actually, morning would be better.' });
+    expect(corrected.conversation.phase).toBe('awaiting_slot_choice');
+    expect(corrected.activity.map((step) => step.tool)).toEqual(['get_availability']);
+
+    const selected = processDemoTurn({ config, conversation: corrected.conversation, message: 'the last one' });
+    expect(selected.conversation.phase).toBe('awaiting_booking_confirmation');
+    expect(selected.conversation.selectedSlotId).toBeTruthy();
+  });
+
+  it('returns outside-area truth and stops before availability', () => {
+    const config = getDefaultPreset().config;
+    const started = processDemoTurn({ config, conversation: emptyConversationState(), message: getDefaultPreset().customerPrompt });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'yes' });
+    const result = processDemoTurnSafe({ config, conversation: consent.conversation, message: '90210' });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe(ErrorCodes.OUTSIDE_SERVICE_AREA);
+      expect(result.reply).toMatch(/Acme Heating & Air doesn't serve 90210/);
+      expect(result.activity.map((step) => step.tool)).toEqual(['search_services', 'check_service_area']);
+      expect(result.activity.find((step) => step.tool === 'check_service_area')?.result?.eligible).toBe(false);
+      expect(result.activity.some((step) => step.tool === 'get_availability')).toBe(false);
+    }
+  });
+
+  it('does not require a ZIP for salon appointments', () => {
     const preset = getDemoPreset('northline-salon');
     const offered = processDemoTurn({
       config: preset.config,
       conversation: emptyConversationState(),
       message: preset.customerPrompt,
     });
-    expect(offered.ok).toBe(true);
+    expect(offered.conversation.phase).toBe('awaiting_slot_choice');
+    expect(offered.activity.map((step) => step.tool)).toEqual(['search_services', 'get_availability']);
+    expect(offered.activity.some((step) => step.tool === 'check_service_area')).toBe(false);
 
-    const confirmed = processDemoTurn({
-      config: preset.config,
-      conversation: offered.conversation,
-      message: 'Yes, book the first one.',
-    });
+    const selected = processDemoTurn({ config: preset.config, conversation: offered.conversation, message: 'the first one' });
+    expect(selected.conversation.phase).toBe('awaiting_booking_confirmation');
+    expect(selected.conversation.appointments).toHaveLength(0);
+    const confirmed = processDemoTurn({ config: preset.config, conversation: selected.conversation, message: 'yes' });
     expect(confirmed.conversation.phase).toBe('booked');
   });
 
-  it('returns a friendly outside-area message', () => {
-    const result = processDemoTurnSafe({
-      config: getDefaultPreset().config,
+  it('guides ambiguous salon and auto problems before accessing either website', () => {
+    const salon = getDemoPreset('northline-salon').config;
+    const salonStart = processDemoTurn({
+      config: salon,
       conversation: emptyConversationState(),
-      message: "I need an AC checkup. I'm in 90210.",
+      message: 'My hair is getting way too long.',
+    });
+    expect(salonStart.activity).toEqual([]);
+    const salonConsent = processDemoTurn({ config: salon, conversation: salonStart.conversation, message: 'yeah' });
+    expect(salonConsent.activity.map((step) => step.tool)).toEqual(['search_services']);
+    expect(salonConsent.conversation.phase).toBe('awaiting_availability_permission');
+
+    const auto = getDemoPreset('mesa-auto').config;
+    const autoStart = processDemoTurn({
+      config: auto,
+      conversation: emptyConversationState(),
+      message: 'My car is due for an oil change.',
+    });
+    expect(autoStart.activity).toEqual([]);
+    const autoConsent = processDemoTurn({ config: auto, conversation: autoStart.conversation, message: 'sure' });
+    expect(autoConsent.activity.map((step) => step.tool)).toEqual(['search_services']);
+    expect(autoConsent.conversation.phase).toBe('awaiting_availability_permission');
+  });
+
+  it('keeps auto service functional with its configured service', () => {
+    const preset = getDemoPreset('mesa-auto');
+    const offered = processDemoTurn({
+      config: preset.config,
+      conversation: emptyConversationState(),
+      message: 'My car is due for an oil change. What times do you have?',
+    });
+    expect(offered.activity.map((step) => step.tool)).toEqual(['search_services', 'get_availability']);
+    expect(offered.activity[0]?.result?.service_name).toBe('Oil Change');
+    const selected = processDemoTurn({ config: preset.config, conversation: offered.conversation, message: 'the last one' });
+    const confirmed = processDemoTurn({ config: preset.config, conversation: selected.conversation, message: 'book it' });
+    expect(confirmed.conversation.phase).toBe('booked');
+    expect(confirmed.conversation.appointments[0]?.resource_allocations).toHaveLength(2);
+  });
+
+  it('does not invent a service when the problem does not match', () => {
+    const config = getDefaultPreset().config;
+    const started = processDemoTurn({ config, conversation: emptyConversationState(), message: 'My pool is green and needs cleaning.' });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'yes' });
+    const result = processDemoTurnSafe({
+      config,
+      conversation: consent.conversation,
+      message: '78701',
     });
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.error.code).toBe(ErrorCodes.OUTSIDE_SERVICE_AREA);
-      expect(result.reply.toLowerCase()).toMatch(/outside/);
-      expect(result.activity.some((s) => s.label === 'Check service area')).toBe(true);
-      expect(result.activity.find((s) => s.label === 'Check service area')?.detail).toMatch(
-        /90210 is outside the service area/,
-      );
-      expect(result.activity.find((s) => s.label === 'Check service area')?.result?.eligible).toBe(
-        false,
-      );
-      expect(result.activity.some((s) => s.target === 'availability')).toBe(false);
+      expect(result.error.code).toBe(ErrorCodes.SERVICE_NOT_FOUND);
+      expect(result.activity.map((step) => step.tool)).toEqual(['search_services']);
+      expect(result.reply).toMatch(/couldn't find a service/i);
     }
   });
 
-  it('reset-equivalent empty conversation clears booking state', () => {
+  it('reports no availability without inventing slots', () => {
+    const config = cloneDemoConfig(getDefaultPreset().config);
+    config.availability = { days: [1, 2, 3, 4, 5], open: '08:00', close: '09:00' };
+    const result = processDemoTurnSafe({
+      config,
+      conversation: emptyConversationState(),
+      message: "I need an AC check tomorrow after 4. I'm in 78701.",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.code).toBe(ErrorCodes.NO_AVAILABILITY);
+      expect(result.reply).toMatch(/don't have anything available/i);
+      expect(result.activity.map((step) => step.tool)).toEqual(['search_services', 'check_service_area', 'get_availability']);
+      expect(result.activity.find((step) => step.tool === 'get_availability')?.result?.slot_labels).toEqual([]);
+    }
+  });
+
+  it('reset-equivalent empty conversation clears every pending interaction value', () => {
     const reset = emptyConversationState();
     expect(reset.appointments).toHaveLength(0);
     expect(reset.pendingOffer).toBeNull();
+    expect(reset.pendingService).toBeNull();
+    expect(reset.serviceQuery).toBeNull();
+    expect(reset.selectedSlotId).toBeNull();
     expect(reset.phase).toBe('idle');
   });
 });
 
 describe('demo intent parsing', () => {
   it('parses postal code, after-4 preference, and tomorrow', () => {
-    const intent = parseCustomerIntent(getDefaultPreset().customerPrompt, {
+    const intent = parseCustomerIntent("I need an AC check tomorrow after 4. I'm in 78701.", {
       timeZone: 'America/Chicago',
       workingHours: normalizeDemoConfig(getDefaultPreset().config).business.working_hours,
     });

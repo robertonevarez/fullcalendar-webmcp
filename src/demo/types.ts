@@ -21,6 +21,8 @@ export interface DemoAvailabilityInput {
 export interface DemoConfig {
   archetype: DemoArchetype;
   businessName: string;
+  /** Optional display location for the human-facing demo website. */
+  locationLabel?: string;
   services: DemoServiceInput[];
   staff: string[];
   /** Non-human resources (service bays, rooms) for compound booking presets */
@@ -54,12 +56,30 @@ export interface DemoPublicAppointment {
   postal_code?: string;
 }
 
-export type DemoConversationPhase = 'idle' | 'awaiting_confirmation' | 'booked';
+export interface DemoPendingService {
+  service_id: string;
+  service_name: string;
+  price_cents: number;
+  currency: string;
+  postal_code?: string;
+}
+
+export type DemoConversationPhase =
+  | 'idle'
+  | 'awaiting_service_confirmation'
+  | 'awaiting_location'
+  | 'awaiting_availability_permission'
+  | 'awaiting_slot_choice'
+  | 'awaiting_booking_confirmation'
+  | 'booked';
 
 export interface DemoConversationState {
   phase: DemoConversationPhase;
   appointments: Appointment[];
+  serviceQuery: string | null;
+  pendingService: DemoPendingService | null;
   pendingOffer: DemoPendingOffer | null;
+  selectedSlotId: string | null;
   lastBooking: DemoPublicAppointment | null;
 }
 
@@ -77,6 +97,7 @@ export type DemoActivityTarget =
   | 'booking';
 
 export interface DemoActivityResult {
+  service_id?: string;
   service_name?: string;
   price_label?: string;
   duration_minutes?: number;
@@ -94,7 +115,7 @@ export interface DemoActivityStep {
   label: string;
   /** Short outcome detail, e.g. "AC Diagnostic Visit" or "2 times found" */
   detail?: string;
-  /** Optional WebMCP tool name shown as secondary text */
+  /** Optional WebMCP tool name shown in the agent terminal */
   tool?: string;
   /** Website region the agent is accessing for this step */
   target: DemoActivityTarget;

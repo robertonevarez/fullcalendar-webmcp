@@ -5,6 +5,7 @@ export type {
   DemoBusinessNotice,
   DemoConfig,
   DemoConversationState,
+  DemoPendingService,
   DemoTurnRequest,
   DemoTurnResponse,
 } from '@/demo/types';
@@ -28,4 +29,3 @@ export {
   formatPriceCents,
   formatSlotWhen,
 } from '@/demo/format';
-

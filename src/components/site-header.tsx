@@ -44,7 +44,7 @@ export function SiteHeader() {
         <div className="flex-1" />
 
         <div className={cn('flex items-center', spacing.gap)}>
-          <NavigationMenu>
+          <NavigationMenu className="hidden sm:block">
             <NavigationMenuList>
               {NAV_ITEMS.map((item) => (
                 <NavigationMenuItem key={item.href}>

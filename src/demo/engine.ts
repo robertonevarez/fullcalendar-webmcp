@@ -191,7 +191,10 @@ export function emptyConversationState() {
   return {
     phase: 'idle' as const,
     appointments: [] as Appointment[],
+    serviceQuery: null,
+    pendingService: null,
     pendingOffer: null,
+    selectedSlotId: null,
     lastBooking: null,
   };
 }

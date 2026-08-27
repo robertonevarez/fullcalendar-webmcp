@@ -135,10 +135,6 @@ export function CustomerConversation({
       return;
     }
 
-    const isWriteOnly = options.activity.every((step) => step.target === 'booking');
-    if (!isWriteOnly) {
-      setTraceSteps([]);
-    }
     setActiveStepId(null);
 
     moveCursor('chat');
@@ -263,7 +259,7 @@ export function CustomerConversation({
       />
 
       <div className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs md:h-full">
-        <div className="min-h-0 flex-[0.58] border-b border-border">
+        <div className="min-h-0 flex-[0.64] border-b border-border md:flex-[0.56]">
           <BusinessWebsite
             className="h-full min-h-0"
             config={config}
@@ -271,7 +267,7 @@ export function CustomerConversation({
             businessNotice={businessNotice}
           />
         </div>
-        <div className="min-h-0 flex-[0.42]">
+        <div className="min-h-0 flex-[0.36] md:flex-[0.44]">
           <AgentActivity
             className="h-full min-h-0"
             steps={traceSteps}

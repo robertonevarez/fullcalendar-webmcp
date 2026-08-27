@@ -4,14 +4,14 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { CustomerConversation } from '@/components/demo/customer-conversation';
 import { cloneDemoConfig } from '@/demo/normalize';
-import { DEFAULT_PRESET_ID, getDemoPreset } from '@/demo/presets';
+import { DEFAULT_PRESET_ID, getDemoPreset, type DemoPresetId } from '@/demo/presets';
 import { ds, spacing } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
-export function DemoExperience() {
+export function DemoExperience({ presetId = DEFAULT_PRESET_ID }: { presetId?: DemoPresetId }) {
   const [sessionKey, setSessionKey] = useState(0);
 
-  const preset = getDemoPreset(DEFAULT_PRESET_ID);
+  const preset = getDemoPreset(presetId);
   const config = cloneDemoConfig(preset.config);
 
   function resetDemo() {
@@ -28,7 +28,7 @@ export function DemoExperience() {
           aria-label="Product demo"
         >
           <CustomerConversation
-            key={`${DEFAULT_PRESET_ID}-${sessionKey}`}
+            key={`${presetId}-${sessionKey}`}
             config={config}
             customerPrompt={preset.customerPrompt}
           />

@@ -10,10 +10,10 @@ export interface ParsedCustomerIntent {
   endDate: string;
   /** Free-text used for service search */
   serviceQuery: string;
-  /** True when the user appears to confirm a previously offered slot */
-  looksLikeConfirmation: boolean;
   /** Parsed clock time if present, e.g. "16:30" */
   chosenTimeHm?: string;
+  /** Simple ordinal selection for offered slots. */
+  slotChoice?: 'first' | 'second' | 'last';
 }
 
 function todayInZone(timeZone: string): string {
@@ -47,6 +47,16 @@ function nextOpenDate(fromDate: string, hours: WorkingHours[], maxLookahead = 14
     if (openDays.has(weekdayForDateString(dateStr))) return dateStr;
   }
   return fromDate;
+}
+
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+const SERVICE_QUERY_FILLER =
+  /\b(a|an|and|at|can|do|for|getting|happening|have|i|is|it|long|my|needs|need|of|please|the|too|what|what's|with|you)\b/gi;
+
+function nextDateForWeekday(fromDate: string, weekday: number): string {
+  const current = weekdayForDateString(fromDate);
+  const daysAhead = (weekday - current + 7) % 7;
+  return addDaysToDateString(fromDate, daysAhead);
 }
 
 /**
@@ -85,6 +95,9 @@ export function parseCustomerIntent(
     startDate = addDaysToDateString(today, 1);
   } else if (/\btoday\b/.test(lower)) {
     startDate = today;
+  } else {
+    const weekday = WEEKDAYS.findIndex((day) => new RegExp(`\\b${day}\\b`).test(lower));
+    if (weekday >= 0) startDate = nextDateForWeekday(today, weekday);
   }
 
   // If the requested day is closed, move to the next open day (demo UX).
@@ -92,16 +105,20 @@ export function parseCustomerIntent(
   const endDate = startDate;
 
   const chosenTime = parseSpokenTime(lower);
-
-  const confirmationHints =
-    /\b(works|book|yes|confirm|that one|first one|go ahead|sounds good|perfect)\b/.test(lower) ||
-    Boolean(chosenTime && /\b(works|book|yes|please|confirm|pm|am)\b/.test(lower));
+  const slotChoice = /\b(first|earliest)\b/.test(lower)
+    ? 'first'
+    : /\b(second)\b/.test(lower)
+      ? 'second'
+      : /\b(last|latest)\b/.test(lower)
+        ? 'last'
+        : undefined;
 
   // Strip location/time noise for service search; keep symptom words.
   const serviceQuery = text
     .replace(/\b\d{5}\b/g, ' ')
     .replace(/\b(tomorrow|today|after|before|morning|afternoon|am|pm|i'?m|free|in)\b/gi, ' ')
     .replace(/\b\d{1,2}(:\d{2})?\b/g, ' ')
+    .replace(SERVICE_QUERY_FILLER, ' ')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -111,9 +128,40 @@ export function parseCustomerIntent(
     startDate,
     endDate,
     serviceQuery: serviceQuery || text,
-    looksLikeConfirmation: confirmationHints && text.length < 120,
     chosenTimeHm: chosenTime,
+    slotChoice,
   };
+}
+
+function normalizedMessage(message: string): string {
+  return message.toLowerCase().replace(/[.!?,]/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+export function isAffirmative(message: string): boolean {
+  const text = normalizedMessage(message);
+  if (!text || isNegative(message)) return false;
+  return /^(yes|yeah|yep|sure|please|okay|ok|do it|go ahead|sounds good|perfect)(?: please)?$/.test(text);
+}
+
+export function isNegative(message: string): boolean {
+  return /\b(no|nope|never mind|nevermind|not now|don't|do not|skip|cancel)\b/i.test(message);
+}
+
+export function isAvailabilityRequest(message: string): boolean {
+  return /\b(when|what time|what times|availability|available|opening|openings|schedule|latest|again|another day)\b/i.test(message);
+}
+
+export function hasScheduleWindow(message: string, intent: ParsedCustomerIntent): boolean {
+  return Boolean(
+    intent.timePreference ||
+      intent.chosenTimeHm ||
+      intent.slotChoice ||
+      /\b(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(message),
+  );
+}
+
+export function isScheduleCorrection(message: string, intent: ParsedCustomerIntent): boolean {
+  return hasScheduleWindow(message, intent) && /\b(actually|instead|better|change|check)\b/i.test(message);
 }
 
 /** Convert "4:30", "4:30pm", "4 pm" → "HH:mm" 24h. */

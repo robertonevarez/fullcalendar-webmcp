@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import type { DemoActivityStep } from '@/demo/types';
 import { cn } from '@/lib/utils';
 
@@ -9,158 +10,155 @@ type Props = {
   className?: string;
 };
 
-function ResultBody({ step }: { step: DemoActivityStep }) {
+function quoted(value?: string): string | null {
+  return value ? JSON.stringify(value) : null;
+}
+
+function TerminalInput({ step }: { step: DemoActivityStep }) {
+  const result = step.result;
+  let line: string | null = null;
+
+  if (step.target === 'services') line = result?.query ? `query: ${quoted(result.query)}` : null;
+  if (step.target === 'service_area') {
+    line = result?.postal_code ? `postal_code: ${result.postal_code}` : null;
+  }
+  if (step.target === 'availability') {
+    line = result?.query ? `after: ${quoted(result.query)}` : null;
+  }
+  if (step.target === 'booking') {
+    line = result?.when_label ? `when: ${result.when_label}` : null;
+  }
+
+  return line ? <p className="pl-5 text-[0.68rem] leading-5 text-zinc-400">{line}</p> : null;
+}
+
+function TerminalResult({ step }: { step: DemoActivityStep }) {
   const result = step.result;
 
   if (step.target === 'services') {
     if (result?.service_name) {
       return (
-        <div className="mt-1.5 space-y-0.5 text-sm tracking-tight">
-          <p>
-            <span aria-hidden>✓ </span>
-            {result.service_name}
+        <div className="mt-1 space-y-0.5">
+          <p className="text-[0.72rem] leading-5 text-emerald-300">
+            <span aria-hidden>✓</span>{' '}
+            {result.service_id ?? result.service_name}
           </p>
-          {(result.price_label || result.duration_minutes) && (
-            <p className="text-muted-foreground">
+          <p className="pl-5 text-[0.72rem] leading-5 text-zinc-100">{result.service_name}</p>
+          {(result.price_label || result.duration_minutes) ? (
+            <p className="pl-5 text-[0.68rem] leading-5 text-zinc-400">
               {[result.price_label, result.duration_minutes ? `${result.duration_minutes} min` : null]
                 .filter(Boolean)
                 .join(' · ')}
             </p>
-          )}
+          ) : null}
         </div>
       );
     }
+
     return (
-      <p className="mt-1.5 text-sm tracking-tight text-muted-foreground">
-        {step.detail ?? 'No match'}
+      <p className="mt-1 text-[0.72rem] leading-5 text-red-300">
+        <span aria-hidden>✗</span> outside_catalog
       </p>
     );
   }
 
   if (step.target === 'service_area') {
-    const failed = result?.eligible === false;
-    const ok = result?.eligible === true;
     return (
-      <p
-        className={cn(
-          'mt-1.5 text-sm tracking-tight',
-          failed && 'text-destructive',
-        )}
-      >
-        {failed ? (
-          <>
-            <span aria-hidden>× </span>
-            {result?.postal_code
-              ? `${result.postal_code} is outside the service area`
-              : step.detail}
-          </>
-        ) : ok ? (
-          <>
-            <span aria-hidden>✓ </span>
-            {result?.postal_code ? `${result.postal_code} eligible` : step.detail}
-          </>
-        ) : (
-          step.detail
-        )}
+      <p className={cn('mt-1 text-[0.72rem] leading-5', result?.eligible === false ? 'text-red-300' : 'text-emerald-300')}>
+        <span aria-hidden>{result?.eligible === false ? '✗' : '✓'}</span>{' '}
+        {result?.eligible === false ? 'outside_service_area' : result?.eligible === true ? 'eligible' : step.detail}
       </p>
     );
   }
 
   if (step.target === 'availability') {
-    if (result?.slot_labels?.length) {
+    const labels = result?.slot_labels ?? [];
+    if (!labels.length) {
       return (
-        <div className="mt-1.5 space-y-1 text-sm tracking-tight">
-          <p>
-            <span aria-hidden>✓ </span>
-            {result.slot_labels.length} opening
-            {result.slot_labels.length === 1 ? '' : 's'}
-          </p>
-          <ul className="space-y-0.5 tabular-nums text-muted-foreground">
-            {result.slot_labels.map((label) => (
-              <li key={label}>{label}</li>
-            ))}
-          </ul>
-        </div>
+        <p className="mt-1 text-[0.72rem] leading-5 text-red-300">
+          <span aria-hidden>✗</span> no_slots
+        </p>
       );
     }
     return (
-      <p className="mt-1.5 text-sm tracking-tight text-muted-foreground">
-        {step.detail ?? 'No openings'}
-      </p>
+      <div className="mt-1 space-y-0.5 text-[0.72rem] leading-5">
+        <p className="text-emerald-300"><span aria-hidden>✓</span> {labels.length} slots</p>
+        <ul className="pl-5 text-zinc-100 tabular-nums">
+          {labels.map((label) => <li key={label}>{label}</li>)}
+        </ul>
+      </div>
     );
   }
 
   if (step.target === 'booking') {
     return (
-      <div className="mt-1.5 space-y-0.5 text-sm tracking-tight">
-        {result?.service_name ? <p>{result.service_name}</p> : null}
-        {result?.when_label ? (
-          <p className="text-muted-foreground">{result.when_label}</p>
-        ) : null}
-        {result?.provider_name ? (
-          <p className="text-muted-foreground">{result.provider_name}</p>
-        ) : null}
-        <p>
-          <span aria-hidden>✓ </span>
-          {step.detail ?? 'Confirmed'}
-        </p>
+      <div className="mt-1 space-y-0.5 text-[0.72rem] leading-5">
+        <p className="text-emerald-300"><span aria-hidden>✓</span> confirmed</p>
+        {result?.service_id ? <p className="pl-5 text-zinc-400">service: {result.service_id}</p> : null}
+        {result?.service_name && !result.service_id ? <p className="pl-5 text-zinc-100">{result.service_name}</p> : null}
+        {result?.provider_name ? <p className="pl-5 text-zinc-400">provider: {result.provider_name}</p> : null}
       </div>
     );
   }
 
-  return step.detail ? (
-    <p className="mt-1.5 text-sm tracking-tight text-muted-foreground">{step.detail}</p>
-  ) : null;
+  return <p className="mt-1 text-[0.72rem] leading-5 text-zinc-100">{step.detail ?? 'complete'}</p>;
+}
+
+function TerminalEntry({ step }: { step: DemoActivityStep }) {
+  return (
+    <>
+      <p className="text-[0.72rem] font-semibold leading-5 text-zinc-100">
+        <span className="mr-2 text-zinc-500" aria-hidden>&gt;</span>
+        {step.tool ?? step.label}
+      </p>
+      <TerminalInput step={step} />
+      <TerminalResult step={step} />
+    </>
+  );
 }
 
 /**
- * Progressive agent-activity surface — structured capabilities under the storefront.
+ * A small visual terminal for the structured capabilities underneath the
+ * storefront. Every entry is supplied by the real demo turn activity.
  */
 export function AgentActivity({ steps, activeStepId, className }: Props) {
+  const activeEntryRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (activeStepId) activeEntryRef.current?.scrollIntoView({ block: 'start' });
+  }, [activeStepId, steps.length]);
+
   return (
     <section
-      className={cn('flex h-full min-h-0 flex-col bg-muted/20', className)}
-      aria-label="Agent activity"
+      className={cn('flex h-full min-h-0 flex-col bg-zinc-950 font-mono text-zinc-100', className)}
+      aria-label="Agent activity terminal"
     >
-      <div className="border-b border-border/80 px-5 py-3 md:px-6">
-        <h2 className="text-xs font-medium tracking-tight text-muted-foreground">
-          Agent activity
-        </h2>
+      <div className="shrink-0 border-b border-zinc-800 px-5 py-3 md:px-6">
+        <p className="text-[0.68rem] font-medium tracking-tight text-zinc-300">protocol-tooling://agent</p>
       </div>
 
       <div
-        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4 md:px-6"
+        className="min-h-0 flex-1 overflow-y-auto px-5 py-4 md:px-6"
         role="log"
         aria-live="polite"
         aria-relevant="additions"
       >
         {steps.length === 0 ? (
-          <p className="text-sm tracking-tight text-muted-foreground">
-            Waiting for a request…
-          </p>
+          <p className="text-[0.72rem] leading-5 text-zinc-500">waiting for agent request...</p>
         ) : (
-          steps.map((step) => {
-            const current = step.id === activeStepId;
-            return (
-              <div
+          <ol className="space-y-3">
+            {steps.map((step) => (
+              <li
                 key={step.id}
+                ref={step.id === activeStepId ? activeEntryRef : undefined}
                 data-demo-target={`activity-${step.id}`}
                 data-demo-step={step.id}
-                className={cn(
-                  'scroll-mt-2 rounded-md px-2 py-1.5 -mx-2 transition-colors',
-                  current && 'bg-background ring-1 ring-foreground/10',
-                )}
+                className={cn('scroll-mt-2 rounded-sm px-1 py-0.5 transition-colors', step.id === activeStepId && 'bg-white/5')}
               >
-                <div className="flex items-baseline justify-between gap-2">
-                  <p className="text-sm font-medium tracking-tight">{step.label}</p>
-                  {step.tool ? (
-                    <code className="text-[0.65rem] text-muted-foreground">{step.tool}</code>
-                  ) : null}
-                </div>
-                <ResultBody step={step} />
-              </div>
-            );
-          })
+                <TerminalEntry step={step} />
+              </li>
+            ))}
+          </ol>
         )}
       </div>
     </section>

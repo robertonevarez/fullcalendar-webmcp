@@ -14,6 +14,7 @@ export interface DemoPreset {
 const ACME_CONFIG: DemoConfig = {
   archetype: 'field_service',
   businessName: 'Acme Heating & Air',
+  locationLabel: 'Austin, TX',
   services: [
     {
       id: 'demo_svc_ac_diagnostic',
@@ -103,8 +104,7 @@ export const DEMO_PRESETS: DemoPreset[] = [
     blurb: 'Field service with a ZIP service area',
     webmcpPath: '/businesses/acme-hvac',
     config: ACME_CONFIG,
-    customerPrompt:
-      "My AC isn't cooling upstairs. I'm free tomorrow after 4. I'm in 78701.",
+    customerPrompt: "What's happening with my AC?",
   },
   {
     id: 'northline-salon',

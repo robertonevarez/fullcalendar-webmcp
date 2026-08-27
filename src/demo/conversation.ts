@@ -1,17 +1,24 @@
 import { AppError, ErrorCodes, toErrorResponse } from '@/domain/errors';
 import { DemoBookingEngine, emptyConversationState } from '@/demo/engine';
+import { formatPriceCents, formatSlotTimeOnly, formatSlotWhen } from '@/demo/format';
 import {
-  formatPriceCents,
-  formatSlotTimeOnly,
-  formatSlotWhen,
-} from '@/demo/format';
-import { matchSlotBySpokenTime, parseCustomerIntent } from '@/demo/intent';
+  hasScheduleWindow,
+  isAffirmative,
+  isAvailabilityRequest,
+  isNegative,
+  isScheduleCorrection,
+  matchSlotBySpokenTime,
+  parseCustomerIntent,
+  type ParsedCustomerIntent,
+} from '@/demo/intent';
 import type {
   DemoActivityResult,
   DemoActivityStep,
   DemoActivityTarget,
+  DemoConfig,
   DemoConversationState,
   DemoPendingOffer,
+  DemoPendingService,
   DemoPublicAppointment,
   DemoTurnRequest,
   DemoTurnResponse,
@@ -41,16 +48,18 @@ function friendlyError(error: unknown): string {
   if (error instanceof AppError) {
     switch (error.code) {
       case ErrorCodes.OUTSIDE_SERVICE_AREA:
-        return "That location is outside this business's service area. Try a ZIP they serve, or update the service area in your setup.";
+        return error.message.includes("doesn't serve")
+          ? error.message
+          : 'That location is outside this business\'s service area.';
       case ErrorCodes.LOCATION_REQUIRED:
-        return 'I need a ZIP code to check whether they can come to you.';
+        return "What's the ZIP code for the service address?";
       case ErrorCodes.NO_AVAILABILITY:
-        return "I couldn't find an open time that matches. Try another day, a wider window, or adjust the business hours.";
+        return "They don't have anything available in that window. Want me to check another day?";
       case ErrorCodes.SLOT_UNAVAILABLE:
       case ErrorCodes.RESOURCE_UNAVAILABLE:
-        return 'That time is no longer available. Ask me to check openings again.';
+        return 'That time was just taken. I can check the latest openings.';
       case ErrorCodes.SERVICE_NOT_FOUND:
-        return "I couldn't match that to a service this business offers. Try describing the job in different words.";
+        return "I couldn't find a service there that matches that problem.";
       case ErrorCodes.VALIDATION_ERROR:
         return error.message;
       default:
@@ -61,7 +70,6 @@ function friendlyError(error: unknown): string {
 }
 
 function toPublicAppointment(
-  engine: DemoBookingEngine,
   appointment: DemoConversationState['appointments'][number],
   serviceName: string,
 ): DemoPublicAppointment {
@@ -78,65 +86,325 @@ function toPublicAppointment(
   };
 }
 
-function offerReply(engine: DemoBookingEngine, offer: DemoPendingOffer): string {
-  const price = formatPriceCents(offer.price_cents, offer.currency);
-  const times = offer.slots
-    .slice(0, 3)
-    .map((slot) => formatSlotTimeOnly(slot.starts_at, engine.timezone));
-  const whenDay = formatSlotWhen(offer.slots[0].starts_at, engine.timezone).replace(/ at .*$/, '');
-  const timeList =
-    times.length === 1
-      ? times[0]
-      : times.length === 2
-        ? `${times[0]} and ${times[1]}`
-        : `${times.slice(0, -1).join(', ')}, and ${times[times.length - 1]}`;
-
-  return `${engine.businessName} offers ${offer.service_name} for ${price}. I found openings ${whenDay} at ${timeList}.\n\nWould you like me to book one?`;
+function clearPending(conversation: DemoConversationState): DemoConversationState {
+  return {
+    ...conversation,
+    phase: 'idle',
+    serviceQuery: null,
+    pendingService: null,
+    pendingOffer: null,
+    selectedSlotId: null,
+  };
 }
 
-function tryConfirm(
-  engine: DemoBookingEngine,
+function noActivity(
   conversation: DemoConversationState,
-  message: string,
-): DemoTurnResponse | null {
-  if (conversation.phase !== 'awaiting_confirmation' || !conversation.pendingOffer) {
-    return null;
+  reply: string,
+): DemoTurnResponse {
+  return {
+    ok: true,
+    reply,
+    conversation,
+    activity: [],
+    businessNotice: null,
+  };
+}
+
+function guidedReply(config: DemoConfig): string {
+  if (config.archetype === 'field_service') {
+    return "If it's running but not cooling properly, a technician should inspect it.\n\nWant me to find someone nearby?";
+  }
+  if (config.archetype === 'salon') {
+    return 'That sounds like a haircut appointment.\n\nWant me to find a time that works?';
+  }
+  return "That sounds like a service visit.\n\nWant me to see when the shop can take it?";
+}
+
+function availabilityQuestion(config: DemoConfig): string {
+  if (config.archetype === 'field_service') return 'Want me to check their next openings tomorrow after 4?';
+  return config.archetype === 'salon'
+    ? 'Want me to check tomorrow morning?'
+    : 'Want me to check tomorrow morning?';
+}
+
+function defaultAvailabilityPrompt(config: DemoConfig): string {
+  return config.archetype === 'field_service' ? 'tomorrow after 4 pm' : 'tomorrow morning';
+}
+
+function requiresLocation(engine: DemoBookingEngine): boolean {
+  return engine.normalized.business.location_mode === 'CUSTOMER_LOCATION';
+}
+
+function hasExplicitSchedulingIntent(message: string, intent: ParsedCustomerIntent): boolean {
+  return Boolean(
+    intent.postalCode ||
+      hasScheduleWindow(message, intent) ||
+      isAvailabilityRequest(message) ||
+      /\b(book|appointment|schedule|opening|available|what time|what times)\b/i.test(message),
+  );
+}
+
+function startGuidedConversation(
+  conversation: DemoConversationState,
+  config: DemoConfig,
+  serviceQuery: string,
+): DemoTurnResponse {
+  return noActivity(
+    {
+      ...conversation,
+      phase: 'awaiting_service_confirmation',
+      serviceQuery,
+      pendingService: null,
+      pendingOffer: null,
+      selectedSlotId: null,
+    },
+    guidedReply(config),
+  );
+}
+
+function requestLocation(
+  conversation: DemoConversationState,
+  serviceQuery: string,
+): DemoTurnResponse {
+  return noActivity(
+    {
+      ...conversation,
+      phase: 'awaiting_location',
+      serviceQuery,
+      pendingService: null,
+      pendingOffer: null,
+      selectedSlotId: null,
+    },
+    "What's your ZIP code?",
+  );
+}
+
+function discoverService(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  serviceQuery: string,
+  postalCode?: string,
+): DemoTurnResponse {
+  const activity: DemoActivityStep[] = [];
+  const matches = engine.search(serviceQuery);
+
+  if (!matches.length) {
+    activity.push(
+      activityStep('search_services', 'Search services', 'services', {
+        detail: 'No match',
+        tool: 'search_services',
+        result: { query: serviceQuery },
+      }),
+    );
+    throw Object.assign(
+      new AppError(
+        ErrorCodes.SERVICE_NOT_FOUND,
+        'No matching service is configured for this business.',
+        false,
+      ),
+      { activity },
+    );
   }
 
-  const intent = parseCustomerIntent(message, {
+  const service = engine.getService(matches[0].service_id);
+  activity.push(
+    activityStep('search_services', 'Search services', 'services', {
+      detail: service.name,
+      tool: 'search_services',
+      result: {
+        service_id: service.id,
+        query: serviceQuery,
+        service_name: service.name,
+        price_label: formatPriceCents(service.price_cents, service.currency),
+        duration_minutes: service.duration_minutes,
+      },
+    }),
+  );
+
+  if (service.service_area_required) {
+    if (!postalCode) {
+      throw Object.assign(
+        new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required.', false, 'postal_code'),
+        { activity },
+      );
+    }
+
+    try {
+      engine.assertServiceArea(service.id, postalCode);
+      activity.push(
+        activityStep('check_service_area', 'Check service area', 'service_area', {
+          detail: `${postalCode} eligible`,
+          tool: 'check_service_area',
+          result: { postal_code: postalCode, eligible: true },
+        }),
+      );
+    } catch (error) {
+      activity.push(
+        activityStep('check_service_area', 'Check service area', 'service_area', {
+          detail: `${postalCode} is outside the service area`,
+          tool: 'check_service_area',
+          result: { postal_code: postalCode, eligible: false },
+        }),
+      );
+      const outsideError = new AppError(
+        ErrorCodes.OUTSIDE_SERVICE_AREA,
+        `${engine.businessName} doesn't serve ${postalCode}.`,
+        false,
+        'postal_code',
+      );
+      throw Object.assign(outsideError, { cause: error, activity });
+    }
+  }
+
+  const pendingService: DemoPendingService = {
+    service_id: service.id,
+    service_name: service.name,
+    price_cents: service.price_cents,
+    currency: service.currency,
+    postal_code: postalCode,
+  };
+
+  const nextConversation: DemoConversationState = {
+    ...conversation,
+    phase: 'awaiting_availability_permission',
+    serviceQuery,
+    pendingService,
+    pendingOffer: null,
+    selectedSlotId: null,
+  };
+
+  return {
+    ok: true,
+    reply: serviceReply(engine, config, pendingService),
+    conversation: nextConversation,
+    activity,
+    businessNotice: null,
+  };
+}
+
+function serviceReply(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  pendingService: DemoPendingService,
+): string {
+  return `${engine.businessName} can help. Their ${pendingService.service_name} is ${formatPriceCents(pendingService.price_cents, pendingService.currency)} and takes about ${engine.getService(pendingService.service_id).duration_minutes} minutes.\n\n${availabilityQuestion(config)}`;
+}
+
+function findAvailability(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+  priorActivity: DemoActivityStep[] = [],
+): DemoTurnResponse {
+  const pendingService = conversation.pendingService;
+  if (!pendingService) return noActivity(conversation, "Let's find the right service first.");
+
+  const parsed = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  const scheduleMessage = hasScheduleWindow(message, parsed)
+    ? message
+    : defaultAvailabilityPrompt(config);
+  const intent = parseCustomerIntent(scheduleMessage, {
     timeZone: engine.timezone,
     workingHours: engine.normalized.business.working_hours,
   });
 
-  if (!intent.looksLikeConfirmation && !intent.chosenTimeHm) {
-    return null;
+  let slots;
+  try {
+    slots = engine.findSlots(conversation.appointments, {
+      service_id: pendingService.service_id,
+      start_date: intent.startDate,
+      end_date: intent.endDate,
+      postal_code: pendingService.postal_code,
+      time_preference: intent.timePreference,
+      limit: 4,
+    });
+  } catch (error) {
+    const activity = [
+      ...priorActivity,
+      activityStep('get_availability', 'Find availability', 'availability', {
+        detail: 'None found',
+        tool: 'get_availability',
+        result: { query: intent.timePreference, slot_labels: [] },
+      }),
+    ];
+    throw Object.assign(error instanceof Error ? error : new Error(String(error)), { activity });
   }
 
+  const slotLabels = slots.slice(0, 3).map((slot) => formatSlotTimeOnly(slot.starts_at, engine.timezone));
+  const activity = [
+    ...priorActivity,
+    activityStep('get_availability', 'Find availability', 'availability', {
+      detail: `${slots.length} time${slots.length === 1 ? '' : 's'} found`,
+      tool: 'get_availability',
+      result: { query: intent.timePreference, slot_labels: slotLabels },
+    }),
+  ];
+  const pendingOffer: DemoPendingOffer = {
+    service_id: pendingService.service_id,
+    service_name: pendingService.service_name,
+    price_cents: pendingService.price_cents,
+    currency: pendingService.currency,
+    postal_code: pendingService.postal_code,
+    time_preference: intent.timePreference,
+    start_date: intent.startDate,
+    end_date: intent.endDate,
+    slots,
+  };
+  const whenDay = formatSlotWhen(slots[0].starts_at, engine.timezone).replace(/ at .*$/, '');
+  const timeList = slotLabels.length === 1
+    ? slotLabels[0]
+    : slotLabels.length === 2
+      ? `${slotLabels[0]} and ${slotLabels[1]}`
+      : `${slotLabels.slice(0, -1).join(', ')}, and ${slotLabels.at(-1)}`;
+
+  return {
+    ok: true,
+    reply: `They have openings ${whenDay} at ${timeList}.\n\nWhich works best?`,
+    conversation: {
+      ...conversation,
+      phase: 'awaiting_slot_choice',
+      pendingOffer,
+      selectedSlotId: null,
+    },
+    activity,
+    businessNotice: null,
+  };
+}
+
+function selectedSlotIndex(
+  offer: DemoPendingOffer,
+  intent: ParsedCustomerIntent,
+  timeZone: string,
+): number {
+  const byTime = matchSlotBySpokenTime(offer.slots, intent.chosenTimeHm, timeZone);
+  if (byTime >= 0) return byTime;
+  if (intent.slotChoice === 'first') return 0;
+  if (intent.slotChoice === 'second') return offer.slots.length > 1 ? 1 : -1;
+  if (intent.slotChoice === 'last') return offer.slots.length - 1;
+  return -1;
+}
+
+function confirmsBooking(message: string): boolean {
+  return !isNegative(message) && (isAffirmative(message) || /\b(book|confirm|go ahead|do it)\b/i.test(message));
+}
+
+function selectedSlotReply(engine: DemoBookingEngine, slot: DemoPendingOffer['slots'][number]): string {
+  return `${formatSlotTimeOnly(slot.starts_at, engine.timezone)} works. Want me to book it?`;
+}
+
+function bookSlot(
+  engine: DemoBookingEngine,
+  conversation: DemoConversationState,
+  slot: DemoPendingOffer['slots'][number],
+  message: string,
+): DemoTurnResponse {
   const offer = conversation.pendingOffer;
-  let slotIndex = matchSlotBySpokenTime(offer.slots, intent.chosenTimeHm, engine.timezone);
-
-  const lower = message.toLowerCase();
-  if (slotIndex < 0 && /\b(first|yes|book|confirm|go ahead|sounds good|perfect)\b/.test(lower)) {
-    slotIndex = 0;
-  }
-  if (slotIndex < 0 && /\bsecond\b/.test(lower) && offer.slots.length > 1) {
-    slotIndex = 1;
-  }
-
-  if (slotIndex < 0) {
-    return {
-      ok: true,
-      reply: `Which time works for you — ${offer.slots
-        .slice(0, 3)
-        .map((s) => formatSlotTimeOnly(s.starts_at, engine.timezone))
-        .join(' or ')}?`,
-      conversation,
-      activity: [],
-      businessNotice: null,
-    };
-  }
-
-  const slot = offer.slots[slotIndex];
+  if (!offer) return noActivity(conversation, "I don't have an opening ready to book.");
   const service = engine.getService(offer.service_id);
   const { appointment, appointments } = engine.createAppointment({
     appointments: conversation.appointments,
@@ -157,28 +425,30 @@ function tryConfirm(
     },
     notes: { description: message },
   });
-
-  const lastBooking = toPublicAppointment(engine, appointment, service.name);
+  const lastBooking = toPublicAppointment(appointment, service.name);
   const when = formatSlotWhen(appointment.starts_at, engine.timezone);
-
-  const nextState: DemoConversationState = {
-    phase: 'booked',
-    appointments,
-    pendingOffer: null,
-    lastBooking,
-  };
+  const whenLabel = when.charAt(0).toUpperCase() + when.slice(1);
 
   return {
     ok: true,
-    reply: `You're booked for ${when}. ${service.name} is confirmed with ${engine.businessName}.`,
-    conversation: nextState,
+    reply: `You're booked with ${engine.businessName} ${when}.`,
+    conversation: {
+      phase: 'booked',
+      appointments,
+      serviceQuery: conversation.serviceQuery,
+      pendingService: null,
+      pendingOffer: null,
+      selectedSlotId: null,
+      lastBooking,
+    },
     activity: [
       activityStep('create_appointment', 'Create appointment', 'booking', {
         detail: 'Confirmed',
         tool: 'create_appointment',
         result: {
+          service_id: service.id,
           service_name: service.name,
-          when_label: when.charAt(0).toUpperCase() + when.slice(1),
+          when_label: whenLabel,
           provider_name: lastBooking.provider_name,
         },
       }),
@@ -186,15 +456,85 @@ function tryConfirm(
     businessNotice: {
       headline: 'Appointment received',
       service_name: service.name,
-      when_label: when.charAt(0).toUpperCase() + when.slice(1),
+      when_label: whenLabel,
       notification_email: engine.notificationEmail,
       provider_name: lastBooking.provider_name,
     },
   };
 }
 
-function findAndOffer(
+function handleSlotChoice(
   engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+): DemoTurnResponse {
+  const offer = conversation.pendingOffer;
+  if (!offer) return noActivity(conversation, "I don't have openings ready to choose from.");
+  if (isNegative(message)) return noActivity(clearPending(conversation), 'No problem. I won\'t book anything.');
+
+  const intent = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  if (isScheduleCorrection(message, intent)) {
+    return findAvailability(engine, config, conversation, message);
+  }
+  if (isAvailabilityRequest(message)) {
+    return findAvailability(engine, config, conversation, message);
+  }
+
+  const index = selectedSlotIndex(offer, intent, engine.timezone);
+  if (index < 0) {
+    return noActivity(conversation, `Which works best — ${offer.slots.slice(0, 3).map((slot) => formatSlotTimeOnly(slot.starts_at, engine.timezone)).join(', ')}?`);
+  }
+
+  const slot = offer.slots[index];
+  if (confirmsBooking(message)) return bookSlot(engine, conversation, slot, message);
+
+  return noActivity(
+    { ...conversation, phase: 'awaiting_booking_confirmation', selectedSlotId: slot.slot_id },
+    selectedSlotReply(engine, slot),
+  );
+}
+
+function handleBookingConfirmation(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+): DemoTurnResponse {
+  if (isNegative(message)) return noActivity(clearPending(conversation), 'No problem. I won\'t book anything.');
+  const offer = conversation.pendingOffer;
+  if (!offer) return noActivity(conversation, 'Which time would you like?');
+
+  const intent = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  if (isScheduleCorrection(message, intent)) {
+    return findAvailability(engine, config, conversation, message);
+  }
+  if (isAvailabilityRequest(message)) {
+    return findAvailability(engine, config, conversation, message);
+  }
+  const index = conversation.selectedSlotId
+    ? offer.slots.findIndex((slot) => slot.slot_id === conversation.selectedSlotId)
+    : selectedSlotIndex(offer, intent, engine.timezone);
+  if (index >= 0 && !confirmsBooking(message)) {
+    const slot = offer.slots[index];
+    return noActivity(
+      { ...conversation, selectedSlotId: slot.slot_id },
+      selectedSlotReply(engine, slot),
+    );
+  }
+  if (confirmsBooking(message) && index >= 0) return bookSlot(engine, conversation, offer.slots[index], message);
+  return noActivity(conversation, 'Want me to book the selected time?');
+}
+
+function handleInitialTurn(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
   conversation: DemoConversationState,
   message: string,
 ): DemoTurnResponse {
@@ -202,164 +542,99 @@ function findAndOffer(
     timeZone: engine.timezone,
     workingHours: engine.normalized.business.working_hours,
   });
-
-  const activity: DemoActivityStep[] = [];
-
-  const matches = engine.search(intent.serviceQuery);
-  if (!matches.length) {
-    const catalog = engine.search();
-    activity.push(
-      activityStep('search_services', 'Search services', 'services', {
-        detail: 'No match',
-        tool: 'search_services',
-        result: { query: intent.serviceQuery },
-      }),
-    );
-    throw Object.assign(
-      new AppError(
-        ErrorCodes.SERVICE_NOT_FOUND,
-        catalog.length
-          ? `No matching service. This business offers: ${catalog.map((s) => s.name).join(', ')}.`
-          : 'No services are configured.',
-        false,
-      ),
-      { activity },
-    );
+  if (!hasExplicitSchedulingIntent(message, intent)) {
+    return startGuidedConversation(conversation, config, intent.serviceQuery);
   }
-
-  const best = matches[0];
-  const service = engine.getService(best.service_id);
-  activity.push(
-    activityStep('search_services', 'Search services', 'services', {
-      detail: service.name,
-      tool: 'search_services',
-      result: {
-        query: intent.serviceQuery,
-        service_name: service.name,
-        price_label: formatPriceCents(service.price_cents, service.currency),
-        duration_minutes: service.duration_minutes,
-      },
-    }),
-  );
-
-  if (service.service_area_required && !intent.postalCode) {
-    activity.push(
-      activityStep('check_service_area', 'Check service area', 'service_area', {
-        detail: 'ZIP needed',
-        tool: 'check_service_area',
-      }),
-    );
-    throw Object.assign(
-      new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required.', false, 'postal_code'),
-      { activity },
-    );
+  if (requiresLocation(engine) && !intent.postalCode) {
+    return requestLocation(conversation, intent.serviceQuery);
   }
-
-  if (service.service_area_required && intent.postalCode) {
-    try {
-      engine.assertServiceArea(service.id, intent.postalCode);
-      activity.push(
-        activityStep('check_service_area', 'Check service area', 'service_area', {
-          detail: `${intent.postalCode} eligible`,
-          tool: 'check_service_area',
-          result: { postal_code: intent.postalCode, eligible: true },
-        }),
-      );
-    } catch (error) {
-      activity.push(
-        activityStep('check_service_area', 'Check service area', 'service_area', {
-          detail: `${intent.postalCode} is outside the service area`,
-          tool: 'check_service_area',
-          result: { postal_code: intent.postalCode, eligible: false },
-        }),
-      );
-      throw Object.assign(error instanceof Error ? error : new Error(String(error)), { activity });
-    }
-  }
-
-  let slots;
-  try {
-    slots = engine.findSlots(conversation.appointments, {
-      service_id: service.id,
-      start_date: intent.startDate,
-      end_date: intent.endDate,
-      postal_code: intent.postalCode,
-      time_preference: intent.timePreference,
-      limit: 4,
-    });
-  } catch (error) {
-    activity.push(
-      activityStep('get_availability', 'Find availability', 'availability', {
-        detail: 'None found',
-        tool: 'get_availability',
-        result: {
-          query: intent.timePreference,
-          slot_labels: [],
-        },
-      }),
-    );
-    throw Object.assign(error instanceof Error ? error : new Error(String(error)), { activity });
-  }
-
-  const slotLabels = slots
-    .slice(0, 3)
-    .map((slot) => formatSlotTimeOnly(slot.starts_at, engine.timezone));
-
-  activity.push(
-    activityStep('get_availability', 'Find availability', 'availability', {
-      detail: `${slots.length} time${slots.length === 1 ? '' : 's'} found`,
-      tool: 'get_availability',
-      result: {
-        query: intent.timePreference,
-        slot_labels: slotLabels,
-      },
-    }),
-  );
-
-  const pendingOffer: DemoPendingOffer = {
-    service_id: service.id,
-    service_name: service.name,
-    price_cents: service.price_cents,
-    currency: service.currency,
-    postal_code: intent.postalCode,
-    time_preference: intent.timePreference,
-    start_date: intent.startDate,
-    end_date: intent.endDate,
-    slots,
-  };
-
-  const nextState: DemoConversationState = {
-    ...conversation,
-    phase: 'awaiting_confirmation',
-    pendingOffer,
-  };
-
-  return {
-    ok: true,
-    reply: offerReply(engine, pendingOffer),
-    conversation: nextState,
-    activity,
-    businessNotice: null,
-  };
+  const discovered = discoverService(engine, config, conversation, intent.serviceQuery, intent.postalCode);
+  return hasScheduleWindow(message, intent) || isAvailabilityRequest(message)
+    ? findAvailability(engine, config, discovered.conversation, message, discovered.activity)
+    : discovered;
 }
 
-/**
- * One conversation turn for the product demo.
- * Read path may run autonomously; writes only after clear confirmation.
- */
+function handleServiceConfirmation(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+): DemoTurnResponse {
+  if (isNegative(message)) return noActivity(clearPending(conversation), 'Okay. Let me know if you want a hand with it.');
+  const intent = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  const serviceQuery = conversation.serviceQuery ?? intent.serviceQuery;
+  if (!isAffirmative(message) && !intent.postalCode) {
+    return noActivity(conversation, guidedReply(config));
+  }
+  if (requiresLocation(engine) && !intent.postalCode) return requestLocation(conversation, serviceQuery);
+  const discovered = discoverService(engine, config, conversation, serviceQuery, intent.postalCode);
+  return hasScheduleWindow(message, intent) || isAvailabilityRequest(message)
+    ? findAvailability(engine, config, discovered.conversation, message, discovered.activity)
+    : discovered;
+}
+
+function handleLocation(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+): DemoTurnResponse {
+  if (isNegative(message)) return noActivity(clearPending(conversation), 'Okay. Let me know if you want a hand with it.');
+  const intent = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  if (!intent.postalCode) return noActivity(conversation, "What's your ZIP code?");
+  const discovered = discoverService(engine, config, conversation, conversation.serviceQuery ?? intent.serviceQuery, intent.postalCode);
+  return hasScheduleWindow(message, intent) || isAvailabilityRequest(message)
+    ? findAvailability(engine, config, discovered.conversation, message, discovered.activity)
+    : discovered;
+}
+
+function handleAvailabilityPermission(
+  engine: DemoBookingEngine,
+  config: DemoConfig,
+  conversation: DemoConversationState,
+  message: string,
+): DemoTurnResponse {
+  if (isNegative(message)) return noActivity(clearPending(conversation), 'No problem. I won\'t check availability.');
+  const intent = parseCustomerIntent(message, {
+    timeZone: engine.timezone,
+    workingHours: engine.normalized.business.working_hours,
+  });
+  if (isAffirmative(message) || isAvailabilityRequest(message) || hasScheduleWindow(message, intent)) {
+    return findAvailability(engine, config, conversation, message);
+  }
+  return noActivity(conversation, availabilityQuestion(config));
+}
+
+/** One deterministic conversation turn. Business capabilities remain authoritative. */
 export function processDemoTurn(request: DemoTurnRequest): DemoTurnResponse {
   const message = request.message?.trim();
-  if (!message) {
-    throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Say what you need in a short message.', false);
-  }
+  if (!message) throw new AppError(ErrorCodes.VALIDATION_ERROR, 'Say what you need in a short message.', false);
 
   const engine = new DemoBookingEngine(request.config);
   const conversation = request.conversation ?? emptyConversationState();
 
-  const confirmed = tryConfirm(engine, conversation, message);
-  if (confirmed) return confirmed;
-
-  return findAndOffer(engine, conversation, message);
+  switch (conversation.phase) {
+    case 'idle':
+      return handleInitialTurn(engine, request.config, conversation, message);
+    case 'awaiting_service_confirmation':
+      return handleServiceConfirmation(engine, request.config, conversation, message);
+    case 'awaiting_location':
+      return handleLocation(engine, request.config, conversation, message);
+    case 'awaiting_availability_permission':
+      return handleAvailabilityPermission(engine, request.config, conversation, message);
+    case 'awaiting_slot_choice':
+      return handleSlotChoice(engine, request.config, conversation, message);
+    case 'awaiting_booking_confirmation':
+      return handleBookingConfirmation(engine, request.config, conversation, message);
+    case 'booked':
+      return noActivity(conversation, `You're already booked with ${engine.businessName}.`);
+  }
 }
 
 export function processDemoTurnSafe(
