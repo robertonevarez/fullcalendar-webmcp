@@ -435,7 +435,7 @@ export function CustomerConversation({
           <div className="pointer-events-none mt-auto shrink-0 select-none border-t border-line/60 p-2">
             <div
               role="presentation"
-              className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-field p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
+              className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-background p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
             >
               <input
                 value={draft}
