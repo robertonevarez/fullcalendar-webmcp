@@ -53,9 +53,23 @@ export function Hero() {
             </p>
 
             <div className={cn('flex flex-wrap items-center justify-center pt-2', spacing.gap)}>
-              <Button nativeButton={false} render={<Link href={DEMO_URL} />} size="xl" className={"drop-shadow-lg"}>
+              <Button
+                nativeButton={false}
+                render={<Link href={DEMO_URL} />}
+                size="xl"
+                className="drop-shadow-lg"
+              >
                 Start with ChatGPT
                 <ArrowRight />
+              </Button>
+              <Button
+                nativeButton={false}
+                render={<a href="#how-it-works" />}
+                size="xl"
+                variant="outline"
+                className="bg-background"
+              >
+                See how it works
               </Button>
             </div>
           </div>

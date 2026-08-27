@@ -13,6 +13,10 @@ export const spacing = {
   /** Standard gap between siblings inside a container. */
   gap: 'gap-3',
   stack: 'space-y-3',
+  /** Vertical rhythm for marketing page sections below the hero. */
+  sectionY: 'py-16 md:py-24',
+  /** Stack gap inside marketing sections. */
+  sectionStack: 'space-y-8 md:space-y-10',
 } as const;
 
 export const layout = {
