@@ -1,81 +1,58 @@
-import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
-import { HeroImageBackground } from '@/components/hero-image-background';
-import { Button } from '@/components/ui/button';
+'use client';
+
+import { useState } from 'react';
+import { CustomerConversation } from '@/components/demo/customer-conversation';
+import { cloneDemoConfig } from '@/demo/normalize';
+import { getDefaultPreset } from '@/demo/presets';
+import { CANONICAL_WALKTHROUGH_SCRIPT } from '@/demo/walkthrough';
 import { playpenSansHebrew } from '@/lib/fonts';
 import { ds, spacing } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
-const DEMO_URL = '/demo';
-const WEBMCP_DEMO_URL = '/businesses/acme-hvac';
-
-const heroScrim =
-  'bg-[linear-gradient(to_bottom,oklch(1_0_0/0.98)_0%,oklch(1_0_0/0.88)_18%,oklch(1_0_0/0.68)_38%,oklch(1_0_0/0.38)_58%,oklch(1_0_0/0.14)_72%,transparent_88%)]';
-const heroCopyGlow =
-  'bg-[radial-gradient(ellipse_110%_90%_at_50%_24%,oklch(1_0_0/0.98)_0%,oklch(1_0_0/0.88)_30%,oklch(1_0_0/0.58)_55%,oklch(1_0_0/0.22)_78%,transparent_94%)]';
-
 export function Hero() {
-  return (
-    <section className="relative flex h-[80svh] w-full items-start overflow-hidden border-b bg-background">
-      <HeroImageBackground className="z-0" opacity={0.8} />
-      <div
-        aria-hidden
-        className={cn('pointer-events-none absolute inset-0 z-[1]', heroScrim)}
-      />
-      <div
-        aria-hidden
-        className={cn('pointer-events-none absolute inset-0 z-[2]', heroCopyGlow)}
-      />
+  const [sessionKey] = useState(0);
+  const preset = getDefaultPreset();
+  const config = cloneDemoConfig(preset.config);
 
+  return (
+    <section className="relative flex w-full flex-col overflow-hidden bg-background">
       <div
         className={cn(
-          'relative z-10 w-full',
+          'relative z-10 mx-auto flex w-full max-w-6xl flex-col',
           ds.layout.container,
           spacing.page,
-          'pt-8 pb-10 md:pt-10 md:pb-12',
+          'pt-3 pb-6 md:pt-4 md:pb-8',
         )}
       >
-        <div className="relative mx-auto max-w-4xl">
-          <div className="relative flex flex-col items-center gap-4 text-center md:gap-6">
-            <h1
-              className={cn(
-                playpenSansHebrew.className,
-                'text-4xl font-medium tracking-tighter text-balance md:text-5xl lg:text-6xl lg:leading-[1.08]',
-              )}
-            >
-              Your customers have agents.
-              <br />
-              Let them book you.
-            </h1>
+        {/* Compact Hero Header Copy */}
+        <div className="mx-auto mb-3 max-w-2xl text-center md:mb-4">
+          <h1
+            className={cn(
+              playpenSansHebrew.className,
+              'text-2xl font-medium tracking-tight text-balance md:text-3xl lg:text-4xl lg:leading-[1.1]',
+            )}
+          >
+            Your customers have agents. Let them book you.
+          </h1>
 
-            <p className="max-w-2xl text-base font-normal tracking-tight text-balance md:text-lg">
-              Protocol Tooling lets people book your services through the AI they already use. They say
-              what they need and when they&apos;re free. You get a confirmed appointment.
-            </p>
+          <p className="mt-1 text-xs text-muted-foreground md:text-sm">
+            Protocol Tooling exposes your scheduling to personal AI agents through WebMCP.
+          </p>
+        </div>
 
-            <div className={cn('flex flex-wrap items-center justify-center pt-2', spacing.gap)}>
-              <Button
-                nativeButton={false}
-                render={<Link href={DEMO_URL} />}
-                size="xl"
-                className="drop-shadow-lg"
-              >
-                Try the product demo
-                <ArrowRight />
-              </Button>
-              <Button
-                nativeButton={false}
-                render={<Link href={WEBMCP_DEMO_URL} />}
-                size="xl"
-                variant="outline"
-                className="bg-background"
-              >
-                Start with ChatGPT
-              </Button>
-            </div>
-          </div>
+        {/* Product Demo Centerpiece */}
+        <div
+          className="flex min-h-0 h-[72svh] max-h-[82svh] flex-col md:h-[75svh]"
+          aria-label="Product demo"
+        >
+          <CustomerConversation
+            key={sessionKey}
+            config={config}
+            script={CANONICAL_WALKTHROUGH_SCRIPT}
+          />
         </div>
       </div>
     </section>
   );
 }
+
