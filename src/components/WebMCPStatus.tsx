@@ -1,7 +1,10 @@
 'use client';
 
+import { Panel } from '@/components/layout';
 import { useWebMCPRegistrationState } from '@/components/WebMCPBusinessProvider';
+import { spacing } from '@/lib/design-system';
 import { WEBMCP_TOOL_NAMES } from '@/webmcp/tools';
+import { cn } from '@/lib/utils';
 
 interface WebMCPStatusProps {
   businessSlug: string;
@@ -36,59 +39,65 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
     process.env.NODE_ENV !== 'production' && state.phase === 'failed' && state.errors.length > 0;
 
   return (
-    <section className="status-panel" aria-labelledby="webmcp-status-heading">
-      <h2 id="webmcp-status-heading">WebMCP status</h2>
-      <p>
-        <strong>Business context:</strong> {businessName} (<code>{businessSlug}</code>)
-      </p>
-      <p>
-        <strong>WebMCP supported:</strong>{' '}
-        {state.supported || state.phase === 'waiting' ? (state.supported ? 'yes' : 'pending') : 'no'}
-      </p>
-      <p>
-        <strong>Registration attempted:</strong>{' '}
-        {state.phase === 'waiting' ? 'pending' : state.attempted ? 'yes' : 'no'}
-      </p>
-      <p>
-        <strong>Registration:</strong>{' '}
-        {state.phase === 'registered' ? (
-          <span className="status-ok">{registrationLabel(state)}</span>
-        ) : state.phase === 'failed' ? (
-          <span className="status-warn">{registrationLabel(state)}</span>
-        ) : (
-          registrationLabel(state)
-        )}
-      </p>
+    <Panel className="text-sm" aria-labelledby="webmcp-status-heading">
+      <h3 id="webmcp-status-heading" className="font-medium">
+        WebMCP status
+      </h3>
+      <dl className={spacing.stack}>
+        <div className={cn('flex', spacing.gap)}>
+          <dt className="text-muted-foreground">Business</dt>
+          <dd>
+            {businessName} (<code className="font-mono text-xs">{businessSlug}</code>)
+          </dd>
+        </div>
+        <div className={cn('flex', spacing.gap)}>
+          <dt className="text-muted-foreground">Supported</dt>
+          <dd>
+            {state.supported || state.phase === 'waiting'
+              ? state.supported
+                ? 'yes'
+                : 'pending'
+              : 'no'}
+          </dd>
+        </div>
+        <div className={cn('flex', spacing.gap)}>
+          <dt className="text-muted-foreground">Attempted</dt>
+          <dd>{state.phase === 'waiting' ? 'pending' : state.attempted ? 'yes' : 'no'}</dd>
+        </div>
+        <div className={cn('flex', spacing.gap)}>
+          <dt className="text-muted-foreground">Registration</dt>
+          <dd
+            className={cn(
+              state.phase === 'registered' && 'font-medium text-foreground',
+              state.phase === 'failed' && 'font-medium',
+            )}
+          >
+            {registrationLabel(state)}
+          </dd>
+        </div>
+      </dl>
       {state.phase === 'registered' && (
-        <>
-          <p>
-            <strong>Registered tools ({state.registered.length}):</strong>
-          </p>
-          <ul className="tool-list">
-            {state.registered.map((tool) => (
-              <li key={tool}>
-                <code>{tool}</code>
-              </li>
-            ))}
-          </ul>
-        </>
+        <ul className={cn('list-inside list-disc font-mono text-xs', spacing.stack)}>
+          {state.registered.map((tool) => (
+            <li key={tool}>{tool}</li>
+          ))}
+        </ul>
       )}
       {state.phase === 'failed' && !state.supported && !state.attempted && (
-        <p className="meta-line">
-          Use ChatGPT&apos;s in-app browser (GPT-5.6 Sol or Terra) or Chrome with{' '}
-          <code>chrome://flags/#enable-webmcp-testing</code>. Site tools require a compatible client —
-          not a conventional browser tab.
+        <p className="text-muted-foreground">
+          Use ChatGPT&apos;s in-app browser or Chrome with{' '}
+          <code className="font-mono text-xs">chrome://flags/#enable-webmcp-testing</code>.
         </p>
       )}
       {showDevErrors && (
         <details>
-          <summary>Registration errors (development only)</summary>
-          <ul>
+          <summary className="cursor-pointer text-muted-foreground">Registration errors</summary>
+          <ul className={cn('list-disc', spacing.stack, 'pl-3')}>
             {state.errors.map((error, index) => (
               <li key={`${error.tool ?? 'general'}-${index}`}>
                 {error.tool ? (
                   <>
-                    <code>{error.tool}</code>: {error.message}
+                    <code className="font-mono text-xs">{error.tool}</code>: {error.message}
                   </>
                 ) : (
                   error.message
@@ -98,14 +107,9 @@ export function WebMCPStatus({ businessSlug, businessName }: WebMCPStatusProps) 
           </ul>
         </details>
       )}
-      <p style={{ marginTop: '1rem' }}>
-        Expected tools:{' '}
-        {WEBMCP_TOOL_NAMES.map((name) => (
-          <code key={name} style={{ marginRight: '0.45rem' }}>
-            {name}
-          </code>
-        ))}
+      <p className="font-mono text-xs text-muted-foreground">
+        Expected: {WEBMCP_TOOL_NAMES.join(', ')}
       </p>
-    </section>
+    </Panel>
   );
 }

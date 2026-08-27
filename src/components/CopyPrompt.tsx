@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Panel } from '@/components/layout';
+import { Button } from '@/components/ui/button';
 
 export function CopyPrompt({ text, label = 'Copy prompt' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
@@ -16,13 +18,11 @@ export function CopyPrompt({ text, label = 'Copy prompt' }: { text: string; labe
   }
 
   return (
-    <div className="prompt-block">
-      <pre>{text}</pre>
-      <p style={{ margin: '0.85rem 0 0' }}>
-        <button type="button" className="button button-secondary" onClick={onCopy}>
-          {copied ? 'Copied' : label}
-        </button>
-      </p>
-    </div>
+    <Panel>
+      <pre className="whitespace-pre-wrap font-mono text-sm">{text}</pre>
+      <Button type="button" variant="outline" onClick={onCopy}>
+        {copied ? 'Copied' : label}
+      </Button>
+    </Panel>
   );
 }
