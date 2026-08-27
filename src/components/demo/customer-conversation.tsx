@@ -432,7 +432,7 @@ export function CustomerConversation({
           </ScrollArea>
 
           {/* composer — prompt text area (non-interactive playback graphic) */}
-          <div className="pointer-events-none mt-auto shrink-0 select-none border-t border-line/60 p-2">
+          <div className="pointer-events-none mt-auto shrink-0 select-none p-2">
             <div
               role="presentation"
               className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-background p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
@@ -451,11 +451,7 @@ export function CustomerConversation({
                   tabIndex={-1}
                   aria-label="Send"
                   disabled={!canSend}
-                  className="flex size-6.5 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200"
-                  style={{
-                    background: canSend ? '#007AFF' : 'var(--line-strong)',
-                    color: canSend ? '#ffffff' : 'var(--ink-2)',
-                  }}
+                  className="flex size-6.5 items-center justify-center rounded-full bg-muted text-muted-foreground transition-[background-color,color,transform] duration-200"
                 >
                   <svg
                     width="14"
