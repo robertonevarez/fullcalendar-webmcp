@@ -38,52 +38,36 @@ export function DemoExperience() {
 
   return (
     <div className="flex flex-col">
-      <section className={cn(ds.layout.container, spacing.x, 'pt-10 pb-12 md:pt-12 md:pb-16')}>
-        <div className="space-y-8 md:space-y-10">
-          <header className="max-w-3xl space-y-3">
-            <h1
-              className={cn(
-                playpenSansHebrew.className,
-                'text-4xl font-medium tracking-tighter text-balance md:text-5xl',
-              )}
-            >
-              See agent booking in action.
-            </h1>
-            <p className="max-w-2xl text-base tracking-tight text-foreground md:text-lg">
-              Pick a business. Ask like a customer. Their agent books against real rules, not a
-              script.
-            </p>
-          </header>
-
-          <div
-            className="flex flex-col overflow-hidden rounded-2xl border border-border md:h-[min(42rem,calc(100svh-16rem))] md:min-h-[36rem]"
-            aria-label="Product demo"
-          >
-            <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2 md:flex-row md:items-center md:gap-3 md:px-3 md:py-2">
-              <DemoPresetPicker
-                className="min-w-0 flex-1"
-                selectedId={presetId}
-                onSelect={selectPreset}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="self-start text-muted-foreground md:self-auto"
-                onClick={resetDemo}
-              >
-                Reset demo
-              </Button>
-            </div>
-
-            <CustomerConversation
-              key={`${presetId}-${sessionKey}`}
-              config={config}
-              customerPrompt={preset.customerPrompt}
-              presetBlurb={preset.blurb}
-              onBooked={() => setBooked(true)}
+      <section className={cn(ds.layout.container, spacing.x, 'pt-3 pb-12 md:pb-16')}>
+        <h1 className="sr-only">Product demo</h1>
+        <div
+          className="flex flex-col overflow-hidden rounded-2xl border border-border md:h-[min(44rem,calc(100svh-8rem))] md:min-h-[36rem]"
+          aria-label="Product demo"
+        >
+          <div className="flex shrink-0 flex-col gap-2 border-b border-border p-2 md:flex-row md:items-center md:gap-3 md:px-3 md:py-2">
+            <DemoPresetPicker
+              className="min-w-0 flex-1"
+              selectedId={presetId}
+              onSelect={selectPreset}
             />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="self-start text-muted-foreground md:self-auto"
+              onClick={resetDemo}
+            >
+              Reset demo
+            </Button>
           </div>
+
+          <CustomerConversation
+            key={`${presetId}-${sessionKey}`}
+            config={config}
+            customerPrompt={preset.customerPrompt}
+            presetBlurb={preset.blurb}
+            onBooked={() => setBooked(true)}
+          />
         </div>
       </section>
 
