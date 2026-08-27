@@ -50,7 +50,7 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('monospace console');
   });
 
-  it('renders business surface container without mock website design', () => {
+  it('renders business surface container without mock website design or appointment notice text', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
@@ -66,6 +66,8 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('Need your AC fixed???');
     expect(html).not.toContain('Compatible agents');
     expect(html).not.toContain('Protocol Tooling');
+    expect(html).not.toContain('Appointment received');
+    expect(html).not.toContain('Details would be sent');
   });
 
   it('enters agent-access state and hosts overlay when agent accesses website', () => {
@@ -266,27 +268,6 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('Tomorrow at 4:30 PM');
     expect(html).toContain('Technician: James');
     expect(html).toContain('create_appointment');
-  });
-
-  it('shows appointment consequence on the surface after booking', () => {
-    const html = renderToStaticMarkup(
-      createElement(BusinessWebsite, {
-        config,
-        lastBooking: null,
-        businessNotice: {
-          headline: 'Appointment received',
-          service_name: 'AC Diagnostic Visit',
-          when_label: 'Tomorrow at 4:30 PM',
-          notification_email: 'hello@acme.example',
-          provider_name: 'James',
-        },
-      }),
-    );
-
-    expect(html).toContain('Appointment received');
-    expect(html).toContain('AC Diagnostic Visit');
-    expect(html).toContain('Tomorrow at 4:30 PM');
-    expect(html).toContain('Details would be sent to hello@acme.example');
   });
 
   it('gates appointment booking overlay until explicit user confirmation', () => {

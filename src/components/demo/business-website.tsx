@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react';
 import type { DemoBusinessNotice, DemoConfig, DemoPublicAppointment } from '@/demo/types';
 import { cn } from '@/lib/utils';
-import { BookingNotice } from '@/components/demo/storefront-primitives';
 
 type Props = {
   config: DemoConfig;
@@ -16,12 +15,10 @@ type Props = {
 
 /**
  * Clean business capability surface hosting the animated agent interaction overlay
- * and booking confirmation notices without mock storefront markup.
+ * and cursor interface without external text or mock designs.
  */
 export function BusinessWebsite({
   config,
-  lastBooking,
-  businessNotice,
   isAgentAccess = false,
   overlay,
   className,
@@ -49,13 +46,6 @@ export function BusinessWebsite({
           {overlay}
         </div>
       ) : null}
-
-      <BookingNotice
-        config={config}
-        lastBooking={lastBooking}
-        businessNotice={businessNotice}
-        className="border-t border-border bg-muted/40 text-foreground"
-      />
     </article>
   );
 }
