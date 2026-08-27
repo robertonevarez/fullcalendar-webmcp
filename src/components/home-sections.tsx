@@ -101,7 +101,7 @@ export function LiveInteractionSection() {
           width={2048}
           height={2048}
           decoding="async"
-          className="w-full self-start justify-self-end rounded-xl shadow-lg border border-border"
+          className="w-full self-start justify-self-end rounded-2xl border border-border shadow-lg"
         />
       </div>
     </HomeSection>
