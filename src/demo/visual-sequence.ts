@@ -9,10 +9,10 @@ export interface VisualStepEvent {
   completedSteps: DemoActivityStep[];
 }
 
-const TRAVEL_MS = 550;
-const STEP_WORKING_MS = 450;
-const STEP_HOLD_MS = 900;
-const SETTLE_MS = 350;
+const TRAVEL_MS = 800;
+const STEP_WORKING_MS = 1400;
+const STEP_HOLD_MS = 1800;
+const SETTLE_MS = 500;
 
 function wait(ms: number, signal?: AbortSignal): Promise<void> {
   if (ms <= 0) return Promise.resolve();
@@ -42,10 +42,10 @@ export type VisualSequenceTimings = {
 
 /** Timings tuned for smooth comprehension during self-driving product walkthrough. */
 export const WALKTHROUGH_VISUAL_TIMINGS: Required<VisualSequenceTimings> = {
-  travelMs: 550,
-  stepWorkingMs: 450,
-  stepHoldMs: 950,
-  settleMs: 350,
+  travelMs: 800,
+  stepWorkingMs: 1400,
+  stepHoldMs: 1800,
+  settleMs: 500,
 };
 
 /**
