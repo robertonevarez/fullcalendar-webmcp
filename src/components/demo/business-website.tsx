@@ -38,7 +38,7 @@ export function BusinessWebsite({
       <div
         className={cn(
           'pointer-events-none min-h-0 flex-1 select-none overflow-y-auto p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
-          isAgentAccess && 'opacity-25 blur-[0.5px] scale-[0.99]',
+          isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99]',
         )}
       >
         <div className="mx-auto max-w-4xl space-y-2.5">
@@ -257,7 +257,7 @@ export function BusinessWebsite({
       {/* Floating Agent Capability Overlay */}
       {overlay ? (
         <div
-          className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4"
+          className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4 backdrop-blur-[2px] bg-white/30 transition-all duration-300"
           data-demo-target="overlay-container"
         >
           {overlay}
