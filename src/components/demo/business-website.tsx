@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { DemoBusinessNotice, DemoConfig, DemoPublicAppointment } from '@/demo/types';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -35,13 +36,14 @@ export function BusinessWebsite({
       aria-label={`${config.businessName} website`}
     >
       {/* Scrollable debloat.dev style website content */}
-      <div
-        className={cn(
-          'min-h-0 flex-1 overflow-y-auto p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
+      <ScrollArea
+        className="min-h-0 flex-1"
+        viewportClassName={cn(
+          'p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
           isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
         )}
       >
-        <div className="mx-auto max-w-4xl space-y-3 pb-8">
+        <div className="pointer-events-none mx-auto max-w-4xl select-none space-y-3 pb-8">
           {/* Top Brand & Search Header */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] pb-2">
             <div className="flex items-baseline gap-2">
@@ -489,7 +491,7 @@ export function BusinessWebsite({
             <p>© 1994–2026 {config.businessName} Company. 4802 S Congress Ave, Austin, TX 78745 • Texas License #TACLA019284E • Dispatch: (512) 555-0199</p>
           </footer>
         </div>
-      </div>
+      </ScrollArea>
 
       {/* Floating Agent Capability Overlay */}
       {overlay ? (
