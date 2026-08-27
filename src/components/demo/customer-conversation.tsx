@@ -163,6 +163,22 @@ export function CustomerConversation({
     signal: AbortSignal;
   }) {
     if (!options.activity.length) {
+      if (!reducedMotionRef.current) {
+        setStatusText(`Working with ${config.businessName}…`);
+        await new Promise<void>((resolve, reject) => {
+          const t = setTimeout(resolve, 550);
+          options.signal.addEventListener(
+            'abort',
+            () => {
+              clearTimeout(t);
+              reject(new DOMException('Aborted', 'AbortError'));
+            },
+            { once: true },
+          );
+        });
+        if (options.signal.aborted) return;
+        setStatusText(null);
+      }
       setMessages((prev) => [
         ...prev,
         { id: `assistant_${crypto.randomUUID()}`, role: 'assistant', text: options.reply },
@@ -227,7 +243,7 @@ export function CustomerConversation({
       // Simulate user typing into the personal agent chat prompt
       if (!reducedMotionRef.current) {
         const chars = Array.from(message);
-        const charDelay = Math.max(8, Math.min(18, Math.floor(280 / chars.length)));
+        const charDelay = Math.max(22, Math.min(38, Math.floor(600 / chars.length)));
         for (let i = 1; i <= chars.length; i++) {
           if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
           setDraft(message.slice(0, i));
@@ -240,7 +256,7 @@ export function CustomerConversation({
           });
         }
         await new Promise<void>((resolve, reject) => {
-          const t = setTimeout(resolve, 80);
+          const t = setTimeout(resolve, 140);
           signal.addEventListener('abort', () => {
             clearTimeout(t);
             reject(new DOMException('Aborted', 'AbortError'));

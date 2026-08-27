@@ -23,13 +23,13 @@ export type WalkthroughScript = readonly string[];
 /** Presentation pacing — controls rhythm, not business correctness. */
 export const WALKTHROUGH_PACING = {
   /** Orient the viewer before the first message. */
-  initialPauseMs: 500,
+  initialPauseMs: 900,
   /** Beat after a user bubble appears, before the turn request starts. */
-  afterUserAppearMs: 250,
+  afterUserAppearMs: 350,
   /** Reading pause after a purely conversational agent reply. */
-  afterConversationalReplyMs: 1000,
+  afterConversationalReplyMs: 2400,
   /** Reading pause after a tool/website visit settles and the reply appears. */
-  afterToolReplyMs: 1400,
+  afterToolReplyMs: 2800,
 } as const;
 
 export type WalkthroughTurnResult = {
