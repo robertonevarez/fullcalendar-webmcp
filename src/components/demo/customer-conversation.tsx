@@ -166,7 +166,7 @@ export function CustomerConversation({
       if (!reducedMotionRef.current) {
         setStatusText(`Working with ${config.businessName}…`);
         await new Promise<void>((resolve, reject) => {
-          const t = setTimeout(resolve, 550);
+          const t = setTimeout(resolve, 750);
           options.signal.addEventListener(
             'abort',
             () => {
@@ -237,45 +237,62 @@ export function CustomerConversation({
   }
 
   async function executeScriptedTurn(message: string, signal: AbortSignal) {
-    setBusy(true);
+    // 1. User typing phase: Agent remains idle
+    setBusy(false);
+    setStatusText(null);
 
     try {
       // Simulate user typing into the personal agent chat prompt
       if (!reducedMotionRef.current) {
         const chars = Array.from(message);
-        const charDelay = Math.max(22, Math.min(38, Math.floor(600 / chars.length)));
+        const charDelay = Math.max(24, Math.min(40, Math.floor(650 / chars.length)));
         for (let i = 1; i <= chars.length; i++) {
           if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
           setDraft(message.slice(0, i));
           await new Promise<void>((resolve, reject) => {
             const t = setTimeout(resolve, charDelay);
-            signal.addEventListener('abort', () => {
-              clearTimeout(t);
-              reject(new DOMException('Aborted', 'AbortError'));
-            }, { once: true });
+            signal.addEventListener(
+              'abort',
+              () => {
+                clearTimeout(t);
+                reject(new DOMException('Aborted', 'AbortError'));
+              },
+              { once: true },
+            );
           });
         }
+        // Hesitation before pressing send
         await new Promise<void>((resolve, reject) => {
-          const t = setTimeout(resolve, 140);
-          signal.addEventListener('abort', () => {
-            clearTimeout(t);
-            reject(new DOMException('Aborted', 'AbortError'));
-          }, { once: true });
+          const t = setTimeout(resolve, 220);
+          signal.addEventListener(
+            'abort',
+            () => {
+              clearTimeout(t);
+              reject(new DOMException('Aborted', 'AbortError'));
+            },
+            { once: true },
+          );
         });
       }
 
       if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+
+      // 2. User confirms/sends the message: clear prompt, render user message bubble
       setDraft('');
       setMessages((prev) => [
         ...prev,
         { id: `user_${crypto.randomUUID()}`, role: 'user', text: message },
       ]);
 
+      // 3. Post-send artificial beat: user message lands before agent reacts
       await waitAfterUserAppear(signal);
 
       if (signal.aborted) {
         throw new DOMException('Aborted', 'AbortError');
       }
+
+      // 4. NOW the agent receives the message and becomes busy
+      setBusy(true);
 
       const response = await fetch('/api/demo/turn', {
         method: 'POST',
@@ -327,6 +344,7 @@ export function CustomerConversation({
       return { hadActivity: false };
     } finally {
       setBusy(false);
+      setStatusText(null);
     }
   }
 

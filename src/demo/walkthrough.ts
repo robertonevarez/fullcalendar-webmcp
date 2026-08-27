@@ -25,11 +25,11 @@ export const WALKTHROUGH_PACING = {
   /** Orient the viewer before the first message. */
   initialPauseMs: 900,
   /** Beat after a user bubble appears, before the turn request starts. */
-  afterUserAppearMs: 350,
+  afterUserAppearMs: 450,
   /** Reading pause after a purely conversational agent reply. */
-  afterConversationalReplyMs: 2400,
+  afterConversationalReplyMs: 2500,
   /** Reading pause after a tool/website visit settles and the reply appears. */
-  afterToolReplyMs: 2800,
+  afterToolReplyMs: 3000,
 } as const;
 
 export type WalkthroughTurnResult = {
