@@ -29,6 +29,8 @@ import {
   type WalkthroughScript,
 } from '@/demo/walkthrough';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { inter } from '@/lib/fonts';
+import { cn } from '@/lib/utils';
 
 type ChatMessage = {
   id: string;
@@ -46,22 +48,16 @@ type Props = {
   onBooked?: () => void;
 };
 
-function Section({
-  label,
-  sub,
-  time,
-  body,
+function AssistantMessage({
+  text,
   resolving,
 }: {
-  label: string;
-  sub: string;
-  time: string;
-  body: string;
+  text: string;
   resolving?: boolean;
 }) {
   return (
     <div
-      className="flex w-full flex-col gap-1.5 transition-[opacity,filter,transform] duration-400"
+      className="flex w-full flex-col transition-[opacity,filter,transform] duration-400"
       style={{
         opacity: resolving ? 0.55 : 1,
         filter: resolving ? 'blur(0.5px)' : 'blur(0)',
@@ -71,12 +67,7 @@ function Section({
         animation: 'fade-up 400ms cubic-bezier(0.23,1,0.32,1) both',
       }}
     >
-      <div className="flex items-center gap-1 text-[12px] leading-[1.3]">
-        <span className="font-medium text-ink">{label}</span>
-        <span className="text-ink-2">{sub}</span>
-        <span className="text-ink">· {time}</span>
-      </div>
-      <p className="text-[13px] leading-normal text-ink whitespace-pre-wrap">{body}</p>
+      <p className="text-[13px] leading-relaxed text-ink whitespace-pre-wrap">{text}</p>
     </div>
   );
 }
@@ -126,7 +117,6 @@ export function CustomerConversation({
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [businessNotice, setBusinessNotice] = useState<DemoBusinessNotice | null>(null);
-  const [tab, setTab] = useState('Assistant');
 
   const [visualPhase, setVisualPhase] = useState<VisualPhase>('idle');
   const [overlayEvent, setOverlayEvent] = useState<VisualStepEvent | null>(null);
@@ -371,7 +361,7 @@ export function CustomerConversation({
         />
       </div>
 
-      {/* RIGHT: Customer's Personal Agent Conversation (Adopted Design & Framework) */}
+      {/* RIGHT: Customer's Personal Agent Conversation (Inter font, simplified non-descriptive UI) */}
       <div className="order-2 flex min-h-0 flex-col md:h-full">
         {statusText ? (
           <p
@@ -386,49 +376,17 @@ export function CustomerConversation({
         <div
           data-demo-target="chat"
           data-demo-playback={playbackState}
-          className="flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col self-start overflow-hidden rounded-[14px] border border-line bg-surface shadow-card md:mx-0"
+          className={cn(
+            inter.className,
+            'flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col self-start overflow-hidden rounded-[14px] border border-line bg-surface shadow-card md:mx-0',
+          )}
           role="region"
           aria-label="Agent conversation"
         >
-          {/* header — tabs + actions */}
-          <div className="flex shrink-0 items-center justify-between border-b border-line p-1.5">
-            <div className="flex items-center">
-              {['Assistant', 'Activity'].map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={tab === item}
-                  onClick={() => setTab(item)}
-                  className={`rounded-[6px] px-2 py-[3px] text-[13px] text-ink transition-[background-color,opacity] duration-100 ${tab === item ? 'bg-field' : 'opacity-50 hover:opacity-75'}`}
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-1">
-              {[
-                <path key="p" d="M12 5v14M5 12h14" />,
-                <g key="h"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></g>,
-                <g key="e" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8" /><circle cx="12" cy="12" r="1.8" /><circle cx="19" cy="12" r="1.8" /></g>,
-              ].map((icon, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  aria-label="Action"
-                  className="flex size-6 items-center justify-center rounded-[6px] text-ink-3 transition-colors duration-100 hover:bg-hover hover:text-ink-2"
-                >
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    {icon}
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* conversation — fixed region so the card never changes shape */}
+          {/* conversation — scrollable messages area */}
           <div
             ref={messagesScrollerRef}
-            className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto px-3 pt-2.5 pb-1"
+            className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-3.5"
           >
             {messages.map((msg) => {
               if (msg.role === 'user') {
@@ -446,29 +404,23 @@ export function CustomerConversation({
                 );
               }
               return (
-                <Section
+                <AssistantMessage
                   key={msg.id}
-                  label="Personal Agent"
-                  sub={config.businessName}
-                  time="now"
-                  body={msg.text}
+                  text={msg.text}
                 />
               );
             })}
 
             {busy || visualPhase !== 'idle' ? (
-              <Section
-                label="Personal Agent"
-                sub={visualPhase === 'operating' ? 'Website Access' : 'Consulting'}
-                time="working"
-                body={statusText ?? `Working with ${config.businessName}…`}
+              <AssistantMessage
+                text={statusText ?? `Working with ${config.businessName}…`}
                 resolving={true}
               />
             ) : null}
           </div>
 
           {/* composer */}
-          <div className="mt-auto shrink-0 p-1.5">
+          <div className="mt-auto shrink-0 p-2">
             <div
               role="presentation"
               className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.035)] transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.025)]"
@@ -476,14 +428,12 @@ export function CustomerConversation({
               <input
                 value={
                   busy
-                    ? 'Agent accessing business website…'
-                    : playbackState === 'completed'
-                      ? 'Walkthrough complete'
-                      : 'Prompt or tag a service with @'
+                    ? 'Working…'
+                    : ''
                 }
                 readOnly
-                aria-label="Chat prompt"
-                className="min-h-4.5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none placeholder:text-ink-3"
+                aria-label="Chat message"
+                className="min-h-4.5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none"
               />
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-ink-3">
