@@ -363,16 +363,6 @@ export function CustomerConversation({
 
       {/* RIGHT: Customer's Personal Agent Conversation (Inter font, simplified non-descriptive UI) */}
       <div className="order-2 flex min-h-0 flex-col md:h-full">
-        {statusText ? (
-          <p
-            className="mb-2 text-xs tracking-tight text-muted-foreground md:hidden"
-            role="status"
-            aria-live="polite"
-          >
-            {statusText}
-          </p>
-        ) : null}
-
         <div
           data-demo-target="chat"
           data-demo-playback={playbackState}
