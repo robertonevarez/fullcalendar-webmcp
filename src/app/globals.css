@@ -32,8 +32,11 @@
   --field: oklch(0.965 0 0);
   --hover: oklch(0.935 0 0);
   --line: oklch(0.92 0 0);
-  --line-strong: oklch(0.82 0 0);
-  --radius-control: 10px;
+  --green: #10b981;
+  --green-tint: rgba(16, 185, 129, 0.12);
+  --red: #ef4444;
+  --red-tint: rgba(239, 68, 68, 0.12);
+  --inset: oklch(0.96 0 0);
 }
 
 @keyframes fade-up {
@@ -44,6 +47,26 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -79,7 +102,13 @@
   --color-hover: var(--hover);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-green: var(--green);
+  --color-green-tint: var(--green-tint);
+  --color-red: var(--red);
+  --color-red-tint: var(--red-tint);
+  --color-inset: var(--inset);
   --radius-control: var(--radius-control);
+  --radius-card: 14px;
   --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
