@@ -81,16 +81,9 @@ function pointInStage(
   const stageRect = stage.getBoundingClientRect();
   const rect = el.getBoundingClientRect();
 
-  if (selector.includes('storefront') || selector.includes('overlay')) {
-    return {
-      x: rect.left - stageRect.left + rect.width / 2,
-      y: rect.top - stageRect.top + rect.height * 0.42,
-    };
-  }
-
   return {
-    x: rect.left - stageRect.left + Math.min(36, rect.width * 0.12),
-    y: rect.top - stageRect.top + Math.min(28, rect.height * 0.18),
+    x: rect.left - stageRect.left + rect.width / 2,
+    y: rect.top - stageRect.top + rect.height / 2,
   };
 }
 
