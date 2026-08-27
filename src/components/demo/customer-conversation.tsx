@@ -227,7 +227,7 @@ export function CustomerConversation({
       // Simulate user typing into the personal agent chat prompt
       if (!reducedMotionRef.current) {
         const chars = Array.from(message);
-        const charDelay = Math.max(15, Math.min(32, Math.floor(550 / chars.length)));
+        const charDelay = Math.max(8, Math.min(18, Math.floor(280 / chars.length)));
         for (let i = 1; i <= chars.length; i++) {
           if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
           setDraft(message.slice(0, i));
@@ -240,7 +240,7 @@ export function CustomerConversation({
           });
         }
         await new Promise<void>((resolve, reject) => {
-          const t = setTimeout(resolve, 180);
+          const t = setTimeout(resolve, 80);
           signal.addEventListener('abort', () => {
             clearTimeout(t);
             reject(new DOMException('Aborted', 'AbortError'));
