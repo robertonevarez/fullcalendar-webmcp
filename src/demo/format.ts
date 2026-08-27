@@ -60,6 +60,8 @@ export function formatDaysLabel(days: number[]): string {
   const names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const sorted = [...days].sort((a, b) => a - b);
   if (sorted.join(',') === '1,2,3,4,5') return 'Monday – Friday';
+  if (sorted.join(',') === '1,2,3,4,5,6') return 'Monday – Saturday';
+  if (sorted.join(',') === '2,3,4,5,6') return 'Tuesday – Saturday';
   if (sorted.join(',') === '0,1,2,3,4,5,6') return 'Every day';
   return sorted.map((d) => names[d] ?? '?').join(', ');
 }

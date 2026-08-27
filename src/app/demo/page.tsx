@@ -4,7 +4,7 @@ import { DemoExperience } from '@/components/demo/demo-experience';
 export const metadata: Metadata = {
   title: 'Product demo',
   description:
-    'Describe a simple service business, make it agent-ready, and experience booking through a customer’s AI agent — powered by Protocol Tooling’s real scheduling rules.',
+    "Watch a customer's personal AI agent book a real business using Protocol Tooling's scheduling rules — no dashboard required.",
 };
 
 export default function DemoPage() {

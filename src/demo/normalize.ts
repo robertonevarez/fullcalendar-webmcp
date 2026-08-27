@@ -1,18 +1,17 @@
 import { AppError, ErrorCodes } from '@/domain/errors';
 import type {
   Business,
+  LocationPolicy,
   Resource,
+  ResourceRequirement,
   Service,
   WorkingHours,
 } from '@/domain/types';
 import {
-  DEFAULT_DEMO_CONFIG,
   DEMO_BUSINESS_ID,
   DEMO_BUSINESS_SLUG,
-  DEMO_STAFF_CAPABILITY,
-  DEMO_STAFF_RESOURCE_TYPE,
 } from '@/demo/defaults';
-import type { DemoConfig, DemoServiceInput } from '@/demo/types';
+import type { DemoArchetype, DemoConfig, DemoServiceInput } from '@/demo/types';
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const POSTAL_RE = /^\d{5}$/;
@@ -35,25 +34,69 @@ function slugifyServiceId(name: string, index: number): string {
   return `demo_svc_${base || 'service'}_${index + 1}`;
 }
 
-function keywordsForService(name: string): string[] {
+function keywordsForService(name: string, archetype: DemoArchetype): string[] {
   const tokens = name
     .toLowerCase()
     .split(/[^a-z0-9]+/)
     .filter((t) => t.length > 1);
   const extras: string[] = [];
-  if (tokens.some((t) => t === 'ac' || t === 'air' || t === 'hvac' || t === 'cooling')) {
-    extras.push('ac', 'air', 'conditioning', 'cooling', 'hvac', 'upstairs', 'diagnostic');
+
+  if (archetype === 'field_service') {
+    if (tokens.some((t) => t === 'ac' || t === 'air' || t === 'hvac' || t === 'cooling')) {
+      extras.push('ac', 'air', 'conditioning', 'cooling', 'hvac', 'upstairs', 'diagnostic');
+    }
+    if (tokens.some((t) => t.includes('maint'))) {
+      extras.push('maintenance', 'tune', 'tuneup', 'preventive', 'checkup');
+    }
+    if (tokens.some((t) => t.includes('diagnost'))) {
+      extras.push('diagnostic', 'inspect', 'look', 'check', 'broken', 'issue');
+    }
   }
-  if (tokens.some((t) => t.includes('maint'))) {
-    extras.push('maintenance', 'tune', 'tuneup', 'preventive', 'checkup');
+
+  if (archetype === 'salon') {
+    if (tokens.some((t) => t.includes('hair') || t === 'cut')) {
+      extras.push('haircut', 'trim', 'cut', 'barber', 'salon');
+    }
+    if (tokens.some((t) => t.includes('color'))) {
+      extras.push('color', 'dye', 'highlights');
+    }
   }
-  if (tokens.some((t) => t.includes('diagnost'))) {
-    extras.push('diagnostic', 'inspect', 'look', 'check', 'broken', 'issue');
+
+  if (archetype === 'auto') {
+    if (tokens.some((t) => t.includes('oil'))) {
+      extras.push('oil change', 'maintenance', 'lube');
+    }
+    if (tokens.some((t) => t.includes('brake'))) {
+      extras.push('brake', 'inspection', 'safety');
+    }
   }
+
   return Array.from(new Set([...tokens, ...extras]));
 }
 
-function normalizeService(input: DemoServiceInput, index: number): Service {
+function serviceRequirements(input: DemoServiceInput, archetype: DemoArchetype): ResourceRequirement[] {
+  const name = input.name.toLowerCase();
+  if (archetype === 'auto') {
+    const capability = name.includes('brake') ? 'brake_service' : 'oil_change';
+    return [
+      { resource_type: 'automotive_technician', quantity: 1, capability },
+      { resource_type: 'service_bay', quantity: 1 },
+    ];
+  }
+  if (archetype === 'salon') {
+    const capability = name.includes('color') ? 'hair_color' : 'haircut';
+    return [{ resource_type: 'stylist', quantity: 1, capability }];
+  }
+  return [{ resource_type: 'staff', quantity: 1, capability: 'demo_capable' }];
+}
+
+function normalizeService(
+  input: DemoServiceInput,
+  index: number,
+  archetype: DemoArchetype,
+  locationPolicy: LocationPolicy,
+  serviceAreaRequired: boolean,
+): Service {
   const id = input.id?.trim() || slugifyServiceId(input.name, index);
   const duration = Math.round(Number(input.duration_minutes));
   const dollars = Number(input.price_dollars);
@@ -80,22 +123,78 @@ function normalizeService(input: DemoServiceInput, index: number): Service {
     duration_minutes: duration,
     price_cents: Math.round(dollars * 100),
     currency: 'USD',
-    keywords: keywordsForService(input.name),
-    location_policy: 'CUSTOMER',
-    service_area_required: true,
-    resource_requirements: [
-      {
-        resource_type: DEMO_STAFF_RESOURCE_TYPE,
-        quantity: 1,
-        capability: DEMO_STAFF_CAPABILITY,
-      },
-    ],
+    keywords: keywordsForService(input.name, archetype),
+    location_policy: locationPolicy,
+    service_area_required: serviceAreaRequired,
+    resource_requirements: serviceRequirements(input, archetype),
     intake_fields: [],
   };
 }
 
+function buildResources(
+  config: DemoConfig,
+  workingHours: WorkingHours[],
+): Resource[] {
+  const resources: Resource[] = [];
+
+  if (config.archetype === 'auto') {
+    config.staff.forEach((name, index) => {
+      resources.push({
+        id: `demo_res_tech_${index + 1}`,
+        business_id: DEMO_BUSINESS_ID,
+        name: name.trim(),
+        resource_type: 'automotive_technician',
+        capabilities: ['oil_change', 'brake_service'],
+        working_hours: workingHours,
+        is_human: true,
+      });
+    });
+    (config.facilities ?? []).forEach((name, index) => {
+      resources.push({
+        id: `demo_res_bay_${index + 1}`,
+        business_id: DEMO_BUSINESS_ID,
+        name: name.trim(),
+        resource_type: 'service_bay',
+        capabilities: [],
+        working_hours: workingHours,
+        is_human: false,
+      });
+    });
+    return resources;
+  }
+
+  if (config.archetype === 'salon') {
+    config.staff.forEach((name, index) => {
+      const caps = index === 0 ? ['haircut', 'hair_color'] : ['haircut'];
+      resources.push({
+        id: `demo_res_stylist_${index + 1}`,
+        business_id: DEMO_BUSINESS_ID,
+        name: name.trim(),
+        resource_type: 'stylist',
+        capabilities: caps,
+        working_hours: workingHours,
+        is_human: true,
+      });
+    });
+    return resources;
+  }
+
+  config.staff.forEach((name, index) => {
+    resources.push({
+      id: `demo_res_${index + 1}`,
+      business_id: DEMO_BUSINESS_ID,
+      name: name.trim(),
+      resource_type: 'staff',
+      capabilities: ['demo_capable'],
+      working_hours: workingHours,
+      is_human: true,
+    });
+  });
+  return resources;
+}
+
 /**
- * Convert simplified demo form state into Protocol Tooling domain objects.
+ * Convert preset demo config into Protocol Tooling domain objects.
  * Does not touch Postgres or seeded businesses.
  */
 export function normalizeDemoConfig(config: DemoConfig): NormalizedDemoBusiness {
@@ -150,7 +249,9 @@ export function normalizeDemoConfig(config: DemoConfig): NormalizedDemoBusiness 
     close: config.availability.close,
   }));
 
-  const serviceAreaRequired = postalCodes.length > 0;
+  const serviceAreaRequired = config.archetype === 'field_service' && postalCodes.length > 0;
+  const locationPolicy: LocationPolicy =
+    config.archetype === 'field_service' && postalCodes.length > 0 ? 'CUSTOMER' : 'NONE';
 
   const business: Business = {
     id: DEMO_BUSINESS_ID,
@@ -163,29 +264,15 @@ export function normalizeDemoConfig(config: DemoConfig): NormalizedDemoBusiness 
       line1: 'Demo business address',
       city: 'Austin',
       region: 'TX',
-      postal_code: postalCodes[0] ?? '00000',
+      postal_code: postalCodes[0] ?? '78756',
     },
   };
 
-  const services = config.services.map((svc, index) => {
-    const normalized = normalizeService(svc, index);
-    return {
-      ...normalized,
-      location_policy: serviceAreaRequired ? ('CUSTOMER' as const) : ('NONE' as const),
-      service_area_required: serviceAreaRequired,
-    };
-  });
+  const services = config.services.map((svc, index) =>
+    normalizeService(svc, index, config.archetype, locationPolicy, serviceAreaRequired),
+  );
 
-  const staffNames = config.staff.map((n) => n.trim()).filter(Boolean);
-  const resources: Resource[] = staffNames.map((name, index) => ({
-    id: `demo_res_${index + 1}`,
-    business_id: DEMO_BUSINESS_ID,
-    name,
-    resource_type: DEMO_STAFF_RESOURCE_TYPE,
-    capabilities: [DEMO_STAFF_CAPABILITY],
-    working_hours: workingHours,
-    is_human: true,
-  }));
+  const resources = buildResources(config, workingHours);
 
   const postalCodesByZone = new Map<string, string[]>();
   if (postalCodes.length) {
@@ -201,7 +288,7 @@ export function normalizeDemoConfig(config: DemoConfig): NormalizedDemoBusiness 
   };
 }
 
-/** Clone config so form edits never mutate a shared constant. */
-export function cloneDemoConfig(config: DemoConfig = DEFAULT_DEMO_CONFIG): DemoConfig {
+/** Clone preset config so mutations never affect shared constants. */
+export function cloneDemoConfig(config: DemoConfig): DemoConfig {
   return structuredClone(config);
 }

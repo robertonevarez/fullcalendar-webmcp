@@ -1,6 +1,8 @@
 import type { Appointment, AvailabilitySlot } from '@/domain/types';
 
-/** Simplified business setup form — not the full domain model. */
+export type DemoArchetype = 'field_service' | 'salon' | 'auto';
+
+/** Simplified business setup — preset-driven, not free-form editable in the UI. */
 export interface DemoServiceInput {
   id: string;
   name: string;
@@ -17,9 +19,12 @@ export interface DemoAvailabilityInput {
 }
 
 export interface DemoConfig {
+  archetype: DemoArchetype;
   businessName: string;
   services: DemoServiceInput[];
   staff: string[];
+  /** Non-human resources (service bays, rooms) for compound booking presets */
+  facilities?: string[];
   availability: DemoAvailabilityInput;
   postalCodes: string[];
   notificationEmail: string;
