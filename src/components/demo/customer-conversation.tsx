@@ -340,8 +340,8 @@ export function CustomerConversation({
         reducedMotion={reducedMotion}
       />
 
-      {/* LEFT: Full Simulated Business Website with Contextual Agent Interaction Overlay */}
-      <div className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs md:h-full">
+      {/* LEFT: Full Business Surface Container */}
+      <div className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground md:h-full">
         <BusinessWebsite
           className="h-full min-h-0"
           config={config}
@@ -368,7 +368,7 @@ export function CustomerConversation({
           data-demo-playback={playbackState}
           className={cn(
             inter.className,
-            'flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col self-start overflow-hidden rounded-[14px] border border-line bg-surface shadow-card md:mx-0',
+            'flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col self-start overflow-hidden rounded-[14px] border border-line bg-surface md:mx-0',
           )}
           role="region"
           aria-label="Agent conversation"
@@ -413,7 +413,7 @@ export function CustomerConversation({
           <div className="mt-auto shrink-0 p-2">
             <div
               role="presentation"
-              className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.035)] transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.025)]"
+              className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 transition-[border-color] duration-150 focus-within:border-line-strong"
             >
               <input
                 value={
