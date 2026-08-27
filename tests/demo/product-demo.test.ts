@@ -32,7 +32,7 @@ describe('demo presets', () => {
     expect(getDefaultPreset().id).toBe('acme-hvac');
     expect(getDefaultPreset().config.businessName).toBe('Acme Heating & Air');
     expect(DEFAULT_DEMO_CONFIG.archetype).toBe('field_service');
-    expect(DEFAULT_CUSTOMER_PROMPT).toBe("What's happening with my AC?");
+    expect(DEFAULT_CUSTOMER_PROMPT).toBe("my ac is blowing warm air, can you check what's up?");
   });
 
   it('normalizes each archetype into domain objects', () => {
@@ -184,7 +184,7 @@ describe('demo conversation state machine', () => {
     const result = processDemoTurn({
       config,
       conversation: emptyConversationState(),
-      message: "What's happening with my AC?",
+      message: "my ac is blowing warm air, can you check what's up?",
     });
 
     expect(result.conversation.phase).toBe('awaiting_service_confirmation');
@@ -201,7 +201,7 @@ describe('demo conversation state machine', () => {
       conversation: emptyConversationState(),
       message: getDefaultPreset().customerPrompt,
     });
-    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'Yeah.' });
+    const consent = processDemoTurn({ config, conversation: started.conversation, message: 'yeah please' });
     expect(consent.conversation.phase).toBe('awaiting_location');
     expect(consent.reply).toBe("What's your ZIP code?");
     expect(consent.activity).toEqual([]);
@@ -213,20 +213,20 @@ describe('demo conversation state machine', () => {
     expect(discovered.reply).toMatch(/90 minutes/);
     expect(discovered.conversation.pendingService?.service_id).toBe(config.services[0].id);
 
-    const availability = processDemoTurn({ config, conversation: discovered.conversation, message: 'Sure.' });
+    const availability = processDemoTurn({ config, conversation: discovered.conversation, message: 'sounds good' });
     expect(availability.conversation.phase).toBe('awaiting_slot_choice');
     expect(availability.activity.map((step) => step.tool)).toEqual(['get_availability']);
     expect(availability.conversation.pendingOffer?.slots.length).toBeGreaterThan(0);
     expect(availability.reply).toMatch(/Which works best/);
 
-    const selected = processDemoTurn({ config, conversation: availability.conversation, message: '4:30 works.' });
+    const selected = processDemoTurn({ config, conversation: availability.conversation, message: '4:30 works' });
     expect(selected.conversation.phase).toBe('awaiting_booking_confirmation');
     expect(selected.conversation.appointments).toHaveLength(0);
     expect(selected.activity).toEqual([]);
     expect(selected.reply).toMatch(/4:30 PM works/);
     expect(selected.reply).toMatch(/book it/i);
 
-    const confirmed = processDemoTurn({ config, conversation: selected.conversation, message: 'Yes.' });
+    const confirmed = processDemoTurn({ config, conversation: selected.conversation, message: 'yes please' });
     expect(confirmed.conversation.phase).toBe('booked');
     expect(confirmed.conversation.appointments).toHaveLength(1);
     expect(confirmed.businessNotice?.notification_email).toBe('hello@acme.example');
@@ -237,7 +237,7 @@ describe('demo conversation state machine', () => {
     expect(confirmed.reply).toMatch(/You're booked with Acme Heating & Air/);
   });
 
-  it.each(['yes', 'yeah', 'sure', 'please', 'do it'])('recognizes the affirmation "%s"', (message) => {
+  it.each(['yes', 'yeah', 'sure', 'please', 'do it', 'yeah please', 'sounds good'])('recognizes the affirmation "%s"', (message) => {
     const config = getDefaultPreset().config;
     const started = processDemoTurn({ config, conversation: emptyConversationState(), message: getDefaultPreset().customerPrompt });
     const result = processDemoTurn({ config, conversation: started.conversation, message });

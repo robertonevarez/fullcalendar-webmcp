@@ -104,7 +104,7 @@ export const DEMO_PRESETS: DemoPreset[] = [
     blurb: 'Field service with a ZIP service area',
     webmcpPath: '/businesses/acme-hvac',
     config: ACME_CONFIG,
-    customerPrompt: "What's happening with my AC?",
+    customerPrompt: "my ac is blowing warm air, can you check what's up?",
   },
   {
     id: 'northline-salon',
@@ -112,7 +112,7 @@ export const DEMO_PRESETS: DemoPreset[] = [
     blurb: 'Salon appointments at the business location',
     webmcpPath: '/businesses/northline-salon',
     config: NORTHLINE_CONFIG,
-    customerPrompt: 'I need a haircut tomorrow morning. What times do you have?',
+    customerPrompt: 'i need a haircut tomorrow morning, what times are open?',
   },
   {
     id: 'mesa-auto',
@@ -120,7 +120,7 @@ export const DEMO_PRESETS: DemoPreset[] = [
     blurb: 'Technician and service bay booked together',
     webmcpPath: '/businesses/mesa-auto-service',
     config: MESA_CONFIG,
-    customerPrompt: 'I need an oil change tomorrow morning. What is available?',
+    customerPrompt: 'i need an oil change tomorrow morning, what do you have?',
   },
 ];
 

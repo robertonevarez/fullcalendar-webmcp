@@ -66,7 +66,7 @@ export function AgentInteractionOverlay({
               <span className="text-[13px] font-medium text-ink">
                 {target === 'services' && isRunning
                   ? 'Finding the right service'
-                  : searchStep?.result?.service_name ?? 'AC Diagnostic Visit'}
+                  : searchStep?.result?.service_name || 'AC Diagnostic Visit'}
               </span>
             </div>
             <span className="font-mono text-[11px] text-ink-3">
@@ -76,10 +76,10 @@ export function AgentInteractionOverlay({
 
           <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-2 text-[12.5px] text-ink-2">
             {target === 'services' && isRunning ? (
-              <span>Matching &quot;{searchStep?.result?.query ?? 'AC cooling upstairs'}&quot;</span>
+              <span>Matching &quot;{searchStep?.result?.query?.trim() || 'AC cooling upstairs'}&quot;</span>
             ) : (
               <span>
-                {searchStep?.result?.price_label ?? '$89'} · {searchStep?.result?.duration_minutes ?? 90} min
+                {searchStep?.result?.price_label || '$89'} · {searchStep?.result?.duration_minutes ?? 90} min
               </span>
             )}
             <span className="rounded-full bg-green-tint px-2 py-0.5 text-[11.5px] font-medium text-green">
@@ -97,6 +97,7 @@ export function AgentInteractionOverlay({
         >
           {(() => {
             const isFailed = areaStep?.result?.eligible === false;
+            const postalCode = areaStep?.result?.postal_code?.trim() || '78701';
             return (
               <>
                 <div className="flex items-center justify-between gap-2">
@@ -112,8 +113,8 @@ export function AgentInteractionOverlay({
                       {target === 'service_area' && isRunning
                         ? 'Checking service area'
                         : isFailed
-                          ? `Not available in ${areaStep?.result?.postal_code ?? '90210'}`
-                          : `Available in ${areaStep?.result?.postal_code ?? '78701'}`}
+                          ? `Not available in ${postalCode}`
+                          : `Available in ${postalCode}`}
                     </span>
                   </div>
                   <span className="font-mono text-[11px] text-ink-3">
@@ -124,8 +125,8 @@ export function AgentInteractionOverlay({
                 <div className="mt-2 flex items-center justify-between border-t border-line/60 pt-2 text-[12.5px] text-ink-2">
                   <span>
                     {isFailed
-                      ? (step.detail ?? `${areaStep?.result?.postal_code} is outside the service area`)
-                      : `Postal code ${areaStep?.result?.postal_code ?? '78701'}`}
+                      ? (step.detail || `${postalCode} is outside the service area`)
+                      : `Postal code ${postalCode}`}
                   </span>
                   {isFailed ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-tint px-2 py-0.5 text-[11.5px] font-medium text-red">
@@ -168,7 +169,10 @@ export function AgentInteractionOverlay({
           </div>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-1.5 border-t border-line/60 pt-2">
-            {(availStep?.result?.slot_labels ?? ['4:00 PM', '4:15 PM', '4:30 PM']).map((slot) => (
+            {(availStep?.result?.slot_labels?.length
+              ? availStep.result.slot_labels
+              : ['4:00 PM', '4:15 PM', '4:30 PM']
+            ).map((slot) => (
               <span
                 key={slot}
                 className="rounded-full bg-field px-2.5 py-1 text-[12px] font-medium text-ink shadow-xs"
@@ -206,14 +210,14 @@ export function AgentInteractionOverlay({
 
           <div className="mt-2 space-y-1 border-t border-line/60 pt-2 text-[12.5px] text-ink-2">
             <div className="flex items-center justify-between">
-              <span>{bookingStep?.result?.service_name ?? 'AC Diagnostic Visit'}</span>
+              <span>{bookingStep?.result?.service_name || 'AC Diagnostic Visit'}</span>
               <span className="rounded-full bg-green-tint px-2 py-0.5 text-[11.5px] font-medium text-green">
                 Confirmed
               </span>
             </div>
             <div className="flex items-center justify-between text-[12px] text-ink-3">
-              <span>{bookingStep?.result?.when_label ?? 'Tomorrow at 4:30 PM'}</span>
-              <span>Technician: {bookingStep?.result?.provider_name ?? 'James'}</span>
+              <span>{bookingStep?.result?.when_label || 'Tomorrow at 4:30 PM'}</span>
+              <span>Technician: {bookingStep?.result?.provider_name || 'James'}</span>
             </div>
           </div>
         </div>
@@ -227,9 +231,9 @@ export function AgentInteractionOverlay({
               <SpinnerRing active={isRunning}>1</SpinnerRing>
               <span className="text-[13px] font-medium text-ink">{step.label}</span>
             </div>
-            <span className="font-mono text-[11px] text-ink-3">{step.tool ?? step.id}</span>
+            <span className="font-mono text-[11px] text-ink-3">{step.tool || step.id}</span>
           </div>
-          {step.detail && (
+          {step.detail && step.detail.trim() && (
             <div className="mt-2 border-t border-line/60 pt-2 text-[12.5px] text-ink-2">
               {step.detail}
             </div>

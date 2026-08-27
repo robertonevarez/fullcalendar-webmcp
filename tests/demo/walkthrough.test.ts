@@ -15,14 +15,14 @@ afterEach(() => {
 
 describe('canonical walkthrough script', () => {
   it('starts from the ambiguous AC prompt and ends with booking confirmation', () => {
-    expect(CANONICAL_WALKTHROUGH_SCRIPT[0]).toBe("What's happening with my AC?");
+    expect(CANONICAL_WALKTHROUGH_SCRIPT[0]).toBe("my ac is blowing warm air, can you check what's up?");
     expect(CANONICAL_WALKTHROUGH_SCRIPT).toEqual([
-      "What's happening with my AC?",
-      'Yeah.',
+      "my ac is blowing warm air, can you check what's up?",
+      'yeah please',
       '78701',
-      'Sure.',
-      '4:30',
-      'Yes.',
+      'sounds good',
+      '4:30 works',
+      'yes please',
     ]);
   });
 
@@ -84,7 +84,7 @@ describe('playWalkthrough controller', () => {
       runTurn: async (message) => {
         runCount += 1;
         seen.push(message);
-        return { hadActivity: message === '78701' || message === 'Sure.' || message === 'Yes.' };
+        return { hadActivity: message === '78701' || message === 'sounds good' || message === 'yes please' };
       },
     });
 

@@ -10,12 +10,12 @@ export type PlaybackState = 'idle' | 'playing' | 'completed';
 
 /** Canonical Acme Heating & Air walkthrough — simulated user turns only. */
 export const CANONICAL_WALKTHROUGH_SCRIPT = [
-  "What's happening with my AC?",
-  'Yeah.',
+  "my ac is blowing warm air, can you check what's up?",
+  'yeah please',
   '78701',
-  'Sure.',
-  '4:30',
-  'Yes.',
+  'sounds good',
+  '4:30 works',
+  'yes please',
 ] as const;
 
 export type WalkthroughScript = readonly string[];

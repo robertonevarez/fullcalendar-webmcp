@@ -140,7 +140,7 @@ function normalizedMessage(message: string): string {
 export function isAffirmative(message: string): boolean {
   const text = normalizedMessage(message);
   if (!text || isNegative(message)) return false;
-  return /^(yes|yeah|yep|sure|please|okay|ok|do it|go ahead|sounds good|perfect)(?: please)?$/.test(text);
+  return /^(yes|yeah|yep|sure|please|okay|ok|do it|go ahead|sounds good|sounds great|perfect)(?: please| thanks| thank you| let's do it| book it)?$/.test(text);
 }
 
 export function isNegative(message: string): boolean {

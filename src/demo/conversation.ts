@@ -112,12 +112,12 @@ function noActivity(
 
 function guidedReply(config: DemoConfig): string {
   if (config.archetype === 'field_service') {
-    return "If it's running but not cooling properly, a technician should inspect it.\n\nWant me to find someone nearby?";
+    return "If your AC is blowing warm air, a technician should inspect the compressor and coils.\n\nWant me to find someone nearby?";
   }
   if (config.archetype === 'salon') {
-    return 'That sounds like a haircut appointment.\n\nWant me to find a time that works?';
+    return 'Sounds like you need a haircut appointment.\n\nWant me to find an open spot?';
   }
-  return "That sounds like a service visit.\n\nWant me to see when the shop can take it?";
+  return "Sounds like a diagnostic service visit.\n\nWant me to check when the shop can take it in?";
 }
 
 function availabilityQuestion(config: DemoConfig): string {
@@ -214,7 +214,7 @@ function discoverService(
       tool: 'search_services',
       result: {
         service_id: service.id,
-        query: serviceQuery,
+        query: serviceQuery.trim() || 'AC diagnostic',
         service_name: service.name,
         price_label: formatPriceCents(service.price_cents, service.currency),
         duration_minutes: service.duration_minutes,
@@ -390,7 +390,7 @@ function selectedSlotIndex(
 }
 
 function confirmsBooking(message: string): boolean {
-  return !isNegative(message) && (isAffirmative(message) || /\b(book|confirm|go ahead|do it)\b/i.test(message));
+  return !isNegative(message) && (isAffirmative(message) || /\b(book|confirm|go ahead|do it|lock it in|yes)\b/i.test(message));
 }
 
 function selectedSlotReply(engine: DemoBookingEngine, slot: DemoPendingOffer['slots'][number]): string {
