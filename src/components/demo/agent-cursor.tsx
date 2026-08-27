@@ -118,8 +118,11 @@ export function AgentCursor({
       clearTimeout(settleTimeout.current);
     }
     settleTimeout.current = setTimeout(() => {
+      rotation.set(0);
+      accumulatedRotation.current = 0;
+      previousAngle.current = 0;
       scale.set(1);
-    }, 150);
+    }, 220);
   }, [cursorX, cursorY, reducedMotion, rotation, scale, x, y]);
 
   useEffect(() => {
