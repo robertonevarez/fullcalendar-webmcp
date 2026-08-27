@@ -20,7 +20,7 @@ const { CustomerConversation } = await import('@/components/demo/customer-conver
 const config = getDefaultPreset().config;
 
 describe('demo presentation surfaces', () => {
-  it('renders the conversation as a playback surface without an editable composer', () => {
+  it('renders the conversation as a playback surface without a composer or input area', () => {
     const html = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
@@ -28,9 +28,9 @@ describe('demo presentation surfaces', () => {
     );
 
     expect(html).toContain('data-demo-playback="playing"');
-    expect(html).toContain('Product walkthrough');
     expect(html).not.toContain('Ask a follow-up');
     expect(html).not.toMatch(/<textarea\b/i);
+    expect(html).not.toMatch(/<input\b/i);
     expect(html).not.toMatch(/placeholder=/i);
     expect(html).not.toContain('type="submit"');
     expect(html).not.toContain("Message to the customer's agent");

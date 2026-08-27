@@ -28,7 +28,9 @@ import {
   type PlaybackState,
   type WalkthroughScript,
 } from '@/demo/walkthrough';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
+import { spacing } from '@/lib/design-system';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
@@ -312,19 +314,15 @@ export function CustomerConversation({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-once autoplay
   }, []);
 
-  const footerLabel =
-    playbackState === 'completed'
-      ? 'Walkthrough complete'
-      : playbackState === 'playing'
-        ? 'Product walkthrough'
-        : 'Agent conversation';
-
   const isAgentAccess = visualPhase === 'entering' || visualPhase === 'operating';
 
   return (
     <div
       ref={stageRef}
-      className="relative grid min-h-0 max-h-[80svh] flex-1 gap-6 grid-rows-[auto_minmax(0,1fr)] md:h-full md:max-h-[80svh] md:grid-cols-[minmax(20rem,1fr)_minmax(18rem,23rem)] md:grid-rows-none md:gap-8 lg:gap-12"
+      className={cn(
+        'relative grid min-h-0 max-h-[80svh] flex-1 grid-rows-[auto_minmax(0,1fr)] md:h-full md:max-h-[80svh] md:grid-cols-[minmax(20rem,1fr)_minmax(18rem,23rem)] md:grid-rows-none',
+        spacing.gap,
+      )}
     >
       <AgentCursor
         visible={cursorVisible}
@@ -367,16 +365,17 @@ export function CustomerConversation({
           aria-label="Agent conversation"
         >
           {/* conversation — scrollable messages area */}
-          <div
-            ref={messagesScrollerRef}
-            className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-3.5"
+          <ScrollArea
+            className="flex-1 min-h-0"
+            viewportRef={messagesScrollerRef}
+            viewportClassName="scroll-fade p-3.5 pb-24 flex flex-col gap-3.5"
           >
             {messages.map((msg) => {
               if (msg.role === 'user') {
                 return (
                   <div key={msg.id} className="flex justify-end pl-10">
                     <div
-                      className="rounded-xl bg-field px-3 py-1.5 text-[13px] leading-[1.4] text-ink transition-[opacity,transform] duration-300"
+                      className="rounded-full bg-[#007AFF] px-3.5 py-1.5 text-[13px] leading-[1.4] text-white transition-[opacity,transform] duration-300"
                       style={{
                         transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
                       }}
@@ -400,45 +399,7 @@ export function CustomerConversation({
                 resolving={true}
               />
             ) : null}
-          </div>
-
-          {/* composer */}
-          <div className="mt-auto shrink-0 p-2">
-            <div
-              role="presentation"
-              className="flex cursor-text flex-col gap-2 rounded-control border border-line bg-field p-2.5 transition-[border-color] duration-150 focus-within:border-line-strong"
-            >
-              <input
-                value={
-                  busy
-                    ? 'Working…'
-                    : ''
-                }
-                readOnly
-                aria-label="Chat message"
-                className="min-h-4.5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none"
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-ink-3">
-                  {footerLabel}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Send"
-                  disabled
-                  className="flex size-7 items-center justify-center rounded-[8px] transition-[background-color,color,transform] duration-200"
-                  style={{
-                    background: 'var(--line-strong)',
-                    color: 'var(--ink-2)',
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 19V5M5 12l7-7 7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
+          </ScrollArea>
         </div>
       </div>
 
