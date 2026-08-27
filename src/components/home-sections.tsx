@@ -79,7 +79,7 @@ function SectionHeading({
 }
 
 function SectionLead({ children }: { children: React.ReactNode }) {
-  return <p className="max-w-2xl text-base tracking-tight text-muted-foreground md:text-lg">{children}</p>;
+  return <p className="max-w-2xl text-base tracking-tight text-foreground md:text-lg">{children}</p>;
 }
 
 export function LiveInteractionSection() {
@@ -101,7 +101,7 @@ export function LiveInteractionSection() {
           width={2048}
           height={2048}
           decoding="async"
-          className="w-full self-start justify-self-end rounded-xl shadow-lg"
+          className="w-full self-start justify-self-end rounded-xl shadow-lg border border-border"
         />
       </div>
     </HomeSection>
@@ -298,7 +298,7 @@ export function ClosingCtaSection() {
           <br />
           Open source.
         </SectionHeading>
-        <p className="text-base text-muted-foreground md:text-lg">
+        <p className="text-base tracking-tight text-foreground md:text-lg">
           Make your business bookable by AI agents.
         </p>
         <div className={cn('flex flex-wrap items-center justify-center', spacing.gap)}>
