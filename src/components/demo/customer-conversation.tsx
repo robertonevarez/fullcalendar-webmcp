@@ -444,8 +444,7 @@ export function CustomerConversation({
                 aria-label="Chat prompt"
                 className="min-h-5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none placeholder:text-ink-3"
               />
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-ink-3">Simulated user</span>
+              <div className="flex items-center justify-end">
                 <button
                   type="button"
                   aria-label="Send"

@@ -29,7 +29,6 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('data-demo-playback="playing"');
     expect(html).toContain('aria-label="Chat prompt"');
     expect(html).toContain('placeholder="Ask your agent anything…"');
-    expect(html).toContain('Simulated user');
     expect(html).toContain('aria-label="Send"');
   });
 
