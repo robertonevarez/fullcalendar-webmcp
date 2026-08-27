@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { SiteHeader } from '@/components/site-header';
-import { instrumentSans } from '@/lib/fonts';
+import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import './globals.css';
 
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn('font-sans', instrumentSans.variable)}>
+    <html lang="en" className={cn('font-sans', inter.variable)}>
       <body>
         <SiteHeader />
         {children}
