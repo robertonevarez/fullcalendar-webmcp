@@ -37,8 +37,8 @@ export function BusinessWebsite({
       {/* Scrollable debloat.dev style website content */}
       <div
         className={cn(
-          'pointer-events-none min-h-0 flex-1 select-none overflow-y-auto p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
-          isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99]',
+          'min-h-0 flex-1 overflow-y-auto p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
+          isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
         )}
       >
         <div className="mx-auto max-w-4xl space-y-3 pb-8">
