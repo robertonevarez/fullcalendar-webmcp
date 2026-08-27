@@ -15,7 +15,7 @@ import { spacing } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
 const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
-const DEMO_URL = '/businesses/acme-hvac';
+const DEMO_URL = '/demo';
 
 const NAV_ITEMS = [
   { href: '/docs', label: 'Docs' },

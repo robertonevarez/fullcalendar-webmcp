@@ -5,7 +5,7 @@ import { ds, spacing } from '@/lib/design-system';
 import { playpenSansHebrew } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
-const DEMO_URL = '/businesses/acme-hvac';
+const DEMO_URL = '/demo';
 const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
 
 function HomeSection({
@@ -190,7 +190,7 @@ export function ClosingCtaSection() {
         </p>
         <div className={cn('flex flex-wrap items-center justify-center', spacing.gap)}>
           <Button nativeButton={false} render={<Link href={DEMO_URL} />} size="lg">
-            Try the live demo
+            Try the product demo
             <ArrowRight />
           </Button>
           <Button

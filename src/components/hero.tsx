@@ -6,7 +6,8 @@ import { playpenSansHebrew } from '@/lib/fonts';
 import { ds, spacing } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
-const DEMO_URL = '/businesses/acme-hvac';
+const DEMO_URL = '/demo';
+const WEBMCP_DEMO_URL = '/businesses/acme-hvac';
 
 const heroScrim =
   'bg-[linear-gradient(to_bottom,oklch(1_0_0/0.98)_0%,oklch(1_0_0/0.88)_18%,oklch(1_0_0/0.68)_38%,oklch(1_0_0/0.38)_58%,oklch(1_0_0/0.14)_72%,transparent_88%)]';
@@ -59,17 +60,17 @@ export function Hero() {
                 size="xl"
                 className="drop-shadow-lg"
               >
-                Start with ChatGPT
+                Try the product demo
                 <ArrowRight />
               </Button>
               <Button
                 nativeButton={false}
-                render={<a href="#how-it-works" />}
+                render={<Link href={WEBMCP_DEMO_URL} />}
                 size="xl"
                 variant="outline"
                 className="bg-background"
               >
-                See how it works
+                Start with ChatGPT
               </Button>
             </div>
           </div>
