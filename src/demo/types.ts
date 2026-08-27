@@ -70,6 +70,24 @@ export interface DemoTurnRequest {
 }
 
 /** Concise live-ops step from real demo orchestration (not a fake tool trace). */
+export type DemoActivityTarget =
+  | 'services'
+  | 'service_area'
+  | 'availability'
+  | 'booking';
+
+export interface DemoActivityResult {
+  service_name?: string;
+  price_label?: string;
+  duration_minutes?: number;
+  postal_code?: string;
+  eligible?: boolean;
+  query?: string;
+  slot_labels?: string[];
+  when_label?: string;
+  provider_name?: string;
+}
+
 export interface DemoActivityStep {
   id: string;
   /** Plain-language capability label, e.g. "Search services" */
@@ -78,6 +96,10 @@ export interface DemoActivityStep {
   detail?: string;
   /** Optional WebMCP tool name shown as secondary text */
   tool?: string;
+  /** Website region the agent is accessing for this step */
+  target: DemoActivityTarget;
+  /** Structured outcome for the capability layer — still from real orchestration */
+  result?: DemoActivityResult;
 }
 
 export interface DemoBusinessNotice {

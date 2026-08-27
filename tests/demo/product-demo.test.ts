@@ -195,9 +195,17 @@ describe('demo conversation confirmation gate', () => {
       'Check service area',
       'Find availability',
     ]);
+    expect(result.activity.map((s) => s.target)).toEqual([
+      'services',
+      'service_area',
+      'availability',
+    ]);
     expect(result.activity[0]?.detail).toMatch(/AC Diagnostic/);
+    expect(result.activity[0]?.result?.service_name).toMatch(/AC Diagnostic/);
     expect(result.activity[1]?.detail).toMatch(/78701 eligible/);
+    expect(result.activity[1]?.result?.eligible).toBe(true);
     expect(result.activity[2]?.detail).toMatch(/time/);
+    expect(result.activity[2]?.result?.slot_labels?.length).toBeGreaterThan(0);
   });
 
   it('creates an appointment only after confirmation using real domain logic', () => {
@@ -228,7 +236,9 @@ describe('demo conversation confirmation gate', () => {
     expect(confirmed.businessNotice?.notification_email).toBe('hello@acme.example');
     expect(confirmed.businessNotice?.headline).toBe('New appointment');
     expect(confirmed.activity.map((s) => s.label)).toEqual(['Create appointment']);
+    expect(confirmed.activity[0]?.target).toBe('booking');
     expect(confirmed.activity[0]?.detail).toBe('Confirmed');
+    expect(confirmed.activity[0]?.result?.when_label).toBeTruthy();
   });
 
   it('books salon preset through confirmation gate', () => {
@@ -262,6 +272,10 @@ describe('demo conversation confirmation gate', () => {
       expect(result.activity.find((s) => s.label === 'Check service area')?.detail).toMatch(
         /90210 not eligible/,
       );
+      expect(result.activity.find((s) => s.label === 'Check service area')?.result?.eligible).toBe(
+        false,
+      );
+      expect(result.activity.some((s) => s.target === 'availability')).toBe(false);
     }
   });
 

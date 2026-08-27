@@ -1,13 +1,17 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowUpIcon } from 'lucide-react';
-import { ProtocolToolingPanel } from '@/components/demo/protocol-tooling-panel';
+import { AgentCursor } from '@/components/demo/agent-cursor';
+import { BusinessWebsite } from '@/components/demo/business-website';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardFooter,
+  CardHeader,
+  CardTitle,
 } from '@/components/ui/card';
 import {
   InputGroup,
@@ -28,15 +32,17 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller';
-import { mergeActivity } from '@/demo/capabilities';
 import { emptyConversationState } from '@/demo/engine';
 import type {
   DemoActivityStep,
+  DemoActivityTarget,
   DemoBusinessNotice,
   DemoConfig,
   DemoConversationState,
   DemoTurnResponse,
 } from '@/demo/types';
+import { playVisualSequence, type VisualPhase } from '@/demo/visual-sequence';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
@@ -52,30 +58,134 @@ type Props = {
   onBooked?: () => void;
 };
 
+function pointInStage(
+  stage: HTMLElement,
+  selector: string,
+): { x: number; y: number } | null {
+  const el = stage.querySelector(selector);
+  if (!el) return null;
+  const stageRect = stage.getBoundingClientRect();
+  const rect = el.getBoundingClientRect();
+  return {
+    x: rect.left - stageRect.left + Math.min(36, rect.width * 0.12),
+    y: rect.top - stageRect.top + Math.min(28, rect.height * 0.18),
+  };
+}
+
 export function CustomerConversation({
   config,
   customerPrompt,
   onBooked,
 }: Props) {
   const formId = useId();
+  const stageRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const reducedMotion = useReducedMotion();
+
   const [input, setInput] = useState(customerPrompt);
   const [busy, setBusy] = useState(false);
   const [conversation, setConversation] = useState<DemoConversationState>(() =>
     emptyConversationState(),
   );
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [activity, setActivity] = useState<DemoActivityStep[]>([]);
   const [businessNotice, setBusinessNotice] = useState<DemoBusinessNotice | null>(null);
 
+  const [visualPhase, setVisualPhase] = useState<VisualPhase>('idle');
+  const [activeStep, setActiveStep] = useState<DemoActivityStep | null>(null);
+  const [cursorVisible, setCursorVisible] = useState(false);
+  const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
+  const [statusText, setStatusText] = useState<string | null>(null);
+
   const customerHasSpoken = messages.some((msg) => msg.role === 'user');
+  const agentAccess = visualPhase === 'entering' || visualPhase === 'operating';
+
+  const moveCursor = useCallback((target: DemoActivityTarget | 'chat') => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const selector =
+      target === 'chat' ? '[data-demo-target="chat"]' : `[data-demo-target="${target}"]`;
+    const point = pointInStage(stage, selector);
+    if (point) setCursorPos(point);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  async function runVisualThenReply(options: {
+    activity: DemoActivityStep[];
+    reply: string;
+  }) {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    if (!options.activity.length) {
+      setMessages((prev) => [
+        ...prev,
+        { id: `assistant_${crypto.randomUUID()}`, role: 'assistant', text: options.reply },
+      ]);
+      return;
+    }
+
+    setCursorVisible(true);
+    setStatusText('Agent accessing business website…');
+    moveCursor(options.activity[0]?.target ?? 'services');
+
+    try {
+      await playVisualSequence({
+        activity: options.activity,
+        reducedMotion,
+        signal: controller.signal,
+        onPhase: (phase) => {
+          setVisualPhase(phase);
+          if (phase === 'entering') {
+            moveCursor(options.activity[0]?.target ?? 'services');
+            setStatusText('Agent accessing business website…');
+          }
+          if (phase === 'returning') {
+            moveCursor('chat');
+            setStatusText('Agent returning to conversation…');
+          }
+          if (phase === 'idle') {
+            setCursorVisible(false);
+            setStatusText(null);
+          }
+        },
+        onStep: (step) => {
+          setActiveStep(step);
+          if (step) {
+            moveCursor(step.target);
+            setStatusText(`${step.label}${step.detail ? ` — ${step.detail}` : ''}`);
+          }
+        },
+      });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      throw error;
+    }
+
+    setActiveStep(null);
+    setVisualPhase('idle');
+    setCursorVisible(false);
+    setStatusText(null);
+    setMessages((prev) => [
+      ...prev,
+      { id: `assistant_${crypto.randomUUID()}`, role: 'assistant', text: options.reply },
+    ]);
+  }
 
   async function sendMessage(raw: string) {
     const message = raw.trim();
     if (!message || busy) return;
 
-    const userId = `user_${crypto.randomUUID()}`;
     setBusy(true);
-    setMessages((prev) => [...prev, { id: userId, role: 'user', text: message }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: `user_${crypto.randomUUID()}`, role: 'user', text: message },
+    ]);
     setInput('');
 
     try {
@@ -96,14 +206,7 @@ export function CustomerConversation({
       };
 
       const reply = payload.reply ?? payload.error?.message ?? 'I could not complete that request.';
-      setMessages((prev) => [
-        ...prev,
-        { id: `assistant_${crypto.randomUUID()}`, role: 'assistant', text: reply },
-      ]);
-
-      if (payload.activity?.length) {
-        setActivity((prev) => mergeActivity(prev, payload.activity ?? []));
-      }
+      const turnActivity = payload.activity ?? [];
 
       if (payload.ok && payload.conversation) {
         setConversation(payload.conversation);
@@ -112,6 +215,8 @@ export function CustomerConversation({
       if (payload.ok && payload.businessNotice) {
         setBusinessNotice(payload.businessNotice);
       }
+
+      await runVisualThenReply({ activity: turnActivity, reply });
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -127,23 +232,64 @@ export function CustomerConversation({
   }
 
   return (
-    <div className="grid min-h-0 flex-1 gap-3 grid-rows-[minmax(28rem,auto)_auto] md:h-full md:grid-cols-[minmax(16rem,2fr)_minmax(18rem,3fr)] md:grid-rows-none md:gap-4">
-      <div className="order-1 flex min-h-0 justify-center md:order-2 md:h-full">
+    <div
+      ref={stageRef}
+      className="relative grid min-h-0 flex-1 gap-6 grid-rows-[minmax(22rem,auto)_auto] md:h-full md:grid-cols-[minmax(18rem,1fr)_minmax(17rem,22rem)] md:grid-rows-none md:gap-10 lg:gap-14"
+    >
+      <AgentCursor
+        visible={cursorVisible}
+        x={cursorPos.x}
+        y={cursorPos.y}
+        reducedMotion={reducedMotion}
+        className="hidden md:flex"
+      />
+
+      <div className="order-2 min-h-0 md:order-1 md:h-full">
+        <BusinessWebsite
+          className="h-full min-h-[22rem] md:min-h-0"
+          config={config}
+          agentAccess={agentAccess}
+          activeStep={activeStep}
+          lastBooking={conversation.lastBooking}
+          businessNotice={businessNotice}
+        />
+      </div>
+
+      <div className="order-1 flex min-h-0 flex-col md:order-2 md:h-full">
+        {/* Mobile status substitute for cursor travel */}
+        {statusText ? (
+          <p
+            className="mb-2 text-xs tracking-tight text-muted-foreground md:hidden"
+            role="status"
+            aria-live="polite"
+          >
+            {statusText}
+          </p>
+        ) : null}
+
         <MessageScrollerProvider autoScroll>
           <Card
             size="sm"
+            data-demo-target="chat"
             className={cn(
               inter.className,
-              'mx-auto h-full min-h-[28rem] w-full max-w-sm gap-0 rounded-3xl py-0 md:min-h-0',
+              'mx-auto flex h-full min-h-[24rem] w-full max-w-sm flex-col gap-0 rounded-3xl py-0 md:mx-0 md:min-h-0',
             )}
             role="region"
-            aria-label="Customer agent"
+            aria-label="Customer's agent"
           >
-            <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-3xl p-0">
+            <CardHeader className="gap-1 border-b py-(--card-spacing)">
+              <CardTitle>Customer&apos;s agent</CardTitle>
+              <CardDescription>
+                This represents the AI your customer already uses.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-none p-0">
               <MessageScroller className="flex-1">
                 <MessageScrollerViewport>
                   <MessageScrollerContent
-                    aria-busy={busy}
+                    aria-busy={busy || visualPhase !== 'idle'}
                     className="gap-6 p-(--card-spacing)"
                   >
                     {messages.map((msg) => {
@@ -175,12 +321,12 @@ export function CustomerConversation({
                       );
                     })}
 
-                    {busy ? (
+                    {busy || visualPhase !== 'idle' ? (
                       <MessageScrollerItem messageId="status-busy">
                         <Message align="start">
                           <Marker role="status">
                             <MarkerContent>
-                              Checking with {config.businessName}…
+                              {statusText ?? `Working with ${config.businessName}…`}
                             </MarkerContent>
                           </Marker>
                         </Message>
@@ -214,7 +360,7 @@ export function CustomerConversation({
                       }
                     }}
                     placeholder={customerHasSpoken ? 'Ask a follow-up' : customerPrompt}
-                    disabled={busy}
+                    disabled={busy || visualPhase !== 'idle'}
                     aria-busy={busy}
                   />
                   <InputGroupAddon align="block-end" className="pt-1">
@@ -222,7 +368,7 @@ export function CustomerConversation({
                       type="submit"
                       variant="default"
                       size="icon-sm"
-                      disabled={busy || !input.trim()}
+                      disabled={busy || visualPhase !== 'idle' || !input.trim()}
                       className="ml-auto rounded-full bg-[#007AFF] text-white hover:bg-[#007AFF]/90"
                     >
                       <ArrowUpIcon />
@@ -236,13 +382,9 @@ export function CustomerConversation({
         </MessageScrollerProvider>
       </div>
 
-      <ProtocolToolingPanel
-        className="order-2 md:order-1"
-        config={config}
-        activity={activity}
-        lastBooking={conversation.lastBooking}
-        businessNotice={businessNotice}
-      />
+      <p className="sr-only" role="status" aria-live="polite">
+        {statusText}
+      </p>
     </div>
   );
 }

@@ -2,31 +2,38 @@
 
 ## Experience
 
-`/demo` is a **single product demonstration** with two surfaces — not a wizard, configurator, or playground.
+`/demo` shows two surfaces with space between them:
 
-- **Left (~40%): Protocol Tooling** — business truth, agent capabilities, live operations, and booking consequence in a shadcn `Card`
-- **Right (~60%): Customer’s agent** — conversation in a matching shadcn `Card` (`MessageScroller` / `Message` / `Bubble` / `Empty` / `InputGroup`), installed from source
+- **Left:** a simple business website (human surface)
+- **Right:** the customer’s personal AI agent (native shadcn chat)
 
-Default story is **Acme Heating & Air**. Salon and Auto examples are available as a small secondary control under the demo frame.
+When the customer sends a request, an **agent cursor** travels from the conversation into the website. The website briefly reveals a contextual **agent capability layer** driven by real demo orchestration. After the operations complete, the cursor returns and the agent replies with the same truth.
 
-Send the example prompt (or type your own), confirm a slot, and watch live operations plus the new appointment appear on the Protocol Tooling side.
+Default story: **Acme Heating & Air**. Salon / Auto remain subtle secondary examples.
 
-## UI notes
+## Human vs agent surface
 
-- Native shadcn conversation appearance is retained (no custom bubble/message CSS).
-- Surrounding page chrome follows Protocol Tooling’s existing design system.
-- This browser demo visualizes the experience; `/businesses/acme-hvac` exposes the real WebMCP tools.
+| Surface | What you see |
+| --- | --- |
+| Human | Ordinary business website |
+| Agent | Structured capabilities (`Search services`, `Check service area`, …) revealed only while the agent is accessing the site |
+| Customer | Personal agent conversation |
 
-## Isolation strategy
+Protocol Tooling enables the agent surface without turning the human website into an agent UI.
+
+## Visual events
+
+Visual steps come from the same `/api/demo/turn` orchestration that produces the reply (`activity[]` with `target` + `result`). There is no separate fake animation timeline.
+
+## Isolation
 
 Anonymous demo state is **ephemeral and client-held**.
 
-- The browser keeps the selected preset config and conversation appointments in React state.
-- Each `/api/demo/turn` request is **stateless**: it receives the full config + appointments, runs real domain scheduling in memory, and returns the next conversation state plus concise live-operation activity.
-- Nothing is written to Postgres.
-- Seeded businesses (`acme-hvac`, etc.) are never mutated.
-- Switching examples or **Reset** clears conversation state for that session.
-- Sessions cannot leak across users because there is no shared demo store.
+- Config + appointments live in React state
+- Each `/api/demo/turn` request is **stateless**
+- Nothing is written to Postgres
+- Seeded businesses are never mutated
+- Reset / switching examples clears session state
 
 ## Architecture
 
@@ -36,8 +43,14 @@ Demo preset (DemoConfig)
     → DemoBookingEngine
          → domain searchServices / checkServiceArea / findAvailability / revalidateSlot
     → conversation orchestration (deterministic intent)
-    → activity steps + appointment objects held only in the client session
+    → activity steps (visual events) + reply
+    → client visual sequence → then agent reply
 ```
 
-Natural-language interpretation is simplified and deterministic.
-Business truth (prices, hours, area, availability, bookings) always comes from the real Protocol Tooling domain layer.
+## Real vs representative
+
+**Real:** services, prices, eligibility, availability, scheduling, appointment creation, orchestration activity.
+
+**Representative:** animated agent cursor, embedded personal-agent chat, email “would be sent”.
+
+This browser demo visualizes the model. `/businesses/acme-hvac` exposes actual WebMCP tools.

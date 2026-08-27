@@ -35,8 +35,13 @@ export function DemoExperience() {
       <section className={cn(ds.layout.container, spacing.x, 'pt-3 pb-8 md:pb-10')}>
         <h1 className="sr-only">Product demo</h1>
 
+        <p className="mb-4 max-w-2xl text-sm tracking-tight text-muted-foreground md:text-base">
+          Your customer talks to their agent. The agent uses capabilities exposed by your website.
+          Your booking system stays yours.
+        </p>
+
         <div
-          className="flex min-h-0 flex-col md:h-[min(52rem,calc(100svh-6rem))] md:min-h-[40rem]"
+          className="flex min-h-0 flex-col md:h-[min(52rem,calc(100svh-8rem))] md:min-h-[40rem]"
           aria-label="Product demo"
         >
           <CustomerConversation
@@ -78,19 +83,15 @@ export function DemoExperience() {
 
         <div className="mt-8 max-w-2xl space-y-3 text-sm tracking-tight text-muted-foreground md:text-base">
           <p>
-            Your booking system stays yours. Protocol Tooling gives AI agents a structured way to
-            use it.
-          </p>
-          <p>
-            This browser demo visualizes the experience. The business page exposes the actual
-            WebMCP tools to compatible agents.
+            This demo visualizes the interaction. The live business page exposes the actual WebMCP
+            capabilities to compatible agents.
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-2 pt-1">
             <Link
               href={preset.webmcpPath}
               className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             >
-              Try the real WebMCP version in ChatGPT
+              Try the real WebMCP demo with ChatGPT
             </Link>
             <Link
               href="/docs"
