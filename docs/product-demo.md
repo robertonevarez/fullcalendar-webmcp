@@ -2,21 +2,26 @@
 
 ## Experience
 
-`/demo` shows two surfaces with space between them:
+`/demo` shows three surfaces:
 
-- **Left:** a simple business website (human surface)
+- **Top left:** ordinary business website (human surface)
+- **Bottom left:** Agent activity (structured capabilities / WebMCP operations)
 - **Right:** the customer’s personal AI agent (native shadcn chat)
 
-When the customer sends a request, an **agent cursor** travels from the conversation into the website. The website briefly reveals a contextual **agent capability layer** driven by real demo orchestration. After the operations complete, the cursor returns and the agent replies with the same truth.
+When the customer sends a request, an **agent cursor** travels:
 
-Default story: **Acme Heating & Air**. Salon / Auto remain subtle secondary examples.
+conversation → storefront → agent activity (real operations) → conversation
+
+After confirmation, a second trip appends **Create appointment**, and the storefront shows a small booking consequence.
+
+Default story: **Acme Heating & Air**. Other presets remain in code/tests but are not primary UI switches.
 
 ## Human vs agent surface
 
 | Surface | What you see |
 | --- | --- |
 | Human | Ordinary business website |
-| Agent | Structured capabilities (`Search services`, `Check service area`, …) revealed only while the agent is accessing the site |
+| Agent | Progressive Agent activity (`Search services`, `Check service area`, …) |
 | Customer | Personal agent conversation |
 
 Protocol Tooling enables the agent surface without turning the human website into an agent UI.
@@ -33,7 +38,7 @@ Anonymous demo state is **ephemeral and client-held**.
 - Each `/api/demo/turn` request is **stateless**
 - Nothing is written to Postgres
 - Seeded businesses are never mutated
-- Reset / switching examples clears session state
+- Reset clears session state
 
 ## Architecture
 

@@ -234,7 +234,7 @@ describe('demo conversation confirmation gate', () => {
     expect(confirmed.conversation.phase).toBe('booked');
     expect(confirmed.conversation.appointments).toHaveLength(1);
     expect(confirmed.businessNotice?.notification_email).toBe('hello@acme.example');
-    expect(confirmed.businessNotice?.headline).toBe('New appointment');
+    expect(confirmed.businessNotice?.headline).toBe('Appointment received');
     expect(confirmed.activity.map((s) => s.label)).toEqual(['Create appointment']);
     expect(confirmed.activity[0]?.target).toBe('booking');
     expect(confirmed.activity[0]?.detail).toBe('Confirmed');
@@ -270,7 +270,7 @@ describe('demo conversation confirmation gate', () => {
       expect(result.reply.toLowerCase()).toMatch(/outside/);
       expect(result.activity.some((s) => s.label === 'Check service area')).toBe(true);
       expect(result.activity.find((s) => s.label === 'Check service area')?.detail).toMatch(
-        /90210 not eligible/,
+        /90210 is outside the service area/,
       );
       expect(result.activity.find((s) => s.label === 'Check service area')?.result?.eligible).toBe(
         false,

@@ -2,17 +2,11 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { ArrowUpIcon } from 'lucide-react';
+import { AgentActivity } from '@/components/demo/agent-activity';
 import { AgentCursor } from '@/components/demo/agent-cursor';
 import { BusinessWebsite } from '@/components/demo/business-website';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import {
   InputGroup,
   InputGroupAddon,
@@ -20,10 +14,7 @@ import {
   InputGroupTextarea,
 } from '@/components/ui/input-group';
 import { Marker, MarkerContent } from '@/components/ui/marker';
-import {
-  Message,
-  MessageContent,
-} from '@/components/ui/message';
+import { Message, MessageContent } from '@/components/ui/message';
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -35,7 +26,6 @@ import {
 import { emptyConversationState } from '@/demo/engine';
 import type {
   DemoActivityStep,
-  DemoActivityTarget,
   DemoBusinessNotice,
   DemoConfig,
   DemoConversationState,
@@ -51,6 +41,8 @@ type ChatMessage = {
   role: 'user' | 'assistant';
   text: string;
 };
+
+type CursorTarget = 'chat' | 'storefront' | `activity-${string}`;
 
 type Props = {
   config: DemoConfig;
@@ -91,22 +83,35 @@ export function CustomerConversation({
   const [businessNotice, setBusinessNotice] = useState<DemoBusinessNotice | null>(null);
 
   const [visualPhase, setVisualPhase] = useState<VisualPhase>('idle');
-  const [activeStep, setActiveStep] = useState<DemoActivityStep | null>(null);
+  const [traceSteps, setTraceSteps] = useState<DemoActivityStep[]>([]);
+  const [activeStepId, setActiveStepId] = useState<string | null>(null);
   const [cursorVisible, setCursorVisible] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [statusText, setStatusText] = useState<string | null>(null);
 
   const customerHasSpoken = messages.some((msg) => msg.role === 'user');
-  const agentAccess = visualPhase === 'entering' || visualPhase === 'operating';
 
-  const moveCursor = useCallback((target: DemoActivityTarget | 'chat') => {
+  const moveCursor = useCallback((target: CursorTarget) => {
     const stage = stageRef.current;
     if (!stage) return;
-    const selector =
-      target === 'chat' ? '[data-demo-target="chat"]' : `[data-demo-target="${target}"]`;
+    const selector = `[data-demo-target="${target}"]`;
     const point = pointInStage(stage, selector);
     if (point) setCursorPos(point);
   }, []);
+
+  useEffect(() => {
+    if (visualPhase === 'entering') {
+      moveCursor('storefront');
+      return;
+    }
+    if (visualPhase === 'returning') {
+      moveCursor('chat');
+      return;
+    }
+    if (visualPhase === 'operating' && activeStepId) {
+      moveCursor(`activity-${activeStepId}`);
+    }
+  }, [activeStepId, moveCursor, visualPhase, traceSteps.length]);
 
   useEffect(() => {
     return () => {
@@ -130,9 +135,15 @@ export function CustomerConversation({
       return;
     }
 
+    const isWriteOnly = options.activity.every((step) => step.target === 'booking');
+    if (!isWriteOnly) {
+      setTraceSteps([]);
+    }
+    setActiveStepId(null);
+
+    moveCursor('chat');
     setCursorVisible(true);
     setStatusText('Agent accessing business website…');
-    moveCursor(options.activity[0]?.target ?? 'services');
 
     try {
       await playVisualSequence({
@@ -142,11 +153,10 @@ export function CustomerConversation({
         onPhase: (phase) => {
           setVisualPhase(phase);
           if (phase === 'entering') {
-            moveCursor(options.activity[0]?.target ?? 'services');
             setStatusText('Agent accessing business website…');
           }
           if (phase === 'returning') {
-            moveCursor('chat');
+            setActiveStepId(null);
             setStatusText('Agent returning to conversation…');
           }
           if (phase === 'idle') {
@@ -155,10 +165,19 @@ export function CustomerConversation({
           }
         },
         onStep: (step) => {
-          setActiveStep(step);
           if (step) {
-            moveCursor(step.target);
+            setTraceSteps((prev) => {
+              if (prev.some((existing) => existing.id === step.id)) {
+                return prev.map((existing) =>
+                  existing.id === step.id ? step : existing,
+                );
+              }
+              return [...prev, step];
+            });
+            setActiveStepId(step.id);
             setStatusText(`${step.label}${step.detail ? ` — ${step.detail}` : ''}`);
+          } else {
+            setActiveStepId(null);
           }
         },
       });
@@ -167,7 +186,7 @@ export function CustomerConversation({
       throw error;
     }
 
-    setActiveStep(null);
+    setActiveStepId(null);
     setVisualPhase('idle');
     setCursorVisible(false);
     setStatusText(null);
@@ -234,29 +253,34 @@ export function CustomerConversation({
   return (
     <div
       ref={stageRef}
-      className="relative grid min-h-0 flex-1 gap-6 grid-rows-[minmax(22rem,auto)_auto] md:h-full md:grid-cols-[minmax(18rem,1fr)_minmax(17rem,22rem)] md:grid-rows-none md:gap-10 lg:gap-14"
+      className="relative grid min-h-0 max-h-[80svh] flex-1 gap-6 grid-rows-[auto_minmax(0,1fr)] md:h-full md:max-h-[80svh] md:grid-cols-[minmax(20rem,1fr)_minmax(17rem,22rem)] md:grid-rows-none md:gap-10 lg:gap-14"
     >
       <AgentCursor
         visible={cursorVisible}
         x={cursorPos.x}
         y={cursorPos.y}
         reducedMotion={reducedMotion}
-        className="hidden md:flex"
       />
 
-      <div className="order-2 min-h-0 md:order-1 md:h-full">
-        <BusinessWebsite
-          className="h-full min-h-[22rem] md:min-h-0"
-          config={config}
-          agentAccess={agentAccess}
-          activeStep={activeStep}
-          lastBooking={conversation.lastBooking}
-          businessNotice={businessNotice}
-        />
+      <div className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs md:h-full">
+        <div className="min-h-0 flex-[0.58] border-b border-border">
+          <BusinessWebsite
+            className="h-full min-h-0"
+            config={config}
+            lastBooking={conversation.lastBooking}
+            businessNotice={businessNotice}
+          />
+        </div>
+        <div className="min-h-0 flex-[0.42]">
+          <AgentActivity
+            className="h-full min-h-0"
+            steps={traceSteps}
+            activeStepId={activeStepId}
+          />
+        </div>
       </div>
 
-      <div className="order-1 flex min-h-0 flex-col md:order-2 md:h-full">
-        {/* Mobile status substitute for cursor travel */}
+      <div className="order-2 flex min-h-0 flex-col md:h-full">
         {statusText ? (
           <p
             className="mb-2 text-xs tracking-tight text-muted-foreground md:hidden"
@@ -273,19 +297,12 @@ export function CustomerConversation({
             data-demo-target="chat"
             className={cn(
               inter.className,
-              'mx-auto flex h-full min-h-[24rem] w-full max-w-sm flex-col gap-0 rounded-3xl py-0 md:mx-0 md:min-h-0',
+              'mx-auto flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col gap-0 rounded-3xl py-0 md:mx-0',
             )}
             role="region"
-            aria-label="Customer's agent"
+            aria-label="Conversation"
           >
-            <CardHeader className="gap-1 border-b py-(--card-spacing)">
-              <CardTitle>Customer&apos;s agent</CardTitle>
-              <CardDescription>
-                This represents the AI your customer already uses.
-              </CardDescription>
-            </CardHeader>
-
-            <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-none p-0">
+            <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-3xl p-0">
               <MessageScroller className="flex-1">
                 <MessageScrollerViewport>
                   <MessageScrollerContent

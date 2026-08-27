@@ -184,7 +184,7 @@ function tryConfirm(
       }),
     ],
     businessNotice: {
-      headline: 'New appointment',
+      headline: 'Appointment received',
       service_name: service.name,
       when_label: when.charAt(0).toUpperCase() + when.slice(1),
       notification_email: engine.notificationEmail,
@@ -268,7 +268,7 @@ function findAndOffer(
     } catch (error) {
       activity.push(
         activityStep('check_service_area', 'Check service area', 'service_area', {
-          detail: `${intent.postalCode} not eligible`,
+          detail: `${intent.postalCode} is outside the service area`,
           tool: 'check_service_area',
           result: { postal_code: intent.postalCode, eligible: false },
         }),
