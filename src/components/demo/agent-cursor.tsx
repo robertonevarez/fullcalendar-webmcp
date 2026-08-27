@@ -35,10 +35,16 @@ export function AgentCursor({
   className,
 }: AgentCursorProps) {
   const springConfig = reducedMotion ? REDUCED_MOTION_SPRING : DEFAULT_SPRING;
+  const lastPos = useRef({ x, y });
   const settleTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cursorX = useSpring(x, springConfig);
   const cursorY = useSpring(y, springConfig);
+  const rotation = useSpring(0, {
+    ...springConfig,
+    damping: reducedMotion ? 100 : 50,
+    stiffness: reducedMotion ? 1000 : 350,
+  });
   const scale = useSpring(1, {
     ...springConfig,
     stiffness: reducedMotion ? 1000 : 500,
@@ -49,18 +55,30 @@ export function AgentCursor({
     cursorX.set(x);
     cursorY.set(y);
 
-    if (reducedMotion) {
+    const dx = x - lastPos.current.x;
+    const dy = y - lastPos.current.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    lastPos.current = { x, y };
+
+    if (reducedMotion || distance < 1) {
       return;
     }
 
-    scale.set(0.95);
+    // Natural physics-based tilt: subtle dynamic banking tilt towards motion direction,
+    // settling back smoothly to default natural resting tilt
+    const targetTilt = Math.max(-20, Math.min(20, dx * 0.15));
+    rotation.set(targetTilt);
+    scale.set(0.96);
+
     if (settleTimeout.current) {
       clearTimeout(settleTimeout.current);
     }
     settleTimeout.current = setTimeout(() => {
+      rotation.set(0);
       scale.set(1);
-    }, 150);
-  }, [cursorX, cursorY, reducedMotion, scale, x, y]);
+    }, 180);
+  }, [cursorX, cursorY, reducedMotion, rotation, scale, x, y]);
 
   useEffect(() => {
     return () => {
@@ -82,6 +100,7 @@ export function AgentCursor({
         top: cursorY,
         translateX: '-18%',
         translateY: '-12%',
+        rotate: rotation,
         scale,
         willChange: 'transform',
       }}
