@@ -15,7 +15,7 @@ export function Hero() {
   const config = cloneDemoConfig(preset.config);
 
   return (
-    <section className="relative flex w-full flex-col overflow-hidden bg-background">
+    <section className="container mx-auto relative flex w-full flex-col overflow-hidden bg-background">
       <div
         className={cn(
           'relative z-10 flex w-full flex-col px-4 sm:px-6 md:px-8 lg:px-10',

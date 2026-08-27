@@ -43,7 +43,7 @@ export function BusinessWebsite({
           isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
         )}
       >
-        <div className="pointer-events-none mx-auto max-w-4xl select-none space-y-3 pb-8">
+        <div className="pointer-events-none mx-auto w-full select-none space-y-3 pb-8">
           {/* Top Brand & Search Header */}
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] pb-2">
             <div className="flex items-baseline gap-2">
