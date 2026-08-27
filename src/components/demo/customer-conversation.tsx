@@ -1,18 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
-import { ArrowUpIcon } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AgentActivity } from '@/components/demo/agent-activity';
 import { AgentCursor } from '@/components/demo/agent-cursor';
 import { BusinessWebsite } from '@/components/demo/business-website';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupTextarea,
-} from '@/components/ui/input-group';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import { Message, MessageContent } from '@/components/ui/message';
 import {
@@ -31,7 +24,19 @@ import type {
   DemoConversationState,
   DemoTurnResponse,
 } from '@/demo/types';
-import { playVisualSequence, type VisualPhase } from '@/demo/visual-sequence';
+import {
+  playVisualSequence,
+  WALKTHROUGH_VISUAL_TIMINGS,
+  type VisualPhase,
+} from '@/demo/visual-sequence';
+import {
+  CANONICAL_WALKTHROUGH_SCRIPT,
+  isAbortError,
+  playWalkthrough,
+  waitAfterUserAppear,
+  type PlaybackState,
+  type WalkthroughScript,
+} from '@/demo/walkthrough';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
@@ -46,7 +51,9 @@ type CursorTarget = 'chat' | 'storefront' | `activity-${string}`;
 
 type Props = {
   config: DemoConfig;
-  customerPrompt: string;
+  /** Simulated-user script. Defaults to the canonical Acme walkthrough. */
+  script?: WalkthroughScript;
+  onPlaybackStateChange?: (state: PlaybackState) => void;
   onBooked?: () => void;
 };
 
@@ -66,15 +73,20 @@ function pointInStage(
 
 export function CustomerConversation({
   config,
-  customerPrompt,
+  script = CANONICAL_WALKTHROUGH_SCRIPT,
+  onPlaybackStateChange,
   onBooked,
 }: Props) {
-  const formId = useId();
   const stageRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const conversationRef = useRef<DemoConversationState>(emptyConversationState());
   const reducedMotion = useReducedMotion();
+  const reducedMotionRef = useRef(reducedMotion);
 
-  const [input, setInput] = useState(customerPrompt);
+  useEffect(() => {
+    reducedMotionRef.current = reducedMotion;
+  }, [reducedMotion]);
+
   const [busy, setBusy] = useState(false);
   const [conversation, setConversation] = useState<DemoConversationState>(() =>
     emptyConversationState(),
@@ -88,8 +100,7 @@ export function CustomerConversation({
   const [cursorVisible, setCursorVisible] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [statusText, setStatusText] = useState<string | null>(null);
-
-  const customerHasSpoken = messages.some((msg) => msg.role === 'user');
+  const [playbackState, setPlaybackState] = useState<PlaybackState>('playing');
 
   const moveCursor = useCallback((target: CursorTarget) => {
     const stage = stageRef.current;
@@ -113,20 +124,19 @@ export function CustomerConversation({
     }
   }, [activeStepId, moveCursor, visualPhase, traceSteps.length]);
 
-  useEffect(() => {
-    return () => {
-      abortRef.current?.abort();
-    };
-  }, []);
+  const updatePlaybackState = useCallback(
+    (state: PlaybackState) => {
+      setPlaybackState(state);
+      onPlaybackStateChange?.(state);
+    },
+    [onPlaybackStateChange],
+  );
 
   async function runVisualThenReply(options: {
     activity: DemoActivityStep[];
     reply: string;
+    signal: AbortSignal;
   }) {
-    abortRef.current?.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
-
     if (!options.activity.length) {
       setMessages((prev) => [
         ...prev,
@@ -136,16 +146,17 @@ export function CustomerConversation({
     }
 
     setActiveStepId(null);
-
     moveCursor('chat');
     setCursorVisible(true);
     setStatusText('Agent accessing business website…');
 
     try {
+      const preferReduced = reducedMotionRef.current;
       await playVisualSequence({
         activity: options.activity,
-        reducedMotion,
-        signal: controller.signal,
+        reducedMotion: preferReduced,
+        signal: options.signal,
+        timings: preferReduced ? undefined : WALKTHROUGH_VISUAL_TIMINGS,
         onPhase: (phase) => {
           setVisualPhase(phase);
           if (phase === 'entering') {
@@ -178,9 +189,11 @@ export function CustomerConversation({
         },
       });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
+      if (isAbortError(error)) return;
       throw error;
     }
+
+    if (options.signal.aborted) return;
 
     setActiveStepId(null);
     setVisualPhase('idle');
@@ -192,26 +205,29 @@ export function CustomerConversation({
     ]);
   }
 
-  async function sendMessage(raw: string) {
-    const message = raw.trim();
-    if (!message || busy) return;
-
+  async function executeScriptedTurn(message: string, signal: AbortSignal) {
     setBusy(true);
     setMessages((prev) => [
       ...prev,
       { id: `user_${crypto.randomUUID()}`, role: 'user', text: message },
     ]);
-    setInput('');
 
     try {
+      await waitAfterUserAppear(signal);
+
+      if (signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
       const response = await fetch('/api/demo/turn', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
           config,
-          conversation,
+          conversation: conversationRef.current,
           message,
         }),
+        signal,
       });
       const payload = (await response.json()) as Partial<DemoTurnResponse> & {
         ok: boolean;
@@ -220,10 +236,15 @@ export function CustomerConversation({
         activity?: DemoActivityStep[];
       };
 
+      if (signal.aborted) {
+        throw new DOMException('Aborted', 'AbortError');
+      }
+
       const reply = payload.reply ?? payload.error?.message ?? 'I could not complete that request.';
       const turnActivity = payload.activity ?? [];
 
       if (payload.ok && payload.conversation) {
+        conversationRef.current = payload.conversation;
         setConversation(payload.conversation);
         if (payload.conversation.phase === 'booked') onBooked?.();
       }
@@ -231,8 +252,11 @@ export function CustomerConversation({
         setBusinessNotice(payload.businessNotice);
       }
 
-      await runVisualThenReply({ activity: turnActivity, reply });
-    } catch {
+      await runVisualThenReply({ activity: turnActivity, reply, signal });
+
+      return { hadActivity: turnActivity.length > 0 };
+    } catch (error) {
+      if (isAbortError(error)) throw error;
       setMessages((prev) => [
         ...prev,
         {
@@ -241,10 +265,47 @@ export function CustomerConversation({
           text: 'The demo could not reach the scheduling service. Check your connection and try again.',
         },
       ]);
+      return { hadActivity: false };
     } finally {
       setBusy(false);
     }
   }
+
+  useEffect(() => {
+    const controller = new AbortController();
+    abortRef.current = controller;
+
+    conversationRef.current = emptyConversationState();
+
+    void (async () => {
+      try {
+        await playWalkthrough({
+          script,
+          signal: controller.signal,
+          runTurn: (message) => executeScriptedTurn(message, controller.signal),
+          onStateChange: updatePlaybackState,
+        });
+      } catch (error) {
+        if (isAbortError(error)) return;
+        console.error('Walkthrough failed', error);
+        updatePlaybackState('idle');
+      }
+    })();
+
+    return () => {
+      controller.abort();
+      abortRef.current = null;
+    };
+    // Remount (Replay) creates a fresh instance; do not re-run on callback identity churn.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-once autoplay
+  }, []);
+
+  const footerLabel =
+    playbackState === 'completed'
+      ? 'Walkthrough complete'
+      : playbackState === 'playing'
+        ? 'Product walkthrough'
+        : 'Agent conversation';
 
   return (
     <div
@@ -291,12 +352,13 @@ export function CustomerConversation({
           <Card
             size="sm"
             data-demo-target="chat"
+            data-demo-playback={playbackState}
             className={cn(
               inter.className,
               'mx-auto flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col gap-0 rounded-3xl py-0 md:mx-0',
             )}
             role="region"
-            aria-label="Conversation"
+            aria-label="Agent conversation"
           >
             <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-3xl p-0">
               <MessageScroller className="flex-1">
@@ -351,45 +413,10 @@ export function CustomerConversation({
               </MessageScroller>
             </CardContent>
 
-            <CardFooter className="flex-col gap-2 rounded-b-3xl py-(--card-spacing)">
-              <form
-                className="w-full"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  void sendMessage(input);
-                }}
-              >
-                <InputGroup className="rounded-3xl">
-                  <InputGroupTextarea
-                    id={formId}
-                    aria-label="Message to the customer's agent"
-                    className="min-h-14 rounded-3xl px-3 py-2.5"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        void sendMessage(input);
-                      }
-                    }}
-                    placeholder={customerHasSpoken ? 'Ask a follow-up' : customerPrompt}
-                    disabled={busy || visualPhase !== 'idle'}
-                    aria-busy={busy}
-                  />
-                  <InputGroupAddon align="block-end" className="pt-1">
-                    <InputGroupButton
-                      type="submit"
-                      variant="default"
-                      size="icon-sm"
-                      disabled={busy || visualPhase !== 'idle' || !input.trim()}
-                      className="ml-auto rounded-full bg-[#007AFF] text-white hover:bg-[#007AFF]/90"
-                    >
-                      <ArrowUpIcon />
-                      <span className="sr-only">Send</span>
-                    </InputGroupButton>
-                  </InputGroupAddon>
-                </InputGroup>
-              </form>
+            <CardFooter className="rounded-b-3xl py-(--card-spacing)">
+              <p className="w-full text-center text-xs tracking-tight text-muted-foreground">
+                {footerLabel}
+              </p>
             </CardFooter>
           </Card>
         </MessageScrollerProvider>

@@ -25,6 +25,19 @@ function wait(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
+export type VisualSequenceTimings = {
+  travelMs?: number;
+  stepMs?: number;
+  settleMs?: number;
+};
+
+/** Slightly longer holds for the self-driving walkthrough so tool results are readable. */
+export const WALKTHROUGH_VISUAL_TIMINGS: Required<VisualSequenceTimings> = {
+  travelMs: 650,
+  stepMs: 1500,
+  settleMs: 450,
+};
+
 /**
  * Plays a visual sequence derived from real orchestration activity.
  * No fake timeline — only steps present in the turn response.
@@ -33,13 +46,14 @@ export async function playVisualSequence(options: {
   activity: DemoActivityStep[];
   reducedMotion: boolean;
   signal?: AbortSignal;
+  timings?: VisualSequenceTimings;
   onPhase: (phase: VisualPhase) => void;
   onStep: (step: DemoActivityStep | null) => void;
 }): Promise<void> {
-  const { activity, reducedMotion, signal, onPhase, onStep } = options;
-  const travel = reducedMotion ? 0 : TRAVEL_MS;
-  const stepHold = reducedMotion ? 0 : STEP_MS;
-  const settle = reducedMotion ? 0 : SETTLE_MS;
+  const { activity, reducedMotion, signal, timings, onPhase, onStep } = options;
+  const travel = reducedMotion ? 0 : (timings?.travelMs ?? TRAVEL_MS);
+  const stepHold = reducedMotion ? 0 : (timings?.stepMs ?? STEP_MS);
+  const settle = reducedMotion ? 0 : (timings?.settleMs ?? SETTLE_MS);
 
   if (!activity.length) {
     onPhase('idle');

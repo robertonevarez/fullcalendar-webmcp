@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AgentActivity } from '@/components/demo/agent-activity';
@@ -6,9 +6,35 @@ import { BusinessWebsite } from '@/components/demo/business-website';
 import { DEMO_PRESETS, getDefaultPreset } from '@/demo/presets';
 import type { DemoActivityStep } from '@/demo/types';
 
+vi.mock('@/lib/fonts', () => ({
+  inter: { className: 'font-inter' },
+  instrumentSans: { className: 'font-instrument', variable: '--font-sans' },
+}));
+
+vi.mock('@/hooks/use-reduced-motion', () => ({
+  useReducedMotion: () => true,
+}));
+
+const { CustomerConversation } = await import('@/components/demo/customer-conversation');
+
 const config = getDefaultPreset().config;
 
 describe('demo presentation surfaces', () => {
+  it('renders the conversation as a playback surface without an editable composer', () => {
+    const html = renderToStaticMarkup(
+      createElement(CustomerConversation, {
+        config,
+      }),
+    );
+
+    expect(html).toContain('data-demo-playback="playing"');
+    expect(html).toContain('Product walkthrough');
+    expect(html).not.toContain('Ask a follow-up');
+    expect(html).not.toMatch(/<textarea\b/i);
+    expect(html).not.toMatch(/placeholder=/i);
+    expect(html).not.toContain('type="submit"');
+    expect(html).not.toContain("Message to the customer's agent");
+  });
   it('renders storefront from demo configuration without Protocol Tooling copy', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {

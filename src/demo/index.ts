@@ -22,7 +22,14 @@ export { DEMO_AGENT_CAPABILITIES, mergeActivity } from '@/demo/capabilities';
 export { cloneDemoConfig, normalizeDemoConfig } from '@/demo/normalize';
 export { DemoBookingEngine, emptyConversationState } from '@/demo/engine';
 export { processDemoTurn, processDemoTurnSafe } from '@/demo/conversation';
-export { playVisualSequence } from '@/demo/visual-sequence';
+export { playVisualSequence, WALKTHROUGH_VISUAL_TIMINGS } from '@/demo/visual-sequence';
+export {
+  CANONICAL_WALKTHROUGH_SCRIPT,
+  playWalkthrough,
+  WALKTHROUGH_PACING,
+  type PlaybackState,
+  type WalkthroughScript,
+} from '@/demo/walkthrough';
 export {
   formatDaysLabel,
   formatHoursLabel,
