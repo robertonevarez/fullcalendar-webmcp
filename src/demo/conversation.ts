@@ -7,12 +7,22 @@ import {
 } from '@/demo/format';
 import { matchSlotBySpokenTime, parseCustomerIntent } from '@/demo/intent';
 import type {
+  DemoActivityStep,
   DemoConversationState,
   DemoPendingOffer,
   DemoPublicAppointment,
   DemoTurnRequest,
   DemoTurnResponse,
 } from '@/demo/types';
+
+function activityStep(
+  id: string,
+  label: string,
+  detail?: string,
+  tool?: string,
+): DemoActivityStep {
+  return { id, label, detail, tool };
+}
 
 function friendlyError(error: unknown): string {
   if (error instanceof AppError) {
@@ -108,6 +118,7 @@ function tryConfirm(
         .map((s) => formatSlotTimeOnly(s.starts_at, engine.timezone))
         .join(' or ')}?`,
       conversation,
+      activity: [],
       businessNotice: null,
     };
   }
@@ -148,11 +159,15 @@ function tryConfirm(
     ok: true,
     reply: `You're booked for ${when}. ${service.name} is confirmed with ${engine.businessName}.`,
     conversation: nextState,
+    activity: [
+      activityStep('create_appointment', 'Create appointment', 'Confirmed', 'create_appointment'),
+    ],
     businessNotice: {
-      headline: 'New appointment created',
+      headline: 'New appointment',
       service_name: service.name,
       when_label: when.charAt(0).toUpperCase() + when.slice(1),
       notification_email: engine.notificationEmail,
+      provider_name: lastBooking.provider_name,
     },
   };
 }
@@ -167,33 +182,91 @@ function findAndOffer(
     workingHours: engine.normalized.business.working_hours,
   });
 
+  const activity: DemoActivityStep[] = [];
+
   const matches = engine.search(intent.serviceQuery);
   if (!matches.length) {
     const catalog = engine.search();
-    throw new AppError(
-      ErrorCodes.SERVICE_NOT_FOUND,
-      catalog.length
-        ? `No matching service. This business offers: ${catalog.map((s) => s.name).join(', ')}.`
-        : 'No services are configured.',
-      false,
+    activity.push(
+      activityStep('search_services', 'Search services', 'No match', 'search_services'),
+    );
+    throw Object.assign(
+      new AppError(
+        ErrorCodes.SERVICE_NOT_FOUND,
+        catalog.length
+          ? `No matching service. This business offers: ${catalog.map((s) => s.name).join(', ')}.`
+          : 'No services are configured.',
+        false,
+      ),
+      { activity },
     );
   }
 
   const best = matches[0];
   const service = engine.getService(best.service_id);
+  activity.push(
+    activityStep('search_services', 'Search services', service.name, 'search_services'),
+  );
 
   if (service.service_area_required && !intent.postalCode) {
-    throw new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required.', false, 'postal_code');
+    activity.push(
+      activityStep('check_service_area', 'Check service area', 'ZIP needed', 'check_service_area'),
+    );
+    throw Object.assign(
+      new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required.', false, 'postal_code'),
+      { activity },
+    );
   }
 
-  const slots = engine.findSlots(conversation.appointments, {
-    service_id: service.id,
-    start_date: intent.startDate,
-    end_date: intent.endDate,
-    postal_code: intent.postalCode,
-    time_preference: intent.timePreference,
-    limit: 4,
-  });
+  if (service.service_area_required && intent.postalCode) {
+    try {
+      engine.assertServiceArea(service.id, intent.postalCode);
+      activity.push(
+        activityStep(
+          'check_service_area',
+          'Check service area',
+          `${intent.postalCode} eligible`,
+          'check_service_area',
+        ),
+      );
+    } catch (error) {
+      activity.push(
+        activityStep(
+          'check_service_area',
+          'Check service area',
+          `${intent.postalCode} not eligible`,
+          'check_service_area',
+        ),
+      );
+      throw Object.assign(error instanceof Error ? error : new Error(String(error)), { activity });
+    }
+  }
+
+  let slots;
+  try {
+    slots = engine.findSlots(conversation.appointments, {
+      service_id: service.id,
+      start_date: intent.startDate,
+      end_date: intent.endDate,
+      postal_code: intent.postalCode,
+      time_preference: intent.timePreference,
+      limit: 4,
+    });
+  } catch (error) {
+    activity.push(
+      activityStep('get_availability', 'Find availability', 'None found', 'get_availability'),
+    );
+    throw Object.assign(error instanceof Error ? error : new Error(String(error)), { activity });
+  }
+
+  activity.push(
+    activityStep(
+      'get_availability',
+      'Find availability',
+      `${slots.length} time${slots.length === 1 ? '' : 's'} found`,
+      'get_availability',
+    ),
+  );
 
   const pendingOffer: DemoPendingOffer = {
     service_id: service.id,
@@ -217,6 +290,7 @@ function findAndOffer(
     ok: true,
     reply: offerReply(engine, pendingOffer),
     conversation: nextState,
+    activity,
     businessNotice: null,
   };
 }
@@ -242,11 +316,20 @@ export function processDemoTurn(request: DemoTurnRequest): DemoTurnResponse {
 
 export function processDemoTurnSafe(
   request: DemoTurnRequest,
-): DemoTurnResponse | { ok: false; error: { code: string; message: string }; reply: string } {
+): DemoTurnResponse | {
+  ok: false;
+  error: { code: string; message: string };
+  reply: string;
+  activity: DemoActivityStep[];
+} {
   try {
     return processDemoTurn(request);
   } catch (error) {
     const envelope = toErrorResponse(error);
+    const activity =
+      error && typeof error === 'object' && 'activity' in error
+        ? ((error as { activity?: DemoActivityStep[] }).activity ?? [])
+        : [];
     return {
       ok: false,
       error: {
@@ -254,6 +337,7 @@ export function processDemoTurnSafe(
         message: envelope.error.message,
       },
       reply: friendlyError(error),
+      activity,
     };
   }
 }

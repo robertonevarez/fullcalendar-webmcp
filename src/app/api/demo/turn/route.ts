@@ -50,6 +50,7 @@ export async function POST(request: Request) {
         reply: result.reply,
         error: result.error,
         conversation: body.conversation,
+        activity: result.activity,
         businessNotice: null,
       },
       { status: 400 },

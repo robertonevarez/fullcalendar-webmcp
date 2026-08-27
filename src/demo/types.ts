@@ -69,17 +69,33 @@ export interface DemoTurnRequest {
   message: string;
 }
 
+/** Concise live-ops step from real demo orchestration (not a fake tool trace). */
+export interface DemoActivityStep {
+  id: string;
+  /** Plain-language capability label, e.g. "Search services" */
+  label: string;
+  /** Short outcome detail, e.g. "AC Diagnostic Visit" or "2 times found" */
+  detail?: string;
+  /** Optional WebMCP tool name shown as secondary text */
+  tool?: string;
+}
+
+export interface DemoBusinessNotice {
+  headline: string;
+  service_name: string;
+  when_label: string;
+  notification_email: string;
+  provider_name?: string;
+}
+
 export interface DemoTurnResponse {
   ok: true;
   reply: string;
   conversation: DemoConversationState;
+  /** Steps performed during this turn — mirrors real scheduling work. */
+  activity: DemoActivityStep[];
   /** Business-side consequence after a booking (not a dashboard). */
-  businessNotice: {
-    headline: string;
-    service_name: string;
-    when_label: string;
-    notification_email: string;
-  } | null;
+  businessNotice: DemoBusinessNotice | null;
 }
 
 export interface DemoTurnErrorResponse {
@@ -88,4 +104,6 @@ export interface DemoTurnErrorResponse {
     code: string;
     message: string;
   };
+  reply: string;
+  activity: DemoActivityStep[];
 }

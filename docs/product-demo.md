@@ -2,23 +2,30 @@
 
 ## Experience
 
-`/demo` is a **single side-by-side surface** — not a wizard or configurator.
+`/demo` is a **single product demonstration** with two surfaces — not a wizard, configurator, or playground.
 
-- **Left:** read-only business truth from a curated preset
-- **Right:** customer conversation visualization (personal agent, not a Protocol Tooling chatbot)
-- **Presets:** Acme Heating & Air (field + ZIP area), Northline Salon (on-site), Mesa Auto Service (technician + bay)
+- **Left (~40%): Protocol Tooling** — business truth, agent capabilities, live operations, and booking consequence
+- **Right (~60%): Customer’s agent** — conversation visualization using official shadcn chat components (`MessageScroller`, `Message`, `Bubble`, `Marker`) installed from source, plus shadcn `Textarea` + `Button` for the composer
 
-Pick a preset, send the example prompt (or type your own), confirm a slot, and see the appointment appear on the business side.
+Default story is **Acme Heating & Air**. Salon and Auto examples are available as a small secondary control under the demo frame.
+
+Send the example prompt (or type your own), confirm a slot, and watch live operations plus the new appointment appear on the Protocol Tooling side.
+
+## UI notes
+
+- Native shadcn conversation appearance is retained (no custom bubble/message CSS).
+- Surrounding page chrome follows Protocol Tooling’s existing design system.
+- This browser demo visualizes the experience; `/businesses/acme-hvac` exposes the real WebMCP tools.
 
 ## Isolation strategy
 
 Anonymous demo state is **ephemeral and client-held**.
 
 - The browser keeps the selected preset config and conversation appointments in React state.
-- Each `/api/demo/turn` request is **stateless**: it receives the full config + appointments, runs real domain scheduling in memory, and returns the next conversation state.
+- Each `/api/demo/turn` request is **stateless**: it receives the full config + appointments, runs real domain scheduling in memory, and returns the next conversation state plus concise live-operation activity.
 - Nothing is written to Postgres.
 - Seeded businesses (`acme-hvac`, etc.) are never mutated.
-- Switching presets or **Reset demo** clears conversation state for that session.
+- Switching examples or **Reset** clears conversation state for that session.
 - Sessions cannot leak across users because there is no shared demo store.
 
 ## Architecture
@@ -29,7 +36,7 @@ Demo preset (DemoConfig)
     → DemoBookingEngine
          → domain searchServices / checkServiceArea / findAvailability / revalidateSlot
     → conversation orchestration (deterministic intent)
-    → appointment objects held only in the client session
+    → activity steps + appointment objects held only in the client session
 ```
 
 Natural-language interpretation is simplified and deterministic.
