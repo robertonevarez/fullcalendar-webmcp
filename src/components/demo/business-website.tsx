@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { DemoBusinessNotice, DemoConfig, DemoPublicAppointment, DemoServiceInput } from '@/demo/types';
 import { formatPriceCents } from '@/demo/format';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,8 @@ type Props = {
   config: DemoConfig;
   lastBooking: DemoPublicAppointment | null;
   businessNotice: DemoBusinessNotice | null;
+  isAgentAccess?: boolean;
+  overlay?: ReactNode;
   className?: string;
 };
 
@@ -234,10 +237,23 @@ function AutoWebsite({ config }: { config: DemoConfig }) {
   );
 }
 
-/** The human-facing surface is composed by business type, not database shape. */
-export function BusinessWebsite({ config, lastBooking, businessNotice, className }: Props) {
+/** The simulated business website with animated agent-access state and capability overlay. */
+export function BusinessWebsite({
+  config,
+  lastBooking,
+  businessNotice,
+  isAgentAccess = false,
+  overlay,
+  className,
+}: Props) {
   const website =
-    config.archetype === 'salon' ? <SalonWebsite config={config} /> : config.archetype === 'auto' ? <AutoWebsite config={config} /> : <HvacWebsite config={config} />;
+    config.archetype === 'salon' ? (
+      <SalonWebsite config={config} />
+    ) : config.archetype === 'auto' ? (
+      <AutoWebsite config={config} />
+    ) : (
+      <HvacWebsite config={config} />
+    );
 
   const noticeClassName =
     config.archetype === 'auto'
@@ -250,11 +266,34 @@ export function BusinessWebsite({ config, lastBooking, businessNotice, className
     <article
       id="top"
       data-demo-target="storefront"
-      className={cn('flex h-full min-h-0 flex-col overflow-hidden', className)}
+      data-agent-access={isAgentAccess ? 'true' : 'false'}
+      className={cn('relative flex h-full min-h-0 flex-col overflow-hidden', className)}
       aria-label={`${config.businessName} website`}
     >
-      <div className="min-h-0 flex-1 overflow-y-auto">{website}</div>
-      <BookingNotice config={config} lastBooking={lastBooking} businessNotice={businessNotice} className={noticeClassName} />
+      <div
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto transition-[filter,opacity,transform] duration-300 ease-out',
+          isAgentAccess && 'blur-[1.5px] opacity-40 scale-[0.99] select-none pointer-events-none',
+        )}
+      >
+        {website}
+      </div>
+
+      {overlay ? (
+        <div
+          className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center p-4"
+          data-demo-target="overlay-container"
+        >
+          {overlay}
+        </div>
+      ) : null}
+
+      <BookingNotice
+        config={config}
+        lastBooking={lastBooking}
+        businessNotice={businessNotice}
+        className={noticeClassName}
+      />
     </article>
   );
 }

@@ -20,7 +20,10 @@ interface WebMCPRegistrarProps {
  */
 export function WebMCPRegistrar({ businessSlug, businessName, onStateChange }: WebMCPRegistrarProps) {
   const onStateChangeRef = useRef(onStateChange);
-  onStateChangeRef.current = onStateChange;
+
+  useLayoutEffect(() => {
+    onStateChangeRef.current = onStateChange;
+  });
 
   useLayoutEffect(() => {
     const controller = new AbortController();

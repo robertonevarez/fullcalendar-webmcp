@@ -1,8 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AgentActivity } from '@/components/demo/agent-activity';
 import { AgentCursor } from '@/components/demo/agent-cursor';
+import {
+  AgentInteractionOverlay,
+  type VisualStepEvent,
+} from '@/components/demo/agent-interaction-overlay';
 import { BusinessWebsite } from '@/components/demo/business-website';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -47,7 +50,7 @@ type ChatMessage = {
   text: string;
 };
 
-type CursorTarget = 'chat' | 'storefront' | `activity-${string}`;
+type CursorTarget = 'chat' | 'storefront' | 'overlay';
 
 type Props = {
   config: DemoConfig;
@@ -65,6 +68,14 @@ function pointInStage(
   if (!el) return null;
   const stageRect = stage.getBoundingClientRect();
   const rect = el.getBoundingClientRect();
+
+  if (selector.includes('storefront') || selector.includes('overlay')) {
+    return {
+      x: rect.left - stageRect.left + rect.width / 2,
+      y: rect.top - stageRect.top + rect.height * 0.42,
+    };
+  }
+
   return {
     x: rect.left - stageRect.left + Math.min(36, rect.width * 0.12),
     y: rect.top - stageRect.top + Math.min(28, rect.height * 0.18),
@@ -95,8 +106,7 @@ export function CustomerConversation({
   const [businessNotice, setBusinessNotice] = useState<DemoBusinessNotice | null>(null);
 
   const [visualPhase, setVisualPhase] = useState<VisualPhase>('idle');
-  const [traceSteps, setTraceSteps] = useState<DemoActivityStep[]>([]);
-  const [activeStepId, setActiveStepId] = useState<string | null>(null);
+  const [overlayEvent, setOverlayEvent] = useState<VisualStepEvent | null>(null);
   const [cursorVisible, setCursorVisible] = useState(false);
   const [cursorPos, setCursorPos] = useState({ x: 0, y: 0 });
   const [statusText, setStatusText] = useState<string | null>(null);
@@ -111,18 +121,14 @@ export function CustomerConversation({
   }, []);
 
   useEffect(() => {
-    if (visualPhase === 'entering') {
+    if (visualPhase === 'entering' || visualPhase === 'operating') {
       moveCursor('storefront');
       return;
     }
     if (visualPhase === 'returning') {
       moveCursor('chat');
-      return;
     }
-    if (visualPhase === 'operating' && activeStepId) {
-      moveCursor(`activity-${activeStepId}`);
-    }
-  }, [activeStepId, moveCursor, visualPhase, traceSteps.length]);
+  }, [moveCursor, visualPhase]);
 
   const updatePlaybackState = useCallback(
     (state: PlaybackState) => {
@@ -145,7 +151,7 @@ export function CustomerConversation({
       return;
     }
 
-    setActiveStepId(null);
+    setOverlayEvent(null);
     moveCursor('chat');
     setCursorVisible(true);
     setStatusText('Agent accessing business website…');
@@ -163,7 +169,7 @@ export function CustomerConversation({
             setStatusText('Agent accessing business website…');
           }
           if (phase === 'returning') {
-            setActiveStepId(null);
+            setOverlayEvent(null);
             setStatusText('Agent returning to conversation…');
           }
           if (phase === 'idle') {
@@ -171,20 +177,10 @@ export function CustomerConversation({
             setStatusText(null);
           }
         },
-        onStep: (step) => {
-          if (step) {
-            setTraceSteps((prev) => {
-              if (prev.some((existing) => existing.id === step.id)) {
-                return prev.map((existing) =>
-                  existing.id === step.id ? step : existing,
-                );
-              }
-              return [...prev, step];
-            });
-            setActiveStepId(step.id);
-            setStatusText(`${step.label}${step.detail ? ` — ${step.detail}` : ''}`);
-          } else {
-            setActiveStepId(null);
+        onStepEvent: (event) => {
+          setOverlayEvent(event);
+          if (event) {
+            setStatusText(`${event.step.label}${event.step.detail ? ` — ${event.step.detail}` : ''}`);
           }
         },
       });
@@ -195,7 +191,7 @@ export function CustomerConversation({
 
     if (options.signal.aborted) return;
 
-    setActiveStepId(null);
+    setOverlayEvent(null);
     setVisualPhase('idle');
     setCursorVisible(false);
     setStatusText(null);
@@ -307,6 +303,8 @@ export function CustomerConversation({
         ? 'Product walkthrough'
         : 'Agent conversation';
 
+  const isAgentAccess = visualPhase === 'entering' || visualPhase === 'operating';
+
   return (
     <div
       ref={stageRef}
@@ -319,24 +317,28 @@ export function CustomerConversation({
         reducedMotion={reducedMotion}
       />
 
+      {/* LEFT: Full Simulated Business Website with Contextual Agent Interaction Overlay */}
       <div className="order-1 flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-xs md:h-full">
-        <div className="min-h-0 flex-[0.64] border-b border-border md:flex-[0.56]">
-          <BusinessWebsite
-            className="h-full min-h-0"
-            config={config}
-            lastBooking={conversation.lastBooking}
-            businessNotice={businessNotice}
-          />
-        </div>
-        <div className="min-h-0 flex-[0.36] md:flex-[0.44]">
-          <AgentActivity
-            className="h-full min-h-0"
-            steps={traceSteps}
-            activeStepId={activeStepId}
-          />
-        </div>
+        <BusinessWebsite
+          className="h-full min-h-0"
+          config={config}
+          lastBooking={conversation.lastBooking}
+          businessNotice={businessNotice}
+          isAgentAccess={isAgentAccess}
+          overlay={
+            overlayEvent ? (
+              <AgentInteractionOverlay
+                step={overlayEvent.step}
+                status={overlayEvent.status}
+                completedSteps={overlayEvent.completedSteps}
+                reducedMotion={reducedMotion}
+              />
+            ) : null
+          }
+        />
       </div>
 
+      {/* RIGHT: Customer's Personal Agent Conversation */}
       <div className="order-2 flex min-h-0 flex-col md:h-full">
         {statusText ? (
           <p
@@ -381,7 +383,7 @@ export function CustomerConversation({
                                 variant={isUser ? 'default' : 'secondary'}
                                 align={isUser ? 'end' : 'start'}
                                 className={
-                                  isUser
+                                   isUser
                                     ? '*:data-[slot=bubble-content]:rounded-3xl *:data-[slot=bubble-content]:bg-[#007AFF] *:data-[slot=bubble-content]:text-white [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[#007AFF]/90'
                                     : '*:data-[slot=bubble-content]:rounded-3xl'
                                 }
