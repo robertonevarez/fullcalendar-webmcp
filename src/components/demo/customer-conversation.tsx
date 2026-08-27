@@ -107,6 +107,7 @@ export function CustomerConversation({
   }, [reducedMotion]);
 
   const [busy, setBusy] = useState(false);
+  const [draft, setDraft] = useState('');
   const [conversation, setConversation] = useState<DemoConversationState>(() =>
     emptyConversationState(),
   );
@@ -128,7 +129,7 @@ export function CustomerConversation({
         behavior: 'smooth',
       });
     }
-  }, [messages.length, busy, statusText]);
+  }, [messages.length, busy, statusText, draft]);
 
   const moveCursor = useCallback((target: CursorTarget) => {
     const stage = stageRef.current;
@@ -221,12 +222,39 @@ export function CustomerConversation({
 
   async function executeScriptedTurn(message: string, signal: AbortSignal) {
     setBusy(true);
-    setMessages((prev) => [
-      ...prev,
-      { id: `user_${crypto.randomUUID()}`, role: 'user', text: message },
-    ]);
 
     try {
+      // Simulate user typing into the personal agent chat prompt
+      if (!reducedMotionRef.current) {
+        const chars = Array.from(message);
+        const charDelay = Math.max(15, Math.min(32, Math.floor(550 / chars.length)));
+        for (let i = 1; i <= chars.length; i++) {
+          if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+          setDraft(message.slice(0, i));
+          await new Promise<void>((resolve, reject) => {
+            const t = setTimeout(resolve, charDelay);
+            signal.addEventListener('abort', () => {
+              clearTimeout(t);
+              reject(new DOMException('Aborted', 'AbortError'));
+            }, { once: true });
+          });
+        }
+        await new Promise<void>((resolve, reject) => {
+          const t = setTimeout(resolve, 180);
+          signal.addEventListener('abort', () => {
+            clearTimeout(t);
+            reject(new DOMException('Aborted', 'AbortError'));
+          }, { once: true });
+        });
+      }
+
+      if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
+      setDraft('');
+      setMessages((prev) => [
+        ...prev,
+        { id: `user_${crypto.randomUUID()}`, role: 'user', text: message },
+      ]);
+
       await waitAfterUserAppear(signal);
 
       if (signal.aborted) {
@@ -271,6 +299,7 @@ export function CustomerConversation({
       return { hadActivity: turnActivity.length > 0 };
     } catch (error) {
       if (isAbortError(error)) throw error;
+      setDraft('');
       setMessages((prev) => [
         ...prev,
         {
@@ -315,6 +344,7 @@ export function CustomerConversation({
   }, []);
 
   const isAgentAccess = visualPhase === 'entering' || visualPhase === 'operating';
+  const canSend = draft.trim().length > 0;
 
   return (
     <div
@@ -368,7 +398,7 @@ export function CustomerConversation({
           <ScrollArea
             className="flex-1 min-h-0"
             viewportRef={messagesScrollerRef}
-            viewportClassName="scroll-fade p-3.5 pb-24 flex flex-col gap-3.5"
+            viewportClassName="scroll-fade p-3.5 pb-4 flex flex-col gap-3.5"
           >
             {messages.map((msg) => {
               if (msg.role === 'user') {
@@ -395,11 +425,53 @@ export function CustomerConversation({
 
             {busy || visualPhase !== 'idle' ? (
               <AssistantMessage
-                text={statusText ?? `Working with ${config.businessName}…`}
+                text={statusText || `Working with ${config.businessName}…`}
                 resolving={true}
               />
             ) : null}
           </ScrollArea>
+
+          {/* composer — prompt text area */}
+          <div className="mt-auto shrink-0 border-t border-line/60 p-2">
+            <div
+              role="presentation"
+              className="flex cursor-text flex-col gap-1.5 rounded-[12px] border border-line bg-field p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)] transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.025)]"
+            >
+              <input
+                value={draft}
+                readOnly
+                placeholder="Ask your agent anything…"
+                aria-label="Chat prompt"
+                className="min-h-5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none placeholder:text-ink-3"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-ink-3">Simulated user</span>
+                <button
+                  type="button"
+                  aria-label="Send"
+                  disabled={!canSend}
+                  className="flex size-6.5 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200"
+                  style={{
+                    background: canSend ? '#007AFF' : 'var(--line-strong)',
+                    color: canSend ? '#ffffff' : 'var(--ink-2)',
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M12 19V5M5 12l7-7 7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

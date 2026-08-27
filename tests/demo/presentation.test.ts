@@ -19,7 +19,7 @@ const { CustomerConversation } = await import('@/components/demo/customer-conver
 const config = getDefaultPreset().config;
 
 describe('demo presentation surfaces', () => {
-  it('renders the conversation as a playback surface without a composer or input area', () => {
+  it('renders the conversation with a simulated user prompt composer', () => {
     const html = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
@@ -27,12 +27,10 @@ describe('demo presentation surfaces', () => {
     );
 
     expect(html).toContain('data-demo-playback="playing"');
-    expect(html).not.toContain('Ask a follow-up');
-    expect(html).not.toMatch(/<textarea\b/i);
-    expect(html).not.toMatch(/<input\b/i);
-    expect(html).not.toMatch(/placeholder=/i);
-    expect(html).not.toContain('type="submit"');
-    expect(html).not.toContain("Message to the customer's agent");
+    expect(html).toContain('aria-label="Chat prompt"');
+    expect(html).toContain('placeholder="Ask your agent anything…"');
+    expect(html).toContain('Simulated user');
+    expect(html).toContain('aria-label="Send"');
   });
 
   it('renders full left surface without any persistent terminal section', () => {
