@@ -16,7 +16,7 @@ const heroCopyGlow =
 export function Hero() {
   return (
     <section className="relative flex h-[80svh] w-full items-start overflow-hidden border-b bg-background">
-      <HeroImageBackground className="z-0" opacity={1} />
+      <HeroImageBackground className="z-0" opacity={0.6} />
       <div
         aria-hidden
         className={cn('pointer-events-none absolute inset-0 z-[1]', heroScrim)}
