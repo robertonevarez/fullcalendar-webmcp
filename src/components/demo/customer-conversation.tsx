@@ -384,7 +384,7 @@ export function CustomerConversation({
     <div
       ref={stageRef}
       className={cn(
-        'relative grid min-h-0 max-h-[80svh] flex-1 grid-rows-[auto_minmax(0,1fr)] md:h-full md:max-h-[80svh] md:grid-cols-[minmax(20rem,1fr)_minmax(18rem,23rem)] md:grid-rows-none',
+        'relative grid min-h-0 max-h-[80svh] flex-1 grid-rows-[auto_minmax(0,1fr)] md:h-full md:max-h-[80svh] md:grid-cols-[minmax(0,1fr)_minmax(19rem,23.5rem)] md:grid-rows-none',
         spacing.gap,
       )}
     >
@@ -423,7 +423,7 @@ export function CustomerConversation({
           data-demo-playback={playbackState}
           className={cn(
             inter.className,
-            'flex h-full max-h-[80svh] min-h-0 w-full max-w-sm flex-col self-start overflow-hidden rounded-[14px] border border-line bg-surface md:mx-0',
+            'flex h-full max-h-[80svh] min-h-0 w-full max-w-[23.5rem] flex-col overflow-hidden rounded-[14px] border border-line bg-surface',
           )}
           role="region"
           aria-label="Agent conversation"

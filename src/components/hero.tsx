@@ -18,9 +18,7 @@ export function Hero() {
     <section className="relative flex w-full flex-col overflow-hidden bg-background">
       <div
         className={cn(
-          'relative z-10 mx-auto flex w-full max-w-6xl flex-col',
-          ds.layout.container,
-          spacing.page,
+          'relative z-10 flex w-full flex-col px-4 sm:px-6 md:px-8 lg:px-10',
           'pt-3 pb-6 md:pt-4 md:pb-8',
         )}
       >
