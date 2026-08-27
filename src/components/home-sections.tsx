@@ -139,10 +139,10 @@ export function BookingFunnelsSection() {
         </>
       }
       image={{
-        src: '/no-more-booking-funnels.jpg',
+        src: '/no-more-booking-funnels.png',
         alt: 'Side-by-side comparison: Protocol Tooling is two clean steps—tell your agent what you need and confirm the appointment—while traditional booking winds through a phone and laptop across seven steps from finding the website to submitting.',
-        width: 2048,
-        height: 2048,
+        width: 1254,
+        height: 1254,
       }}
     />
   );
@@ -167,10 +167,10 @@ export function BusinessControlSection() {
         </>
       }
       image={{
-        src: '/business-control.jpg',
-        alt: 'An authorized appointment slot at 4:30 marked Confirmed, with quieter empty slots faded behind it.',
-        width: 2048,
-        height: 2048,
+        src: '/business-control.png',
+        alt: 'Business owns Services, Hours, and Areas; an agent only asks “Can you book me in?” against those rules.',
+        width: 1254,
+        height: 1254,
       }}
     />
   );
