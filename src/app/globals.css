@@ -25,6 +25,26 @@
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
   --spacing-page: 0.75rem;
+  --ink: oklch(0.145 0 0);
+  --ink-2: oklch(0.48 0 0);
+  --ink-3: oklch(0.65 0 0);
+  --surface: oklch(1 0 0);
+  --field: oklch(0.965 0 0);
+  --hover: oklch(0.935 0 0);
+  --line: oklch(0.92 0 0);
+  --line-strong: oklch(0.82 0 0);
+  --radius-control: 10px;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @theme inline {
@@ -51,6 +71,16 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-surface: var(--surface);
+  --color-field: var(--field);
+  --color-hover: var(--hover);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --radius-control: var(--radius-control);
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
 }
 
 @layer base {
