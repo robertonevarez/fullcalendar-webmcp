@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AgentInteractionOverlay } from '@/components/demo/agent-interaction-overlay';
 import { BusinessWebsite } from '@/components/demo/business-website';
-import { DEMO_PRESETS, getDefaultPreset } from '@/demo/presets';
+import { getDefaultPreset } from '@/demo/presets';
 import type { DemoActivityStep } from '@/demo/types';
 
 vi.mock('@/lib/fonts', () => ({
@@ -36,7 +36,7 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain("Message to the customer's agent");
   });
 
-  it('renders full storefront without any persistent terminal section', () => {
+  it('renders full left surface without any persistent terminal section', () => {
     const html = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
@@ -50,7 +50,7 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('monospace console');
   });
 
-  it('renders storefront from demo configuration without Protocol Tooling copy', () => {
+  it('renders business surface container without mock website design', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
@@ -59,21 +59,13 @@ describe('demo presentation surfaces', () => {
       }),
     );
 
-    expect(html).toMatch(/Acme Heating (&|\&amp;) Air/);
-    expect(html).toContain('AC Diagnostic Visit');
-    expect(html).toContain('$89');
-    expect(html).toContain('Preventive Maintenance');
-    expect(html).toContain('Services');
-    expect(html).toContain('Austin Heating &amp; Cooling Service');
-    expect(html).toContain('Need your AC fixed???');
-    expect(html).toContain('Comic_Sans_MS');
-    expect(html).toContain('Austin, TX');
-    expect(html).toContain('78701 · 78702 · 78703');
-    expect(html).not.toContain('Compatible agents');
-    expect(html).not.toContain('structured capabilities exposed underneath');
-    expect(html).not.toContain('Protocol Tooling');
-    expect(html).not.toContain('Waiting for a request');
+    expect(html).toContain('data-demo-target="storefront"');
     expect(html).toContain('data-agent-access="false"');
+    expect(html).not.toContain('Comic_Sans_MS');
+    expect(html).not.toContain('SCHEDULE SERVICE');
+    expect(html).not.toContain('Need your AC fixed???');
+    expect(html).not.toContain('Compatible agents');
+    expect(html).not.toContain('Protocol Tooling');
   });
 
   it('enters agent-access state and hosts overlay when agent accesses website', () => {
@@ -108,7 +100,6 @@ describe('demo presentation surfaces', () => {
     );
 
     expect(html).toContain('data-agent-access="true"');
-    expect(html).toContain('blur-[1.5px]');
     expect(html).toContain('data-demo-target="overlay"');
     expect(html).toContain('AC Diagnostic Visit');
     expect(html).toContain('search_services');
@@ -277,7 +268,7 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('create_appointment');
   });
 
-  it('shows appointment consequence on the storefront after booking', () => {
+  it('shows appointment consequence on the surface after booking', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
@@ -298,69 +289,12 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('Details would be sent to hello@acme.example');
   });
 
-  it.each(DEMO_PRESETS)('composes an intentional $id storefront from its archetype', (preset) => {
-    const html = renderToStaticMarkup(
-      createElement(BusinessWebsite, {
-        config: preset.config,
-        lastBooking: null,
-        businessNotice: null,
-      }),
-    );
-
-    expect(html).toContain(preset.config.businessName.replaceAll('&', '&amp;'));
-    for (const service of preset.config.services) {
-      expect(html).toContain(service.name);
-      expect(html).toContain(`$${service.price_dollars}`);
-      expect(html).toContain(String(service.duration_minutes));
-    }
-
-    if (preset.config.archetype === 'field_service') {
-      expect(html).toContain('Austin Heating &amp; Cooling Service');
-      expect(html).toContain('Need your AC fixed???');
-    } else if (preset.config.archetype === 'salon') {
-      expect(html).toContain('Beautiful hair starts here');
-      expect(html).toContain('Our stylists');
-      expect(html).not.toContain('Austin Heating &amp; Cooling Service');
-    } else {
-      expect(html).toContain('Straightforward service for your car.');
-      expect(html).toContain('Technicians');
-      expect(html).not.toContain('Beautiful hair starts here');
-    }
-
-    expect(html).not.toContain('Protocol Tooling');
-    expect(html.match(/data-demo-target="storefront"/g)).toHaveLength(1);
-    expect(html).toMatch(/href="#(?:services|contact|visit)"/);
-  });
-
-  it('does not carry storefront content across business configurations', () => {
-    const htmlFor = (presetId: (typeof DEMO_PRESETS)[number]['id']) =>
-      renderToStaticMarkup(
-        createElement(BusinessWebsite, {
-          config: DEMO_PRESETS.find((preset) => preset.id === presetId)!.config,
-          lastBooking: null,
-          businessNotice: null,
-        }),
-      );
-    const acme = htmlFor('acme-hvac');
-    const salon = htmlFor('northline-salon');
-    const auto = htmlFor('mesa-auto');
-
-    expect(salon).not.toContain('AC Diagnostic Visit');
-    expect(salon).not.toContain('Straightforward service for your car.');
-    expect(auto).not.toContain('Beautiful hair starts here');
-    expect(auto).not.toContain('AC Diagnostic Visit');
-    expect(acme).not.toContain('Beautiful hair starts here');
-    expect(acme).not.toContain('Straightforward service for your car.');
-  });
-
   it('gates appointment booking overlay until explicit user confirmation', () => {
-    // Turn 5: User says "4:30" (slot chosen)
     const slotChosenStepHtml = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
       }),
     );
-    // Initial render has no overlay active
     expect(slotChosenStepHtml).not.toContain('data-demo-overlay-target="booking"');
     expect(slotChosenStepHtml).not.toContain('Appointment confirmed');
   });
