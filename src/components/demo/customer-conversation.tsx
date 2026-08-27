@@ -431,22 +431,24 @@ export function CustomerConversation({
             ) : null}
           </ScrollArea>
 
-          {/* composer — prompt text area */}
-          <div className="mt-auto shrink-0 border-t border-line/60 p-2">
+          {/* composer — prompt text area (non-interactive playback graphic) */}
+          <div className="pointer-events-none mt-auto shrink-0 select-none border-t border-line/60 p-2">
             <div
               role="presentation"
-              className="flex cursor-text flex-col gap-1.5 rounded-[12px] border border-line bg-field p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)] transition-[border-color,box-shadow] duration-150 focus-within:border-line-strong focus-within:shadow-[0_1px_2px_rgba(0,0,0,0.025)]"
+              className="flex flex-col gap-1.5 rounded-[12px] border border-line bg-field p-2 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
             >
               <input
                 value={draft}
                 readOnly
+                tabIndex={-1}
                 placeholder="Ask your agent anything…"
                 aria-label="Chat prompt"
-                className="min-h-5 bg-transparent text-[13px] leading-[1.4] text-ink outline-none placeholder:text-ink-3"
+                className="pointer-events-none min-h-5 select-none bg-transparent text-[13px] leading-[1.4] text-ink outline-none placeholder:text-ink-3"
               />
               <div className="flex items-center justify-end">
                 <button
                   type="button"
+                  tabIndex={-1}
                   aria-label="Send"
                   disabled={!canSend}
                   className="flex size-6.5 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200"
