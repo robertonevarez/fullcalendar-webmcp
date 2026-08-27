@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { CustomerConversation } from '@/components/demo/customer-conversation';
-import { Button } from '@/components/ui/button';
 import { cloneDemoConfig } from '@/demo/normalize';
 import {
   DEMO_PRESETS,
@@ -37,7 +36,7 @@ export function DemoExperience() {
         <h1 className="sr-only">Product demo</h1>
 
         <div
-          className="flex flex-col overflow-hidden rounded-2xl border border-border md:h-[min(48rem,calc(100svh-7rem))] md:min-h-[36rem]"
+          className="flex min-h-0 flex-col md:h-[min(52rem,calc(100svh-6rem))] md:min-h-[40rem]"
           aria-label="Product demo"
         >
           <CustomerConversation
@@ -48,15 +47,13 @@ export function DemoExperience() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm tracking-tight text-muted-foreground">
-          <Button
+          <button
             type="button"
-            variant="ghost"
-            size="sm"
-            className="h-auto px-0 text-muted-foreground hover:bg-transparent hover:text-foreground"
+            className="text-foreground underline-offset-4 hover:underline focus-visible:rounded-sm focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
             onClick={resetDemo}
           >
             Reset
-          </Button>
+          </button>
           <span className="text-border" aria-hidden>
             ·
           </span>

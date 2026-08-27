@@ -2,6 +2,16 @@
 
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { DEMO_AGENT_CAPABILITIES } from '@/demo/capabilities';
 import { formatDaysLabel, formatHoursLabel, formatSlotWhen } from '@/demo/format';
 import type {
@@ -51,8 +61,8 @@ function Field({
 }) {
   return (
     <div className="space-y-1.5">
-      <h4 className="text-xs font-medium tracking-tight text-muted-foreground">{label}</h4>
-      <div className="text-sm tracking-tight">{children}</div>
+      <h4 className="text-xs font-medium text-muted-foreground">{label}</h4>
+      <div className="text-sm">{children}</div>
     </div>
   );
 }
@@ -71,38 +81,38 @@ export function ProtocolToolingPanel({
     config.archetype === 'auto' ? 'Technicians' : config.archetype === 'salon' ? 'Stylists' : 'Staff';
 
   return (
-    <aside
-      className={cn('flex min-h-0 flex-col bg-muted/30 p-4 md:p-5', className)}
+    <Card
+      size="sm"
+      className={cn('h-full min-h-0 gap-0 py-0', className)}
       aria-label="Protocol Tooling"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1">
-          <h3 className="text-lg font-medium tracking-tight">Protocol Tooling</h3>
-          <p className="text-sm tracking-tight text-muted-foreground">
-            Business capabilities exposed to the agent
-          </p>
-        </div>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex shrink-0 items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1 text-xs font-medium tracking-tight text-muted-foreground outline-none md:hidden',
-            'hover:text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50',
-          )}
-          aria-expanded={detailsOpen}
-          aria-controls={detailsId}
-          onClick={() => setDetailsOpen((open) => !open)}
-        >
-          {detailsOpen ? 'Hide' : 'Details'}
-          <ChevronDown
-            className={cn('size-3.5 transition-transform', detailsOpen && 'rotate-180')}
-            aria-hidden
-          />
-        </button>
-      </div>
+      <CardHeader className="gap-1 border-b py-(--card-spacing)">
+        <CardTitle>Protocol Tooling</CardTitle>
+        <CardDescription>Business capabilities exposed to the agent</CardDescription>
+        <CardAction className="md:hidden">
+          <Button
+            type="button"
+            variant="outline"
+            size="xs"
+            aria-expanded={detailsOpen}
+            aria-controls={detailsId}
+            onClick={() => setDetailsOpen((open) => !open)}
+          >
+            {detailsOpen ? 'Hide' : 'Details'}
+            <ChevronDown
+              className={cn('size-3.5 transition-transform', detailsOpen && 'rotate-180')}
+              aria-hidden
+            />
+          </Button>
+        </CardAction>
+      </CardHeader>
 
-      <div
+      <CardContent
         id={detailsId}
-        className={cn('mt-5 space-y-5', detailsOpen ? 'block' : 'hidden md:block')}
+        className={cn(
+          'min-h-0 flex-1 gap-5 overflow-y-auto py-(--card-spacing)',
+          detailsOpen ? 'flex' : 'hidden md:flex',
+        )}
       >
         <Field label="Business">
           <p className="font-medium">{config.businessName}</p>
@@ -173,21 +183,19 @@ export function ProtocolToolingPanel({
             ))}
           </ul>
         </Field>
-      </div>
+      </CardContent>
 
-      <div className="mt-5 space-y-4 border-t border-border pt-4 md:mt-auto">
+      <CardFooter className="flex-col items-stretch gap-4 border-t py-(--card-spacing)">
         <div className="space-y-2" aria-live="polite">
-          <h4 className="text-xs font-medium tracking-tight text-muted-foreground">
-            Live operations
-          </h4>
+          <h4 className="text-xs font-medium text-muted-foreground">Live operations</h4>
           {activity.length === 0 ? (
-            <p className="text-sm tracking-tight text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Activity appears here as the agent works.
             </p>
           ) : (
             <ul className="space-y-2.5">
               {activity.map((step) => (
-                <li key={step.id} className="text-sm tracking-tight">
+                <li key={step.id} className="text-sm">
                   <div className="font-medium">{step.label}</div>
                   {step.detail ? (
                     <p className="text-muted-foreground">{step.detail}</p>
@@ -199,36 +207,34 @@ export function ProtocolToolingPanel({
         </div>
 
         {lastBooking || businessNotice ? (
-          <div className="space-y-2 border-t border-border pt-4" role="status" aria-live="polite">
-            <h4 className="text-xs font-medium tracking-tight text-muted-foreground">
+          <div className="space-y-2 border-t pt-4" role="status" aria-live="polite">
+            <h4 className="text-xs font-medium text-muted-foreground">
               {businessNotice?.headline ?? 'New appointment'}
             </h4>
-            <p className="text-sm font-medium tracking-tight">
+            <p className="text-sm font-medium">
               {businessNotice?.service_name ?? lastBooking?.service_name}
             </p>
-            <p className="text-sm tracking-tight text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               {businessNotice?.when_label ??
                 (lastBooking
                   ? formatSlotWhen(lastBooking.starts_at, config.timezone)
                   : null)}
             </p>
             {(businessNotice?.provider_name ?? lastBooking?.provider_name) ? (
-              <p className="text-sm tracking-tight text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {businessNotice?.provider_name ?? lastBooking?.provider_name}
               </p>
             ) : null}
             <div className="pt-1">
-              <p className="text-xs font-medium tracking-tight text-muted-foreground">
-                Notification
-              </p>
-              <p className="text-sm tracking-tight text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground">Notification</p>
+              <p className="text-sm text-muted-foreground">
                 Would be sent to{' '}
                 {businessNotice?.notification_email ?? config.notificationEmail}
               </p>
             </div>
           </div>
         ) : null}
-      </div>
-    </aside>
+      </CardFooter>
+    </Card>
   );
 }

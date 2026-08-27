@@ -1,14 +1,24 @@
 'use client';
 
 import { useId, useState } from 'react';
+import { ArrowUpIcon } from 'lucide-react';
 import { ProtocolToolingPanel } from '@/components/demo/protocol-tooling-panel';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
-import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+} from '@/components/ui/card';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupTextarea,
+} from '@/components/ui/input-group';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import {
   Message,
   MessageContent,
-  MessageHeader,
 } from '@/components/ui/message';
 import {
   MessageScroller,
@@ -18,7 +28,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller';
-import { Textarea } from '@/components/ui/textarea';
 import { mergeActivity } from '@/demo/capabilities';
 import { emptyConversationState } from '@/demo/engine';
 import type {
@@ -28,6 +37,8 @@ import type {
   DemoConversationState,
   DemoTurnResponse,
 } from '@/demo/types';
+import { inter } from '@/lib/fonts';
+import { cn } from '@/lib/utils';
 
 type ChatMessage = {
   id: string;
@@ -41,7 +52,11 @@ type Props = {
   onBooked?: () => void;
 };
 
-export function CustomerConversation({ config, customerPrompt, onBooked }: Props) {
+export function CustomerConversation({
+  config,
+  customerPrompt,
+  onBooked,
+}: Props) {
   const formId = useId();
   const [input, setInput] = useState(customerPrompt);
   const [busy, setBusy] = useState(false);
@@ -112,118 +127,117 @@ export function CustomerConversation({ config, customerPrompt, onBooked }: Props
   }
 
   return (
-    <div className="grid min-h-0 flex-1 grid-rows-[minmax(24rem,1fr)_auto] md:h-full md:grid-cols-[minmax(16rem,2fr)_minmax(0,3fr)] md:grid-rows-none">
-      {/* Mobile: conversation first for usability; desktop: Protocol Tooling | agent */}
-      <div className="order-1 flex min-h-[24rem] flex-col overflow-hidden bg-background md:order-2 md:h-full md:min-h-0">
-        <div className="space-y-1 border-b border-border px-4 py-3 md:px-5">
-          <p className="text-sm font-medium tracking-tight">Customer&apos;s agent</p>
-          <p className="text-xs tracking-tight text-muted-foreground">
-            This represents the AI your customer already uses.
-          </p>
-        </div>
-
+    <div className="grid min-h-0 flex-1 gap-3 grid-rows-[minmax(28rem,auto)_auto] md:h-full md:grid-cols-[minmax(16rem,2fr)_minmax(18rem,3fr)] md:grid-rows-none md:gap-4">
+      <div className="order-1 flex min-h-0 justify-center md:order-2 md:h-full">
         <MessageScrollerProvider autoScroll>
-          <div className="relative flex min-h-0 flex-1 flex-col">
-            <MessageScroller className="flex-1">
-              <MessageScrollerViewport>
-                <MessageScrollerContent className="gap-6 p-4 md:p-5">
-                  {messages.length === 0 && !busy ? (
-                    <MessageScrollerItem messageId="empty">
-                      <p className="mx-auto max-w-xs py-10 text-center text-sm tracking-tight text-muted-foreground">
-                        Send a request. The agent books against Protocol Tooling.
-                      </p>
-                    </MessageScrollerItem>
-                  ) : null}
+          <Card
+            size="sm"
+            className={cn(
+              inter.className,
+              'mx-auto h-full min-h-[28rem] w-full max-w-sm gap-0 rounded-3xl py-0 md:min-h-0',
+            )}
+            role="region"
+            aria-label="Customer agent"
+          >
+            <CardContent className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-t-3xl p-0">
+              <MessageScroller className="flex-1">
+                <MessageScrollerViewport>
+                  <MessageScrollerContent
+                    aria-busy={busy}
+                    className="gap-6 p-(--card-spacing)"
+                  >
+                    {messages.map((msg) => {
+                      const isUser = msg.role === 'user';
+                      return (
+                        <MessageScrollerItem
+                          key={msg.id}
+                          messageId={msg.id}
+                          scrollAnchor={isUser}
+                        >
+                          <Message align={isUser ? 'end' : 'start'}>
+                            <MessageContent>
+                              <Bubble
+                                variant={isUser ? 'default' : 'secondary'}
+                                align={isUser ? 'end' : 'start'}
+                                className={
+                                  isUser
+                                    ? '*:data-[slot=bubble-content]:rounded-3xl *:data-[slot=bubble-content]:bg-[#007AFF] *:data-[slot=bubble-content]:text-white [&>[data-slot=bubble-content]:is(button,a):hover]:bg-[#007AFF]/90'
+                                    : '*:data-[slot=bubble-content]:rounded-3xl'
+                                }
+                              >
+                                <BubbleContent className="whitespace-pre-wrap rounded-3xl">
+                                  {msg.text}
+                                </BubbleContent>
+                              </Bubble>
+                            </MessageContent>
+                          </Message>
+                        </MessageScrollerItem>
+                      );
+                    })}
 
-                  {messages.map((msg) => {
-                    const isUser = msg.role === 'user';
-                    return (
-                      <MessageScrollerItem
-                        key={msg.id}
-                        messageId={msg.id}
-                        scrollAnchor={isUser}
-                      >
-                        <Message align={isUser ? 'end' : 'start'}>
-                          <MessageContent>
-                            <MessageHeader>{isUser ? 'You' : 'Agent'}</MessageHeader>
-                            <Bubble
-                              variant={isUser ? 'default' : 'secondary'}
-                              align={isUser ? 'end' : 'start'}
-                            >
-                              <BubbleContent className="whitespace-pre-wrap">
-                                {msg.text}
-                              </BubbleContent>
-                            </Bubble>
-                          </MessageContent>
+                    {busy ? (
+                      <MessageScrollerItem messageId="status-busy">
+                        <Message align="start">
+                          <Marker role="status">
+                            <MarkerContent>
+                              Checking with {config.businessName}…
+                            </MarkerContent>
+                          </Marker>
                         </Message>
                       </MessageScrollerItem>
-                    );
-                  })}
+                    ) : null}
+                  </MessageScrollerContent>
+                </MessageScrollerViewport>
+                <MessageScrollerButton />
+              </MessageScroller>
+            </CardContent>
 
-                  {busy ? (
-                    <MessageScrollerItem messageId="status-busy">
-                      <Message align="start">
-                        <Marker role="status">
-                          <MarkerContent>
-                            Checking with {config.businessName}…
-                          </MarkerContent>
-                        </Marker>
-                      </Message>
-                    </MessageScrollerItem>
-                  ) : null}
-                </MessageScrollerContent>
-              </MessageScrollerViewport>
-              <MessageScrollerButton />
-            </MessageScroller>
-          </div>
-        </MessageScrollerProvider>
-
-        <form
-          className="shrink-0 space-y-2 border-t border-border p-3 md:px-4 md:py-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void sendMessage(input);
-          }}
-        >
-          <label className="sr-only" htmlFor={formId}>
-            Message to the customer&apos;s agent
-          </label>
-          <Textarea
-            id={formId}
-            rows={2}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                void sendMessage(input);
-              }
-            }}
-            placeholder={customerHasSpoken ? 'Ask a follow-up' : customerPrompt}
-            disabled={busy}
-            aria-busy={busy}
-          />
-          <div className="flex items-center gap-2">
-            {customerHasSpoken ? null : (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={busy}
-                onClick={() => setInput(customerPrompt)}
+            <CardFooter className="flex-col gap-2 rounded-b-3xl py-(--card-spacing)">
+              <form
+                className="w-full"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  void sendMessage(input);
+                }}
               >
-                Use example prompt
-              </Button>
-            )}
-            <Button type="submit" className="ml-auto" disabled={busy || !input.trim()}>
-              Send
-            </Button>
-          </div>
-        </form>
+                <InputGroup className="rounded-3xl">
+                  <InputGroupTextarea
+                    id={formId}
+                    aria-label="Message to the customer's agent"
+                    className="min-h-14 rounded-3xl px-3 py-2.5"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void sendMessage(input);
+                      }
+                    }}
+                    placeholder={customerHasSpoken ? 'Ask a follow-up' : customerPrompt}
+                    disabled={busy}
+                    aria-busy={busy}
+                  />
+                  <InputGroupAddon align="block-end" className="pt-1">
+                    <InputGroupButton
+                      type="submit"
+                      variant="default"
+                      size="icon-sm"
+                      disabled={busy || !input.trim()}
+                      className="ml-auto rounded-full bg-[#007AFF] text-white hover:bg-[#007AFF]/90"
+                    >
+                      <ArrowUpIcon />
+                      <span className="sr-only">Send</span>
+                    </InputGroupButton>
+                  </InputGroupAddon>
+                </InputGroup>
+              </form>
+            </CardFooter>
+          </Card>
+        </MessageScrollerProvider>
       </div>
 
       <ProtocolToolingPanel
-        className="order-2 border-t border-border md:order-1 md:h-full md:overflow-y-auto md:border-t-0 md:border-r"
+        className="order-2 md:order-1"
         config={config}
         activity={activity}
         lastBooking={conversation.lastBooking}

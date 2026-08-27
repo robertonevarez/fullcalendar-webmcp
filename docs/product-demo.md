@@ -4,8 +4,8 @@
 
 `/demo` is a **single product demonstration** with two surfaces — not a wizard, configurator, or playground.
 
-- **Left (~40%): Protocol Tooling** — business truth, agent capabilities, live operations, and booking consequence
-- **Right (~60%): Customer’s agent** — conversation visualization using official shadcn chat components (`MessageScroller`, `Message`, `Bubble`, `Marker`) installed from source, plus shadcn `Textarea` + `Button` for the composer
+- **Left (~40%): Protocol Tooling** — business truth, agent capabilities, live operations, and booking consequence in a shadcn `Card`
+- **Right (~60%): Customer’s agent** — conversation in a matching shadcn `Card` (`MessageScroller` / `Message` / `Bubble` / `Empty` / `InputGroup`), installed from source
 
 Default story is **Acme Heating & Air**. Salon and Auto examples are available as a small secondary control under the demo frame.
 
