@@ -46,7 +46,7 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('monospace console');
   });
 
-  it('renders business surface container without mock website design or appointment notice text', () => {
+  it('renders retro HTML-driven website mockup with services and service area', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
@@ -57,13 +57,11 @@ describe('demo presentation surfaces', () => {
 
     expect(html).toContain('data-demo-target="storefront"');
     expect(html).toContain('data-agent-access="false"');
-    expect(html).not.toContain('Comic_Sans_MS');
-    expect(html).not.toContain('SCHEDULE SERVICE');
-    expect(html).not.toContain('Need your AC fixed???');
-    expect(html).not.toContain('Compatible agents');
-    expect(html).not.toContain('Protocol Tooling');
-    expect(html).not.toContain('Appointment received');
-    expect(html).not.toContain('Details would be sent');
+    expect(html).toContain('Acme Heating &amp; Air');
+    expect(html).toContain('AC Diagnostic Visit');
+    expect(html).toContain('Est. 1994');
+    expect(html).toContain('78701');
+    expect(html).toContain('[ Home ]');
   });
 
   it('enters agent-access state and hosts overlay when agent accesses website', () => {
