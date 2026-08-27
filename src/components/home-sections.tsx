@@ -95,7 +95,7 @@ function ImageTextSection({
           height={image.height}
           decoding="async"
           className={cn(
-            'w-full self-start rounded-2xl border border-border shadow-lg',
+            'w-full self-start rounded-2xl',
             imageOnLeft ? 'md:col-start-1 md:row-start-1' : 'md:col-start-2 md:row-start-1',
           )}
         />
@@ -117,10 +117,10 @@ export function LiveInteractionSection() {
         </>
       }
       image={{
-        src: '/how-it-works.jpg',
+        src: '/how-it-works.png',
         alt: 'A customer asks their agent to book an AC diagnostic visit. Protocol Tooling returns the service, confirms 78701 is eligible, offers 4:30 PM or 6:00 PM for $89, and confirms the appointment.',
-        width: 2048,
-        height: 2048,
+        width: 1254,
+        height: 1254,
       }}
     />
   );
