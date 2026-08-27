@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { DemoBusinessNotice, DemoConfig, DemoPublicAppointment } from '@/demo/types';
+import { BrowserToolbar, type BrowserState } from '@/components/demo/browser-toolbar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 
@@ -11,41 +12,58 @@ type Props = {
   businessNotice: DemoBusinessNotice | null;
   isAgentAccess?: boolean;
   overlay?: ReactNode;
+  browserState?: BrowserState;
   className?: string;
 };
 
 /**
  * Rich, authentic early-web local business website mockup inspired by debloat.dev,
- * presenting a complete real-world HVAC service platform.
+ * framed inside an in-app personal agent browser window.
  */
 export function BusinessWebsite({
   config,
   isAgentAccess = false,
   overlay,
+  browserState = 'loaded',
   className,
 }: Props) {
+  const isLoaded = browserState === 'loaded';
+  const websiteUrl = 'https://acmehvac.com';
+
   return (
     <article
       id="top"
       data-demo-target="storefront"
       data-agent-access={isAgentAccess ? 'true' : 'false'}
+      data-browser-state={browserState}
       className={cn(
         'relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans text-[#222]',
         className,
       )}
       aria-label={`${config.businessName} website`}
     >
-      {/* Scrollable debloat.dev style website content */}
-      <ScrollArea
-        className="min-h-0 flex-1"
-        viewportClassName={cn(
-          'p-3 text-[12px] leading-tight transition-[filter,opacity,transform] duration-300 ease-out',
-          isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
+      {/* Top Browser Toolbar Chrome */}
+      <BrowserToolbar url={websiteUrl} browserState={browserState} />
+
+      {/* Website Body with smooth ease-in and ease-out */}
+      <div
+        className={cn(
+          'relative flex min-h-0 flex-1 flex-col overflow-hidden bg-white transition-[opacity,transform] duration-700 ease-in-out',
+          isLoaded
+            ? 'opacity-100 scale-100'
+            : 'opacity-0 scale-[0.99] pointer-events-none select-none',
         )}
       >
-        <div className="pointer-events-none mx-auto w-full select-none space-y-3 pb-8">
-          {/* Top Brand & Search Header */}
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] pb-2">
+        <ScrollArea
+          className="min-h-0 flex-1"
+          viewportClassName={cn(
+            'p-3 text-[12px] leading-tight transition-all duration-500 ease-in-out',
+            isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
+          )}
+        >
+          <div className="pointer-events-none mx-auto w-full select-none space-y-3 pb-8">
+            {/* Top Brand & Search Header */}
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] pb-2">
             <div className="flex items-baseline gap-2">
               <span className="text-[22px] font-black tracking-tight text-[#d32f2f]">
                 acme
@@ -492,6 +510,7 @@ export function BusinessWebsite({
           </footer>
         </div>
       </ScrollArea>
+      </div>
 
       {/* Floating Agent Capability Overlay */}
       {overlay ? (

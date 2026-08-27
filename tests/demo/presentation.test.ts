@@ -27,12 +27,14 @@ describe('demo presentation surfaces', () => {
     );
 
     expect(html).toContain('data-demo-playback="playing"');
+    expect(html).toContain('aria-label="Agent window toolbar"');
+    expect(html).toContain('AI Agent');
     expect(html).toContain('aria-label="Chat prompt"');
     expect(html).toContain('placeholder="Ask your agent anything…"');
     expect(html).toContain('aria-label="Send"');
   });
 
-  it('renders full left surface without any persistent terminal section', () => {
+  it('renders full left surface with mock browser toolbar and initial blank session', () => {
     const html = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
@@ -42,21 +44,42 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('protocol-tooling://agent');
     expect(html).not.toContain('Agent activity terminal');
     expect(html).not.toContain('waiting for agent request...');
-    expect(html).not.toContain('&gt;</span>search_services');
-    expect(html).not.toContain('monospace console');
+    expect(html).toContain('aria-label="Browser toolbar"');
+    expect(html).toContain('about:blank');
+    expect(html).not.toContain('In-App Browser Session');
   });
 
-  it('renders utilitarian debloat.dev styled website mockup with services and service area', () => {
+  it('renders blank browser session when browserState is blank', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
         lastBooking: null,
         businessNotice: null,
+        browserState: 'blank',
+      }),
+    );
+
+    expect(html).toContain('data-browser-state="blank"');
+    expect(html).toContain('about:blank');
+    expect(html).toContain('opacity-0');
+    expect(html).not.toContain('In-App Browser Session');
+  });
+
+  it('renders utilitarian debloat.dev styled website mockup with WebMCP active when loaded', () => {
+    const html = renderToStaticMarkup(
+      createElement(BusinessWebsite, {
+        config,
+        lastBooking: null,
+        businessNotice: null,
+        browserState: 'loaded',
       }),
     );
 
     expect(html).toContain('data-demo-target="storefront"');
     expect(html).toContain('data-agent-access="false"');
+    expect(html).toContain('data-browser-state="loaded"');
+    expect(html).toContain('https://acmehvac.com');
+    expect(html).toContain('WebMCP Active');
     expect(html).toContain('acme');
     expect(html).toContain('hvac');
     expect(html).toContain('AC Diagnostic Visit');

@@ -6,6 +6,7 @@ import {
   AgentInteractionOverlay,
   type VisualStepEvent,
 } from '@/components/demo/agent-interaction-overlay';
+import type { BrowserState } from '@/components/demo/browser-toolbar';
 import { BusinessWebsite } from '@/components/demo/business-website';
 import { emptyConversationState } from '@/demo/engine';
 import type {
@@ -114,6 +115,9 @@ export function CustomerConversation({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [businessNotice, setBusinessNotice] = useState<DemoBusinessNotice | null>(null);
 
+  const [browserState, setBrowserState] = useState<BrowserState>('blank');
+  const browserStateRef = useRef<BrowserState>('blank');
+
   const [visualPhase, setVisualPhase] = useState<VisualPhase>('idle');
   const [overlayEvent, setOverlayEvent] = useState<VisualStepEvent | null>(null);
   const [cursorVisible, setCursorVisible] = useState(false);
@@ -184,6 +188,28 @@ export function CustomerConversation({
         { id: `assistant_${crypto.randomUUID()}`, role: 'assistant', text: options.reply },
       ]);
       return;
+    }
+
+    // Deferred browser loading: Navigate to the WebMCP website on first tool access
+    if (browserStateRef.current !== 'loaded') {
+      setBrowserState('navigating');
+      setStatusText(`Agent opening ${config.businessName} website…`);
+      if (!reducedMotionRef.current) {
+        await new Promise<void>((resolve, reject) => {
+          const t = setTimeout(resolve, 500);
+          options.signal.addEventListener(
+            'abort',
+            () => {
+              clearTimeout(t);
+              reject(new DOMException('Aborted', 'AbortError'));
+            },
+            { once: true },
+          );
+        });
+      }
+      if (options.signal.aborted) return;
+      setBrowserState('loaded');
+      browserStateRef.current = 'loaded';
     }
 
     setOverlayEvent(null);
@@ -353,6 +379,8 @@ export function CustomerConversation({
     abortRef.current = controller;
 
     conversationRef.current = emptyConversationState();
+    browserStateRef.current = 'blank';
+    setBrowserState('blank');
 
     void (async () => {
       try {
@@ -403,6 +431,7 @@ export function CustomerConversation({
           lastBooking={conversation.lastBooking}
           businessNotice={businessNotice}
           isAgentAccess={isAgentAccess}
+          browserState={browserState}
           overlay={
             overlayEvent ? (
               <AgentInteractionOverlay
@@ -428,6 +457,25 @@ export function CustomerConversation({
           role="region"
           aria-label="Agent conversation"
         >
+          {/* Top Agent Window Toolbar */}
+          <div
+            className="relative flex h-6.5 shrink-0 select-none items-center justify-between border-b border-line/50 bg-background/60 px-2.5 text-[11px] text-muted-foreground"
+            role="region"
+            aria-label="Agent window toolbar"
+          >
+            <div className="flex items-center gap-1.5 opacity-60" aria-hidden="true">
+              <span className="size-2 rounded-full bg-[#ff5f56]" />
+              <span className="size-2 rounded-full bg-[#ffbd2e]" />
+              <span className="size-2 rounded-full bg-[#27c93f]" />
+            </div>
+
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-foreground/85">
+              <span>AI Agent</span>
+            </div>
+
+            <div className="w-8" aria-hidden="true" />
+          </div>
+
           {/* conversation — scrollable messages area */}
           <ScrollArea
             className="flex-1 min-h-0"
