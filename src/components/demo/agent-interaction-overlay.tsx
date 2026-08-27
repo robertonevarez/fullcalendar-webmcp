@@ -73,7 +73,7 @@ export function AgentInteractionOverlay({
       label: isCurrent && isRunning ? 'Finding the right service' : searchName,
       amount: `${price} · ${dur}`,
       pill: isDone ? (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green">
+        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
           Completed
         </span>
       ) : null,
@@ -112,11 +112,11 @@ export function AgentInteractionOverlay({
           : `Available in ${areaStep?.result?.postal_code ?? '78701'}`,
       amount: areaStep?.result?.postal_code ?? '78701',
       pill: isFailed ? (
-        <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[11.5px] font-medium text-red">
+        <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[12px] font-medium text-red">
           Failed <span style={{ animation: 'spin 1.2s linear infinite' }} className="flex">{RetryIcon}</span>
         </span>
       ) : isDone ? (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green">
+        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
           Completed
         </span>
       ) : null,
@@ -147,7 +147,7 @@ export function AgentInteractionOverlay({
       label: isCurrent && isRunning ? 'Finding available times' : 'Available tomorrow',
       amount: `${slots.length} times`,
       pill: isDone ? (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green">
+        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
           Completed
         </span>
       ) : null,
@@ -174,7 +174,7 @@ export function AgentInteractionOverlay({
       label: isCurrent && isRunning ? 'Booking appointment' : 'Appointment confirmed',
       amount: 'Confirmed',
       pill: isDone ? (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green">
+        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
           Confirmed
         </span>
       ) : null,
@@ -232,7 +232,7 @@ export function AgentInteractionOverlay({
               <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
                 {row.label}
               </span>
-              <span className="text-[12.5px] text-ink-2 tabular-nums">{row.amount}</span>
+              <span className="text-[13px] text-ink-2 tabular-nums">{row.amount}</span>
               {row.pill}
               <span
                 aria-hidden="true"
@@ -278,8 +278,8 @@ export function AgentInteractionOverlay({
                             : undefined
                         }
                       >
-                        <span className="text-[12px] text-ink-2">{d.label}</span>
-                        <span className="font-mono text-[11.5px] text-ink-3 tabular-nums">
+                        <span className="text-[13px] text-ink-2">{d.label}</span>
+                        <span className="font-mono text-[12.5px] text-ink-3 tabular-nums">
                           {d.meta}
                         </span>
                       </div>

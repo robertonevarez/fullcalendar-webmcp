@@ -83,7 +83,7 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
       label: 'Verified vendor records',
       amount: '12 suppliers',
       pill: (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green">
+        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
           Completed
         </span>
       ),
@@ -117,11 +117,11 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
       amount: '2 messages',
       pill:
         row2 === 'failed' ? (
-          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[11.5px] font-medium text-red" style={{ animation: 'fade-in 200ms ease-out both' }}>
+          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[12px] font-medium text-red" style={{ animation: 'fade-in 200ms ease-out both' }}>
             Failed <span style={{ animation: 'spin 1.2s linear infinite' }} className="flex">{RetryIcon}</span>
           </span>
         ) : row2 === 'done' ? (
-          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-green-tint px-2 text-[11.5px] font-medium text-green" style={{ animation: 'fade-in 200ms ease-out both' }}>
+          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-green-tint px-2 text-[12px] font-medium text-green" style={{ animation: 'fade-in 200ms ease-out both' }}>
             Completed
           </span>
         ) : null,
@@ -164,7 +164,7 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
               <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
                 {row.label}
               </span>
-              <span className="text-[12.5px] text-ink-2 tabular-nums">{row.amount}</span>
+              <span className="text-[13px] text-ink-2 tabular-nums">{row.amount}</span>
               {row.pill}
               <span
                 aria-hidden="true"
@@ -203,8 +203,8 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
                             : undefined
                         }
                       >
-                        <span className="text-[12px] text-ink-2">{d.label}</span>
-                        <span className="font-mono text-[11.5px] text-ink-3 tabular-nums">
+                        <span className="text-[13px] text-ink-2">{d.label}</span>
+                        <span className="font-mono text-[12.5px] text-ink-3 tabular-nums">
                           {d.meta}
                         </span>
                       </div>
