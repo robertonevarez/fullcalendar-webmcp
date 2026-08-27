@@ -46,7 +46,7 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('monospace console');
   });
 
-  it('renders retro HTML-driven website mockup with services and service area', () => {
+  it('renders utilitarian debloat.dev styled website mockup with services and service area', () => {
     const html = renderToStaticMarkup(
       createElement(BusinessWebsite, {
         config,
@@ -57,11 +57,12 @@ describe('demo presentation surfaces', () => {
 
     expect(html).toContain('data-demo-target="storefront"');
     expect(html).toContain('data-agent-access="false"');
-    expect(html).toContain('Acme Heating &amp; Air');
+    expect(html).toContain('acme');
+    expect(html).toContain('hvac');
     expect(html).toContain('AC Diagnostic Visit');
-    expect(html).toContain('Est. 1994');
     expect(html).toContain('78701');
-    expect(html).toContain('[ Home ]');
+    expect(html).toContain('Categories');
+    expect(html).toContain('Featured');
   });
 
   it('enters agent-access state and hosts overlay when agent accesses website', () => {
