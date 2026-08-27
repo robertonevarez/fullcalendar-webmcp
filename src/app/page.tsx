@@ -5,8 +5,6 @@ import {
   BusinessControlSection,
   ClosingCtaSection,
   LiveInteractionSection,
-  MultiVerticalSection,
-  TechnicalCredibilitySection,
 } from '@/components/home-sections';
 
 export const metadata: Metadata = {
@@ -28,8 +26,6 @@ export default function HomePage() {
       <LiveInteractionSection />
       <BookingFunnelsSection />
       <BusinessControlSection />
-      <MultiVerticalSection />
-      <TechnicalCredibilitySection />
       <ClosingCtaSection />
     </main>
   );
