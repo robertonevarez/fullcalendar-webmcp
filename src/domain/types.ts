@@ -138,3 +138,54 @@ export interface ServiceSearchResult {
   price_cents: number;
   score: number;
 }
+
+export interface BusinessInfo {
+  business_id: string;
+  slug: string;
+  name: string;
+  category: string;
+  timezone: string;
+  location: {
+    address?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+  };
+  service_area: string[];
+  contact: {
+    phone?: string;
+    email?: string;
+  };
+  working_hours: WorkingHours[];
+  capabilities: string[];
+}
+
+export interface ServiceEligibilityQuery {
+  service_id: string;
+  postal_code?: string;
+  property_type?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  square_footage?: number;
+}
+
+export interface ServiceEligibilityResult {
+  eligible: boolean;
+  service_id: string;
+  service_name?: string;
+  requirements: string[];
+  reason: string | null;
+  zone_id?: string | null;
+}
+
+export interface AppointmentRequestInput {
+  service_id: string;
+  slot_id?: string;
+  start?: string;
+  idempotency_key: string;
+  postal_code?: string;
+  customer: CustomerInput;
+  service_address?: BusinessAddress;
+  notes?: AppointmentNotes;
+}
+

@@ -4,85 +4,103 @@ import { ArrowLeftIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export const metadata: Metadata = {
-  title: 'WebMCP Tool Specifications',
-  description: 'Technical reference for Protocol Tooling WebMCP tools, schemas, and API contracts.',
+  title: 'WebMCP Capability Specifications',
+  description: 'Technical reference for Protocol Tooling native WebMCP tools, schemas, and capability contracts.',
 };
 
 const TOOLS = [
   {
-    name: 'search_services',
-    summary: 'Catalog Search & Ranking',
+    name: 'get_business_info',
+    summary: 'Authoritative Business & Territory Profile',
     readOnly: true,
     description:
-      'Discovers services offered by the business matching a natural language problem or keyword query. Returns matching services with service_id, price, and duration.',
+      'Returns authoritative business information including operational timezone, location, service territory postal codes, contact details, operating hours, and active capability IDs.',
     inputSchema: `{
   "type": "object",
-  "properties": {
-    "query": { "type": "string", "description": "Optional search text such as AC cooling or haircut." }
-  }
+  "properties": {}
 }`,
     outputExample: `{
-  "services": [
-    {
-      "id": "svc_ac_diagnostic",
-      "name": "AC Diagnostic Visit",
-      "price_cents": 8900,
-      "currency": "USD",
-      "duration_minutes": 90,
-      "service_area_required": true
-    }
-  ]
+  "ok": true,
+  "data": {
+    "business_id": "marias-cleaning",
+    "slug": "marias-cleaning",
+    "name": "Maria's Cleaning Service",
+    "category": "residential_cleaning",
+    "timezone": "America/Denver",
+    "location": {
+      "city": "El Paso",
+      "state": "TX",
+      "postal_code": "79902"
+    },
+    "service_area": ["79901", "79902", "79905", "79912", "79925", "79936"],
+    "capabilities": ["svc_standard_cleaning", "svc_deep_cleaning", "svc_move_out_cleaning"]
+  }
 }`,
   },
   {
-    name: 'get_service_details',
-    summary: 'Service Metadata & Requirements',
+    name: 'get_services',
+    summary: 'Structured Catalog & Offerings',
     readOnly: true,
     description:
-      'Returns duration, price, location policy, required resources, and intake constraints for a specific service.',
+      'Returns the business service catalog with transparent pricing, duration, dispatch policies, and intake requirements. Accepts an optional keyword filter.',
     inputSchema: `{
   "type": "object",
   "properties": {
-    "service_id": { "type": "string" }
+    "query": { "type": "string", "description": "Optional search text or service category" }
+  }
+}`,
+    outputExample: `{
+  "ok": true,
+  "data": {
+    "services": [
+      {
+        "id": "svc_deep_cleaning",
+        "name": "Deep Cleaning",
+        "description": "Thorough, top-to-bottom scrub covering baseboards, appliance exteriors, and sanitation.",
+        "duration_minutes": 180,
+        "price": { "type": "fixed", "amount": 18000, "currency": "USD" },
+        "location_policy": "CUSTOMER",
+        "service_area_required": true
+      }
+    ]
+  }
+}`,
+  },
+  {
+    name: 'check_service_eligibility',
+    summary: 'Territory & Job Constraints Validation',
+    readOnly: true,
+    description:
+      'Evaluates customer location and property parameters (postal code, bedrooms, bathrooms) against business constraints before calendar availability is queried.',
+    inputSchema: `{
+  "type": "object",
+  "properties": {
+    "service_id": { "type": "string" },
+    "postal_code": { "type": "string" },
+    "property_type": { "type": "string" },
+    "bedrooms": { "type": "number" },
+    "bathrooms": { "type": "number" }
   },
   "required": ["service_id"]
 }`,
     outputExample: `{
-  "service": {
-    "id": "svc_ac_diagnostic",
-    "name": "AC Diagnostic Visit",
-    "price_cents": 8900,
-    "duration_minutes": 90,
-    "location_policy": "CUSTOMER",
-    "service_area_required": true
+  "ok": true,
+  "data": {
+    "eligible": true,
+    "service_id": "svc_deep_cleaning",
+    "service_name": "Deep Cleaning",
+    "requirements": ["Access to property with working water and electricity"],
+    "reason": null,
+    "zone_id": "zone_el_paso_metro"
   }
 }`,
   },
   {
-    name: 'check_service_area',
-    summary: 'Geographic Eligibility Verification',
+    name: 'check_availability',
+    summary: 'Timezone-Aware Candidate Slot Generation',
     readOnly: true,
     description:
-      'Validates whether a customer postal code falls within the business service territory before checking slot availability for dispatch services.',
-    inputSchema: `{
-  "type": "object",
-  "properties": {
-    "postal_code": { "type": "string" },
-    "service_id": { "type": "string" }
-  }
-}`,
-    outputExample: `{
-  "status": "eligible",
-  "postal_code": "78701",
-  "message": "Eligible for service"
-}`,
-  },
-  {
-    name: 'get_availability',
-    summary: 'Viable Slot Generation',
-    readOnly: true,
-    description:
-      'Calculates available appointment start and end windows matching service duration, business working hours, provider schedules, and resource constraints.',
+      'Calculates valid, unallocated appointment windows across staff schedules, working hours, and blocked times. Each slot includes an atomic tokenized slot_id.',
     inputSchema: `{
   "type": "object",
   "properties": {
@@ -90,32 +108,39 @@ const TOOLS = [
     "start_date": { "type": "string", "format": "date" },
     "end_date": { "type": "string", "format": "date" },
     "postal_code": { "type": "string" },
+    "timezone": { "type": "string" },
     "time_preference": { "type": "string" }
   },
-  "required": ["service_id", "start_date", "end_date"]
+  "required": ["service_id"]
 }`,
     outputExample: `{
-  "slots": [
-    {
-      "slot_id": "slot_b4dcf0d9...",
-      "starts_at": "2026-08-29T16:00:00.000Z",
-      "ends_at": "2026-08-29T17:30:00.000Z",
-      "resources": [{ "resource_id": "res_james", "resource_name": "James" }]
-    }
-  ]
+  "ok": true,
+  "data": {
+    "service_id": "svc_deep_cleaning",
+    "timezone": "America/Denver",
+    "slots": [
+      {
+        "slot_id": "slot_e4d9b2...",
+        "starts_at": "2026-09-01T15:00:00.000Z",
+        "ends_at": "2026-09-01T18:00:00.000Z",
+        "resources": [{ "resource_id": "res_cleaner_maria", "resource_name": "Maria Lopez" }]
+      }
+    ]
+  }
 }`,
   },
   {
-    name: 'create_appointment',
+    name: 'request_appointment',
     summary: 'Atomic Booking & Slot Confirmation',
     readOnly: false,
     description:
-      'Creates a confirmed appointment using an explicit slot_id after user confirmation. Re-validates resource allocation atomically and supports idempotency.',
+      'Creates a persisted appointment request after human confirmation. Re-validates resource allocation atomically and enforces idempotency.',
     inputSchema: `{
   "type": "object",
   "properties": {
     "service_id": { "type": "string" },
     "slot_id": { "type": "string" },
+    "start": { "type": "string" },
     "idempotency_key": { "type": "string" },
     "postal_code": { "type": "string" },
     "customer": {
@@ -126,25 +151,32 @@ const TOOLS = [
         "phone": { "type": "string" }
       },
       "required": ["name"]
-    }
+    },
+    "notes": { "type": "object" }
   },
-  "required": ["service_id", "slot_id", "customer", "idempotency_key"]
+  "required": ["service_id", "customer", "idempotency_key"]
 }`,
     outputExample: `{
-  "appointment": {
-    "id": "appt_3dea1a32...",
+  "ok": true,
+  "data": {
+    "appointment_id": "appt_3dea1a32...",
     "status": "confirmed",
-    "starts_at": "2026-08-29T16:00:00.000Z",
-    "ends_at": "2026-08-29T17:30:00.000Z"
+    "service": "Deep Cleaning",
+    "starts_at": "2026-09-01T15:00:00.000Z",
+    "provider": "Maria Lopez",
+    "next_steps": [
+      "Service is scheduled for 2026-09-01T15:00:00.000Z.",
+      "Assigned professional: Maria Lopez."
+    ]
   }
 }`,
   },
   {
     name: 'get_appointment',
-    summary: 'Appointment Inspection',
+    summary: 'Appointment Status Inspection',
     readOnly: true,
     description:
-      'Retrieves appointment details and status by appointment_id scoped to the business.',
+      'Retrieves full appointment details, assigned provider, schedule, and cancellation status by appointment_id scoped to the business.',
     inputSchema: `{
   "type": "object",
   "properties": {
@@ -153,19 +185,20 @@ const TOOLS = [
   "required": ["appointment_id"]
 }`,
     outputExample: `{
-  "appointment": {
-    "id": "appt_3dea1a32...",
+  "ok": true,
+  "data": {
+    "appointment_id": "appt_3dea1a32...",
     "status": "confirmed",
-    "service_name": "AC Diagnostic Visit"
+    "service": "Deep Cleaning"
   }
 }`,
   },
   {
     name: 'reschedule_appointment',
-    summary: 'Atomic Rescheduling',
+    summary: 'Atomic Rescheduling & Re-allocation',
     readOnly: false,
     description:
-      'Moves an existing appointment to a new slot_id, releasing the old resource allocations and reserving the new slot atomically.',
+      'Moves an existing appointment to a new slot_id, atomically releasing previous resource locks and securing new provider availability.',
     inputSchema: `{
   "type": "object",
   "properties": {
@@ -176,16 +209,17 @@ const TOOLS = [
   "required": ["appointment_id", "new_slot_id", "idempotency_key"]
 }`,
     outputExample: `{
-  "appointment": {
-    "id": "appt_3dea1a32...",
+  "ok": true,
+  "data": {
+    "appointment_id": "appt_3dea1a32...",
     "status": "confirmed",
-    "starts_at": "2026-08-30T10:00:00.000Z"
+    "starts_at": "2026-09-02T16:00:00.000Z"
   }
 }`,
   },
   {
     name: 'cancel_appointment',
-    summary: 'Cancellation & Release',
+    summary: 'Cancellation & Resource Release',
     readOnly: false,
     description:
       'Cancels an existing appointment and releases all reserved resources back to the available pool.',
@@ -199,9 +233,11 @@ const TOOLS = [
   "required": ["appointment_id", "idempotency_key"]
 }`,
     outputExample: `{
-  "appointment": {
-    "id": "appt_3dea1a32...",
-    "status": "cancelled"
+  "ok": true,
+  "data": {
+    "appointment_id": "appt_3dea1a32...",
+    "status": "cancelled",
+    "message": "Appointment cancelled."
   }
 }`,
   },
@@ -216,10 +252,10 @@ export default function DocsPage() {
           Back to Overview
         </Button>
         <h1 className="text-3xl font-bold tracking-tight text-foreground">
-          WebMCP Tool Specification
+          WebMCP Capability Suite
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed">
-          Protocol Tooling exposes 8 WebMCP tools registered directly onto the browser agent context on each business endpoint. AI agents discover these tools dynamically through <code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">document.modelContext.registerTool</code>.
+          Protocol Tooling exposes 8 native WebMCP tools registered directly into the browser agent context (<code className="text-xs bg-muted px-1.5 py-0.5 rounded font-mono">document.modelContext.registerTool</code>) on each business endpoint. AI agents discover and execute these tools dynamically without DOM automation.
         </p>
       </div>
 
@@ -242,7 +278,7 @@ export default function DocsPage() {
                     : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
                 }`}
               >
-                {tool.readOnly ? 'readOnlyHint: true' : 'Mutation (User Confirmation Required)'}
+                {tool.readOnly ? 'readOnlyHint: true' : 'Side Effect (Human Confirmation Required)'}
               </span>
             </div>
 

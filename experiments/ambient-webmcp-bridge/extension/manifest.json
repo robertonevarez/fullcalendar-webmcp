@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Protocol Tooling Ambient WebMCP Bridge (Spike)",
+  "version": "0.0.1",
+  "description": "Experimental WebMCP registration on recognized, unmodified pages.",
+  "permissions": ["scripting"],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*",
+    "https://example.com/*"
+  ],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1/*",
+        "http://localhost/*",
+        "https://example.com/*"
+      ],
+      "js": ["isolated-controller.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    },
+    {
+      "matches": [
+        "http://127.0.0.1/*",
+        "http://localhost/*",
+        "https://example.com/*"
+      ],
+      "js": ["bridge-tools.js", "main-register.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}

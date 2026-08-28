@@ -1,6 +1,14 @@
 import { query, runInTransaction } from '@/db/client';
 import { WorkingHours } from '@/domain/types';
 
+const CLEANING_HOURS: WorkingHours[] = [
+  { day: 1, open: '08:00', close: '18:00' },
+  { day: 2, open: '08:00', close: '18:00' },
+  { day: 3, open: '08:00', close: '18:00' },
+  { day: 4, open: '08:00', close: '18:00' },
+  { day: 5, open: '08:00', close: '18:00' },
+];
+
 const WEEKDAY_FIELD: WorkingHours[] = [
   { day: 1, open: '08:00', close: '20:00' },
   { day: 2, open: '08:00', close: '20:00' },
@@ -193,6 +201,97 @@ export async function seedDatabase(force = false) {
         [appointmentId, resourceId, resourceType],
       );
     }
+
+    // --- Maria's Cleaning Service (Reference Business for WebMCP Challenge) ---
+    await insertBusiness(
+      'biz_marias_cleaning',
+      'marias-cleaning',
+      "Maria's Cleaning Service",
+      'America/Denver',
+      'CUSTOMER_LOCATION',
+      JSON.stringify(CLEANING_HOURS),
+      JSON.stringify({
+        line1: '4120 Rio Bravo St',
+        city: 'El Paso',
+        region: 'TX',
+        postal_code: '79902',
+      }),
+    );
+    await insertZone(
+      'zone_el_paso_metro',
+      'biz_marias_cleaning',
+      'el-paso-metro',
+      JSON.stringify(['79901', '79902', '79905', '79912', '79925', '79936']),
+    );
+    await insertService(
+      'svc_standard_cleaning',
+      'biz_marias_cleaning',
+      'Standard Cleaning',
+      'Routine residential maintenance cleaning covering kitchens, bathrooms, living spaces, dusting, and floor care.',
+      120,
+      12000,
+      'USD',
+      JSON.stringify(['standard cleaning', 'routine cleaning', 'house cleaning', 'maid service', 'residential']),
+      'CUSTOMER',
+      true,
+      JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'standard_cleaning' }]),
+      JSON.stringify(['property_type', 'bedrooms', 'bathrooms', 'entry_instructions']),
+    );
+    await insertService(
+      'svc_deep_cleaning',
+      'biz_marias_cleaning',
+      'Deep Cleaning',
+      'Thorough, top-to-bottom scrub covering baseboards, appliance exteriors, detailed tile/grout scrubbing, and deep kitchen/bath sanitation.',
+      180,
+      18000,
+      'USD',
+      JSON.stringify(['deep cleaning', 'deep scrub', 'spring cleaning', 'detailed cleaning', 'sanitization']),
+      'CUSTOMER',
+      true,
+      JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'deep_cleaning' }]),
+      JSON.stringify(['property_type', 'bedrooms', 'bathrooms', 'focus_areas', 'entry_instructions']),
+    );
+    await insertService(
+      'svc_move_out_cleaning',
+      'biz_marias_cleaning',
+      'Move-Out Cleaning',
+      'Comprehensive empty-home turnover cleaning including inside cabinets, oven/fridge deep clean, closets, and move-in/move-out readiness.',
+      240,
+      25000,
+      'USD',
+      JSON.stringify(['move out', 'move in', 'turnover', 'empty home', 'lease cleaning', 'move-out cleaning']),
+      'CUSTOMER',
+      true,
+      JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'move_out' }]),
+      JSON.stringify(['empty_home_confirmed', 'utilities_on_confirmed', 'entry_instructions']),
+    );
+    await insertResource(
+      'res_cleaner_maria',
+      'biz_marias_cleaning',
+      'Maria Lopez',
+      'cleaner',
+      JSON.stringify(['standard_cleaning', 'deep_cleaning', 'move_out']),
+      JSON.stringify(CLEANING_HOURS),
+      true,
+    );
+    await insertResource(
+      'res_cleaner_rosa',
+      'biz_marias_cleaning',
+      'Rosa Mendez',
+      'cleaner',
+      JSON.stringify(['standard_cleaning', 'deep_cleaning']),
+      JSON.stringify(CLEANING_HOURS),
+      true,
+    );
+    await insertResource(
+      'res_cleaner_carlos',
+      'biz_marias_cleaning',
+      'Carlos Ortiz',
+      'cleaner',
+      JSON.stringify(['standard_cleaning', 'move_out']),
+      JSON.stringify(CLEANING_HOURS),
+      true,
+    );
 
     // --- Acme HVAC ---
     await insertBusiness(

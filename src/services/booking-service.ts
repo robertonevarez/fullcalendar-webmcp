@@ -14,12 +14,30 @@ import {
   AvailabilityQuery,
   CustomerInput,
   AppointmentNotes,
+  BusinessInfo,
+  ServiceEligibilityQuery,
+  ServiceEligibilityResult,
+  AppointmentRequestInput,
+  ServiceSearchResult,
 } from '@/domain/types';
+import { BusinessCapabilities, PublicAppointment, PublicService } from '@/domain/capabilities';
 import { buildIdempotencyScope } from '@/lib/idempotency';
 import { log } from '@/lib/logging';
 import { addMinutes } from '@/lib/time';
 
 const SLOT_TTL_MINUTES = 30;
+
+function inferBusinessCategory(slug: string, name: string): string {
+  const lower = `${slug} ${name}`.toLowerCase();
+  if (lower.includes('clean')) return 'residential_cleaning';
+  if (lower.includes('hvac') || lower.includes('heat') || lower.includes('air')) return 'hvac_service';
+  if (lower.includes('plumb')) return 'plumbing_service';
+  if (lower.includes('salon') || lower.includes('hair')) return 'personal_care';
+  if (lower.includes('pt') || lower.includes('physic') || lower.includes('therap')) return 'physical_therapy';
+  if (lower.includes('auto') || lower.includes('car')) return 'automotive_service';
+  return 'local_service';
+}
+
 
 async function buildSchedulerContext(businessId: string, serviceId: string) {
   const business = await bookingRepository.getBusinessById(businessId);
@@ -91,7 +109,192 @@ function assertAppointmentInBusiness(
   }
 }
 
-export class BookingService {
+export class BookingService implements BusinessCapabilities {
+  async getBusinessInfo(businessSlug: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
+    const services = await bookingRepository.listServices(business.id);
+    const zones = await bookingRepository.listServiceAreaZones(business.id);
+    const postalCodes = Array.from(new Set(zones.flatMap((z) => z.postal_codes)));
+
+    const info: BusinessInfo = {
+      business_id: business.slug,
+      slug: business.slug,
+      name: business.name,
+      category: inferBusinessCategory(business.slug, business.name),
+      timezone: business.timezone,
+      location: {
+        address: business.address.line1,
+        city: business.address.city,
+        state: business.address.region,
+        postal_code: business.address.postal_code,
+      },
+      service_area: postalCodes,
+      contact: {
+        phone: business.slug === 'marias-cleaning' ? '915-555-0199' : '512-555-0100',
+        email: `contact@${business.slug}.com`,
+      },
+      working_hours: business.working_hours,
+      capabilities: services.map((s) => s.id),
+    };
+    return ok(info);
+  }
+
+  async getServices(businessSlug: string, query?: string) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
+    const allServices = await bookingRepository.listServices(business.id);
+    const matched = query ? searchServices(allServices, query) : null;
+    const servicesToReturn = matched
+      ? (matched as ServiceSearchResult[])
+          .map((r) => allServices.find((s) => s.id === r.service_id))
+          .filter((s): s is (typeof allServices)[0] => Boolean(s))
+      : allServices;
+
+    const services: PublicService[] = servicesToReturn.map((s) => ({
+      id: s.id,
+      name: s.name,
+      description: s.description,
+      duration_minutes: s.duration_minutes,
+      price: {
+        type: 'fixed',
+        amount: s.price_cents,
+        currency: s.currency,
+      },
+      location_policy: s.location_policy,
+      service_area_required: s.service_area_required,
+      required_resources: requirementSummary(s.resource_requirements),
+      intake_fields: s.intake_fields,
+      keywords: s.keywords,
+    }));
+
+    return ok({ services });
+  }
+
+  async checkServiceEligibility(businessSlug: string, input: ServiceEligibilityQuery) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
+
+    const service = await bookingRepository.getService(business.id, input.service_id);
+    if (!service) {
+      throw new AppError(ErrorCodes.SERVICE_NOT_FOUND, `Service ${input.service_id} was not found.`, false, 'service_id');
+    }
+
+    const requirements: string[] = [];
+    if (service.location_policy === 'CUSTOMER') {
+      requirements.push('Access to property with working water and electricity');
+    }
+    if (input.bedrooms && input.bedrooms > 8) {
+      return ok({
+        eligible: false,
+        service_id: service.id,
+        service_name: service.name,
+        requirements,
+        reason: 'Properties with more than 8 bedrooms require custom commercial team quoting.',
+        zone_id: null,
+      });
+    }
+
+    if (service.service_area_required) {
+      if (!input.postal_code) {
+        return ok({
+          eligible: false,
+          service_id: service.id,
+          service_name: service.name,
+          requirements,
+          reason: 'Postal code is required to verify service territory eligibility.',
+          zone_id: null,
+        });
+      }
+      const area = checkServiceArea(business.id, service, await serviceAreaMap(business.id), input.postal_code);
+      if (area.status === 'ineligible') {
+        return ok({
+          eligible: false,
+          service_id: service.id,
+          service_name: service.name,
+          requirements,
+          reason: area.message,
+          zone_id: null,
+        });
+      }
+      return ok({
+        eligible: true,
+        service_id: service.id,
+        service_name: service.name,
+        requirements,
+        reason: null,
+        zone_id: area.zone_id ?? null,
+      });
+    }
+
+    return ok({
+      eligible: true,
+      service_id: service.id,
+      service_name: service.name,
+      requirements,
+      reason: null,
+      zone_id: null,
+    });
+  }
+
+  async checkAvailability(businessSlug: string, query: AvailabilityQuery) {
+    const business = await bookingRepository.getBusinessBySlug(businessSlug);
+    if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
+
+    const avail = await this.getAvailability(businessSlug, query);
+    return ok({
+      service_id: query.service_id,
+      timezone: business.timezone,
+      slots: avail.data.slots,
+    });
+  }
+
+  async requestAppointment(input: { businessSlug: string } & AppointmentRequestInput) {
+    let slotId = input.slot_id;
+
+    if (!slotId && input.start) {
+      const dateStr = input.start.slice(0, 10);
+      const avail = await this.getAvailability(input.businessSlug, {
+        service_id: input.service_id,
+        start_date: dateStr,
+        end_date: dateStr,
+        postal_code: input.postal_code ?? input.service_address?.postal_code,
+      });
+      const matchingSlot = avail.data.slots.find(
+        (s) => s.starts_at === input.start || s.starts_at.startsWith(input.start!),
+      );
+      if (matchingSlot) {
+        slotId = matchingSlot.slot_id;
+      }
+    }
+
+    if (!slotId) {
+      throw new AppError(
+        ErrorCodes.VALIDATION_ERROR,
+        'slot_id (or a valid matching start time) is required to request an appointment.',
+        false,
+        'slot_id',
+      );
+    }
+
+    const customerInput: CustomerInput = {
+      name: input.customer.name,
+      email: input.customer.email,
+      phone: input.customer.phone,
+      service_address: input.customer.service_address ?? input.service_address,
+    };
+
+    return this.createAppointment({
+      businessSlug: input.businessSlug,
+      service_id: input.service_id,
+      slot_id: slotId,
+      customer: customerInput,
+      notes: input.notes,
+      idempotency_key: input.idempotency_key,
+      postal_code: input.postal_code ?? customerInput.service_address?.postal_code,
+    });
+  }
+
   async searchServices(businessSlug: string, query?: string) {
     const business = await bookingRepository.getBusinessBySlug(businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${businessSlug} was not found.`);
@@ -191,7 +394,7 @@ export class BookingService {
   }) {
     const scopeKey = buildIdempotencyScope('create_appointment', input.businessSlug, input.idempotency_key);
     const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached as ReturnType<typeof ok>;
+    if (cached) return cached as ReturnType<typeof ok<PublicAppointment>>;
 
     const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
@@ -258,7 +461,7 @@ export class BookingService {
         // then re-check idempotency before treating a conflict as failure.
         await this.lockResourcesForAppointment(appointment);
         const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
-        if (raced) return raced as ReturnType<typeof ok>;
+        if (raced) return raced as ReturnType<typeof ok<PublicAppointment>>;
 
         await this.assertResourcesFree(business.id, appointment, appointment.id, { alreadyLocked: true });
         await bookingRepository.insertAppointment(appointment);
@@ -270,7 +473,7 @@ export class BookingService {
       return response;
     } catch (error) {
       const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
-      if (raced) return raced as ReturnType<typeof ok>;
+      if (raced) return raced as ReturnType<typeof ok<PublicAppointment>>;
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are no longer available.', true);
     }
@@ -299,7 +502,7 @@ export class BookingService {
       input.idempotency_key,
     );
     const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached as ReturnType<typeof ok>;
+    if (cached) return cached as ReturnType<typeof ok<PublicAppointment>>;
 
     const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
@@ -345,7 +548,7 @@ export class BookingService {
 
         await this.lockResourcesForAppointment(updated);
         const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
-        if (raced) return raced as ReturnType<typeof ok>;
+        if (raced) return raced as ReturnType<typeof ok<PublicAppointment>>;
 
         await this.assertResourcesFree(business.id, updated, appointment!.id, { alreadyLocked: true });
         await bookingRepository.updateAppointmentTimes(appointment!.id, slot.starts_at, slot.ends_at);
@@ -362,7 +565,7 @@ export class BookingService {
       return response;
     } catch (error) {
       const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
-      if (raced) return raced as ReturnType<typeof ok>;
+      if (raced) return raced as ReturnType<typeof ok<PublicAppointment>>;
       if (error instanceof AppError) throw error;
       throw new AppError(ErrorCodes.RESOURCE_UNAVAILABLE, 'Required resources are unavailable for reschedule.', true);
     }
@@ -374,9 +577,10 @@ export class BookingService {
     idempotency_key: string;
     reason?: string;
   }) {
+    type CancelApptReturn = { appointment_id: string; status: string; message: string; appointment: PublicAppointment };
     const scopeKey = buildIdempotencyScope('cancel_appointment', input.businessSlug, input.idempotency_key);
     const cached = await bookingRepository.getIdempotencyResponse(scopeKey);
-    if (cached) return cached as ReturnType<typeof ok>;
+    if (cached) return cached as ReturnType<typeof ok<CancelApptReturn>>;
 
     const business = await bookingRepository.getBusinessBySlug(input.businessSlug);
     if (!business) throw new AppError(ErrorCodes.BUSINESS_NOT_FOUND, `Business ${input.businessSlug} was not found.`);
@@ -391,7 +595,7 @@ export class BookingService {
       assertAppointmentInBusiness(input.businessSlug, business.id, appointment, input.appointment_id);
 
       const raced = await bookingRepository.getIdempotencyResponse(scopeKey);
-      if (raced) return raced as ReturnType<typeof ok>;
+      if (raced) return raced as ReturnType<typeof ok<CancelApptReturn>>;
 
       if (appointment!.status === 'cancelled') {
         const body = ok({
@@ -484,8 +688,11 @@ export class BookingService {
 
   private toPublicAppointment(appointment: Appointment, serviceName: string, businessName: string) {
     const human = appointment.resource_allocations.find((r) =>
-      ['hvac_technician', 'plumber', 'stylist', 'therapist', 'automotive_technician'].includes(r.resource_type),
+      ['hvac_technician', 'plumber', 'stylist', 'therapist', 'automotive_technician', 'cleaner', 'technician', 'provider'].includes(
+        r.resource_type,
+      ) || Boolean(r.resource_name),
     );
+    const providerName = human?.resource_name ?? null;
     return {
       appointment_id: appointment.id,
       business: businessName,
@@ -496,7 +703,7 @@ export class BookingService {
       location:
         appointment.customer.service_address ??
         (appointment.resource_allocations.length ? 'At business location' : null),
-      provider: human?.resource_name ?? null,
+      provider: providerName,
       price: { amount: appointment.price_cents, currency: appointment.currency },
       customer: {
         name: appointment.customer.name,
@@ -505,6 +712,13 @@ export class BookingService {
       },
       notes: appointment.notes ?? null,
       cancellable: appointment.status === 'confirmed',
+      next_steps: [
+        `Service is scheduled for ${appointment.starts_at}.`,
+        providerName
+          ? `Assigned professional: ${providerName}.`
+          : `Service will be fulfilled by ${businessName}.`,
+        `To inspect, reschedule, or cancel, use get_appointment, reschedule_appointment, or cancel_appointment with appointment_id: ${appointment.id}.`,
+      ],
     };
   }
 }
