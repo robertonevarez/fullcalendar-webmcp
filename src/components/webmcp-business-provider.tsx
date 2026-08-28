@@ -17,22 +17,29 @@ export function useWebMCPRegistrationState(): WebMCPRegistrationState {
   return useContext(WebMCPRegistrationContext);
 }
 
-interface WebMCPBusinessProviderProps {
+export interface WebMCPBusinessProviderProps {
   businessSlug: string;
   businessName: string;
+  apiBaseUrl?: string;
   children: ReactNode;
 }
 
 export function WebMCPBusinessProvider({
   businessSlug,
   businessName,
+  apiBaseUrl,
   children,
 }: WebMCPBusinessProviderProps) {
   const [state, setState] = useState<WebMCPRegistrationState>(initialRegistrationState);
 
   return (
     <WebMCPRegistrationContext.Provider value={state}>
-      <WebMCPRegistrar businessSlug={businessSlug} businessName={businessName} onStateChange={setState} />
+      <WebMCPRegistrar
+        businessSlug={businessSlug}
+        businessName={businessName}
+        apiBaseUrl={apiBaseUrl}
+        onStateChange={setState}
+      />
       {children}
     </WebMCPRegistrationContext.Provider>
   );

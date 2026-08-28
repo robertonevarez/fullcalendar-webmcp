@@ -1,4 +1,4 @@
-import { getModelContext, registerBusinessTools, registrationErrorMessage, type RegistrationResult } from '@/webmcp/tools';
+import { getModelContext, registerBusinessTools, registrationErrorMessage, type RegisterBusinessToolsOptions, type RegistrationResult } from '@/webmcp/tools';
 
 export type WebMCPRegistrationState =
   | { phase: 'waiting'; supported: false; attempted: false }
@@ -11,6 +11,13 @@ export type WaitForModelContextOptions = {
   intervalMs?: number;
   signal?: AbortSignal;
 };
+
+export interface RegisterBusinessToolsWhenReadyOptions extends WaitForModelContextOptions {
+  businessSlug: string;
+  businessName: string;
+  apiBaseUrl?: string;
+  signal?: AbortSignal;
+}
 
 const DEFAULT_TIMEOUT_MS = 10_000;
 const DEFAULT_INTERVAL_MS = 100;
@@ -94,12 +101,23 @@ export async function registerPingTool(signal: AbortSignal): Promise<Registratio
 }
 
 export async function registerBusinessToolsWhenReady(
-  businessSlug: string,
-  businessName: string,
-  signal: AbortSignal,
-  options: WaitForModelContextOptions = {},
+  optionsOrSlug: RegisterBusinessToolsWhenReadyOptions | string,
+  maybeBusinessName?: string,
+  maybeSignal?: AbortSignal,
+  maybeOptions: WaitForModelContextOptions = {},
 ): Promise<WebMCPRegistrationState> {
-  const modelContext = await waitForModelContext({ ...options, signal });
+  const options: RegisterBusinessToolsWhenReadyOptions =
+    typeof optionsOrSlug === 'string'
+      ? {
+          businessSlug: optionsOrSlug,
+          businessName: maybeBusinessName ?? optionsOrSlug,
+          signal: maybeSignal,
+          ...maybeOptions,
+        }
+      : optionsOrSlug;
+
+  const { businessSlug, businessName, apiBaseUrl, signal, timeoutMs, intervalMs } = options;
+  const modelContext = await waitForModelContext({ timeoutMs, intervalMs, signal });
   if (!modelContext?.registerTool) {
     return {
       phase: 'failed',
@@ -111,7 +129,13 @@ export async function registerBusinessToolsWhenReady(
     };
   }
 
-  const result = await registerBusinessTools(businessSlug, businessName, signal);
+  const result = await registerBusinessTools({
+    businessSlug,
+    businessName,
+    apiBaseUrl,
+    signal,
+  });
+
   if (result.registered.length > 0 && result.errors.length === 0) {
     return { phase: 'registered', ...result };
   }

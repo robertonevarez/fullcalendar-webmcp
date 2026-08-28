@@ -34,6 +34,31 @@ describe('WebMCP execute wrapper', () => {
     );
   });
 
+  it('routes to explicit apiBaseUrl when configured', async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({ ok: true, data: { services: [{ service_id: 'svc_ac_diagnostic' }] } }),
+    );
+    vi.stubGlobal('fetch', fetchMock);
+
+    const tools = createBusinessTools({
+      businessSlug: 'acme-hvac',
+      businessName: 'Acme Heating & Air',
+      apiBaseUrl: 'https://api.protocoltooling.com',
+    });
+    const search = tools.find((tool) => tool.name === 'search_services')!;
+    const execute = search.execute as ToolExecute;
+
+    await execute({ query: 'AC' });
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.protocoltooling.com/api/businesses/acme-hvac/search-services',
+      expect.objectContaining({
+        method: 'POST',
+        body: JSON.stringify({ query: 'AC' }),
+      }),
+    );
+  });
+
   it('forwards AbortSignal when options.signal is provided', async () => {
     const fetchMock = vi.fn(async () => Response.json({ ok: true, data: {} }));
     vi.stubGlobal('fetch', fetchMock);

@@ -15,6 +15,17 @@ export type ToolExecuteOptions = {
   signal?: AbortSignal;
 };
 
+export interface CreateBusinessToolsOptions {
+  businessSlug: string;
+  businessName: string;
+  apiBaseUrl?: string;
+}
+
+export function normalizeApiBaseUrl(url?: string): string {
+  if (!url) return '';
+  return url.trim().replace(/\/+$/, '');
+}
+
 /** Structured `{ ok: false, error: { code } }` payloads from booking APIs. */
 export function isStructuredDomainError(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object') return false;
@@ -95,8 +106,25 @@ function toolExecute<TInput extends object>(url: string) {
   return async (input: TInput, options?: ToolExecuteOptions) => postJson(url, input ?? {}, options);
 }
 
-export function createBusinessTools(businessSlug: string, businessName: string) {
-  const base = `/api/businesses/${businessSlug}`;
+export function createBusinessTools(
+  optionsOrSlug: CreateBusinessToolsOptions | string,
+  maybeBusinessName?: string,
+  maybeApiBaseUrl?: string,
+) {
+  const options: CreateBusinessToolsOptions =
+    typeof optionsOrSlug === 'string'
+      ? {
+          businessSlug: optionsOrSlug,
+          businessName: maybeBusinessName ?? optionsOrSlug,
+          apiBaseUrl: maybeApiBaseUrl,
+        }
+      : optionsOrSlug;
+
+  const { businessSlug, businessName, apiBaseUrl } = options;
+  const normalizedBase = normalizeApiBaseUrl(apiBaseUrl);
+  const base = normalizedBase
+    ? `${normalizedBase}/api/businesses/${encodeURIComponent(businessSlug)}`
+    : `/api/businesses/${encodeURIComponent(businessSlug)}`;
 
   return [
     {
@@ -255,6 +283,13 @@ export type RegistrationResult = {
   businessSlug: string;
 };
 
+export interface RegisterBusinessToolsOptions {
+  businessSlug: string;
+  businessName: string;
+  signal?: AbortSignal;
+  apiBaseUrl?: string;
+}
+
 export function getModelContext(): { registerTool?: Function } | undefined {
   if (typeof document === 'undefined') return undefined;
   const doc = document as Document & { modelContext?: { registerTool?: Function } };
@@ -276,10 +311,22 @@ function registrationErrorMessage(error: unknown): string {
 export { registrationErrorMessage };
 
 export async function registerBusinessTools(
-  businessSlug: string,
-  businessName: string,
-  signal: AbortSignal,
+  optionsOrSlug: RegisterBusinessToolsOptions | string,
+  maybeBusinessName?: string,
+  maybeSignal?: AbortSignal,
+  maybeApiBaseUrl?: string,
 ): Promise<RegistrationResult> {
+  const options: RegisterBusinessToolsOptions =
+    typeof optionsOrSlug === 'string'
+      ? {
+          businessSlug: optionsOrSlug,
+          businessName: maybeBusinessName ?? optionsOrSlug,
+          signal: maybeSignal,
+          apiBaseUrl: maybeApiBaseUrl,
+        }
+      : optionsOrSlug;
+
+  const { businessSlug, businessName, signal, apiBaseUrl } = options;
   const modelContext = getModelContext();
   if (!modelContext?.registerTool) {
     return {
@@ -291,12 +338,12 @@ export async function registerBusinessTools(
     };
   }
 
-  const tools = createBusinessTools(businessSlug, businessName);
+  const tools = createBusinessTools({ businessSlug, businessName, apiBaseUrl });
   const registered: string[] = [];
   const errors: RegistrationError[] = [];
 
   for (const tool of tools) {
-    if (signal.aborted) break;
+    if (signal?.aborted) break;
     try {
       await modelContext.registerTool(tool, { signal });
       registered.push(tool.name);
