@@ -235,7 +235,17 @@ export async function seedDatabase(force = false) {
       'CUSTOMER',
       true,
       JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'standard_cleaning' }]),
-      JSON.stringify(['property_type', 'bedrooms', 'bathrooms', 'entry_instructions']),
+      JSON.stringify({
+        fields: ['property_type', 'bedrooms', 'bathrooms', 'entry_instructions'],
+        eligibility_rules: {
+          max_bedrooms: 6,
+          requires_water_and_power: true,
+          general_requirements: [
+            'Access to property with active water and electricity',
+            'Standard residential property size (up to 6 bedrooms)',
+          ],
+        },
+      }),
     );
     await insertService(
       'svc_deep_cleaning',
@@ -249,7 +259,17 @@ export async function seedDatabase(force = false) {
       'CUSTOMER',
       true,
       JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'deep_cleaning' }]),
-      JSON.stringify(['property_type', 'bedrooms', 'bathrooms', 'focus_areas', 'entry_instructions']),
+      JSON.stringify({
+        fields: ['property_type', 'bedrooms', 'bathrooms', 'focus_areas', 'entry_instructions'],
+        eligibility_rules: {
+          max_bedrooms: 8,
+          requires_water_and_power: true,
+          general_requirements: [
+            'Access to property with active water and electricity',
+            'Residential properties up to 8 bedrooms (larger estates require custom commercial quoting)',
+          ],
+        },
+      }),
     );
     await insertService(
       'svc_move_out_cleaning',
@@ -263,7 +283,17 @@ export async function seedDatabase(force = false) {
       'CUSTOMER',
       true,
       JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'move_out' }]),
-      JSON.stringify(['empty_home_confirmed', 'utilities_on_confirmed', 'entry_instructions']),
+      JSON.stringify({
+        fields: ['empty_home_confirmed', 'utilities_on_confirmed', 'entry_instructions'],
+        eligibility_rules: {
+          max_bedrooms: 8,
+          requires_water_and_power: true,
+          general_requirements: [
+            'Empty home confirmation (furniture cleared)',
+            'Active water and electricity utilities for appliance and floor cleaning',
+          ],
+        },
+      }),
     );
     await insertResource(
       'res_cleaner_maria',

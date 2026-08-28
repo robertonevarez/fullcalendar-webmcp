@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ensureDatabaseSeeded } from '@/db/init';
+import { ok } from '@/domain/errors';
 import { bookingService, handleServiceError } from '@/services/booking-service';
 
 export const runtime = 'nodejs';
@@ -14,6 +15,8 @@ export async function POST(
     const body = await request.json();
     const result = await bookingService.checkAvailability(slug, {
       service_id: body.service_id,
+      date_from: body.date_from ?? body.start_date,
+      date_to: body.date_to ?? body.end_date,
       start_date: body.start_date ?? body.date_from,
       end_date: body.end_date ?? body.date_to,
       postal_code: body.postal_code,
@@ -21,7 +24,7 @@ export async function POST(
       preferred_resource_id: body.preferred_resource_id,
       limit: body.limit,
     });
-    return NextResponse.json(result);
+    return NextResponse.json(ok(result));
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });
   }

@@ -41,5 +41,6 @@ describe('WebMCP contract', () => {
 
     const availability = tools.find((tool) => tool.name === 'check_availability')!;
     expect(availability.description).toMatch(/availability/i);
+    expect(availability.inputSchema.required).toEqual(['service_id', 'date_from', 'date_to']);
   });
 });

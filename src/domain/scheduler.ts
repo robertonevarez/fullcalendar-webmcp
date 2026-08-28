@@ -35,7 +35,7 @@ export interface SchedulerContext {
 export function checkServiceArea(
   businessId: string,
   service: Service,
-  postalCodesByZone: Map<string, string[]>,
+  postalCodesByZone: Map<string, string[]> | Record<string, string[]>,
   postalCode?: string,
 ): { status: 'not_required' | 'eligible' | 'ineligible'; zone_id?: string; message: string } {
   if (!service.service_area_required) {
@@ -47,7 +47,11 @@ export function checkServiceArea(
   if (!postalCode) {
     throw new AppError(ErrorCodes.LOCATION_REQUIRED, 'Postal code is required for this service.', false, 'postal_code');
   }
-  for (const [zoneId, codes] of postalCodesByZone.entries()) {
+  const entries =
+    postalCodesByZone instanceof Map
+      ? Array.from(postalCodesByZone.entries())
+      : Object.entries(postalCodesByZone);
+  for (const [zoneId, codes] of entries) {
     if (codes.includes(postalCode)) {
       return {
         status: 'eligible',
@@ -63,12 +67,17 @@ export function checkServiceArea(
 }
 
 export function findAvailability(ctx: SchedulerContext, query: AvailabilityQuery): AvailabilitySlot[] {
-  if (query.start_date > query.end_date) {
-    throw new AppError(ErrorCodes.INVALID_TIME_RANGE, 'start_date must be on or before end_date.', false);
+  const startDate = query.date_from ?? query.start_date;
+  const endDate = query.date_to ?? query.end_date;
+  if (!startDate || !endDate) {
+    throw new AppError(ErrorCodes.VALIDATION_ERROR, 'date_from and date_to (or start_date and end_date) are required.', false);
+  }
+  if (startDate > endDate) {
+    throw new AppError(ErrorCodes.INVALID_TIME_RANGE, 'date_from must be on or before date_to.', false);
   }
 
   const slots: AvailabilitySlot[] = [];
-  const days = eachDayInRange(query.start_date, query.end_date);
+  const days = eachDayInRange(startDate, endDate);
 
   for (const day of days) {
     for (let minute = 0; minute < 24 * 60; minute += SLOT_INTERVAL_MINUTES) {
@@ -95,7 +104,7 @@ export function findAvailability(ctx: SchedulerContext, query: AvailabilityQuery
         starts_at: utcToIso(start),
         ends_at: utcToIso(end),
         resources: allocation,
-        price: { amount: ctx.service.price_cents, currency: ctx.service.currency },
+        price: { amount: ctx.service.price_cents / 100, currency: ctx.service.currency },
       });
 
       if (slots.length >= (query.limit ?? DEFAULT_SLOT_LIMIT)) {
@@ -204,7 +213,7 @@ function isResourceFree(ctx: SchedulerContext, resource: Resource, start: Date, 
   }
 
   for (const appointment of ctx.appointments) {
-    if (appointment.status !== 'confirmed') continue;
+    if (appointment.status !== 'confirmed' && appointment.status !== 'requested') continue;
     const usesResource = appointment.resource_allocations.some((a) => a.resource_id === resource.id);
     if (!usesResource) continue;
     const apptStart = new Date(appointment.starts_at);

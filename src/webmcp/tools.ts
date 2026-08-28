@@ -169,28 +169,25 @@ export function createBusinessTools(
     },
     {
       name: 'check_availability',
-      description: `Return viable appointment availability slots for a service at ${businessName} within a date range and timezone. Call after verifying service eligibility. Each slot includes a reusable slot_id.`,
+      description: `Return viable appointment availability slots for a service at ${businessName} within a date range. Times are returned in the business's authoritative timezone. Call after verifying service eligibility. Each slot includes a reusable slot_id.`,
       inputSchema: {
         type: 'object',
         properties: {
-          service_id: { type: 'string', description: 'Service identifier.' },
-          start_date: { type: 'string', format: 'date', description: 'Start date in YYYY-MM-DD format.' },
-          end_date: { type: 'string', format: 'date', description: 'End date in YYYY-MM-DD format.' },
-          date_from: { type: 'string', format: 'date', description: 'Alias for start_date.' },
-          date_to: { type: 'string', format: 'date', description: 'Alias for end_date.' },
-          postal_code: { type: 'string', description: 'Customer postal code.' },
-          timezone: { type: 'string', description: 'Target timezone (e.g. America/Denver).' },
+          service_id: { type: 'string', description: 'Service identifier from get_services.' },
+          date_from: { type: 'string', format: 'date', description: 'Start date in YYYY-MM-DD format.' },
+          date_to: { type: 'string', format: 'date', description: 'End date in YYYY-MM-DD format.' },
+          postal_code: { type: 'string', description: 'Customer postal code for territory validation.' },
           time_preference: { type: 'string', description: 'Time preference (e.g. morning, afternoon, after 16:00).' },
           preferred_resource_id: { type: 'string', description: 'Optional provider identifier.' },
         },
-        required: ['service_id'],
+        required: ['service_id', 'date_from', 'date_to'],
       },
       annotations: { readOnlyHint: true },
       execute: toolExecute<Record<string, unknown>>(`${base}/check-availability`),
     },
     {
       name: 'request_appointment',
-      description: `Create a bounded appointment request at ${businessName} after human confirmation. Requires slot_id (or start date/time), customer information, and idempotency_key. Atomically reserves resources.`,
+      description: `Submit an appointment request to ${businessName} for review and scheduling after user confirmation. Requires service_id, slot_id (or start date/time), customer information, and idempotency_key. Creates an appointment in 'requested' status.`,
       inputSchema: {
         type: 'object',
         properties: {

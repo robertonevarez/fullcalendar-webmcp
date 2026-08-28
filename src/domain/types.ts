@@ -1,6 +1,6 @@
 export type LocationMode = 'CUSTOMER_LOCATION' | 'BUSINESS_LOCATION' | 'EITHER';
 export type LocationPolicy = 'CUSTOMER' | 'BUSINESS' | 'NONE';
-export type AppointmentStatus = 'confirmed' | 'cancelled';
+export type AppointmentStatus = 'requested' | 'confirmed' | 'cancelled' | 'declined' | 'completed';
 
 export interface WorkingHours {
   /** 0=Sunday … 6=Saturday */
@@ -33,6 +33,15 @@ export interface ResourceRequirement {
   preferred_resource_id?: string;
 }
 
+export interface ServiceEligibilityRules {
+  max_bedrooms?: number;
+  max_bathrooms?: number;
+  max_square_footage?: number;
+  property_types_supported?: string[];
+  requires_water_and_power?: boolean;
+  general_requirements?: string[];
+}
+
 export interface Service {
   id: string;
   business_id: string;
@@ -46,6 +55,7 @@ export interface Service {
   service_area_required: boolean;
   resource_requirements: ResourceRequirement[];
   intake_fields: string[];
+  eligibility_rules?: ServiceEligibilityRules;
 }
 
 export interface Resource {
@@ -122,8 +132,10 @@ export interface TimeRange {
 
 export interface AvailabilityQuery {
   service_id: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
+  date_from?: string;
+  date_to?: string;
   postal_code?: string;
   time_preference?: string;
   preferred_resource_id?: string;
@@ -158,6 +170,7 @@ export interface BusinessInfo {
   };
   working_hours: WorkingHours[];
   capabilities: string[];
+  service_ids: string[];
 }
 
 export interface ServiceEligibilityQuery {
@@ -188,4 +201,3 @@ export interface AppointmentRequestInput {
   service_address?: BusinessAddress;
   notes?: AppointmentNotes;
 }
-

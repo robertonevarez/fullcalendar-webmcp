@@ -54,9 +54,9 @@ export default async function BusinessPage({
         {/* Business Identity Header */}
         <header className="space-y-3 border-b border-border pb-6">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
               <span className="size-1.5 rounded-full bg-emerald-500" />
-              WebMCP Agent-Enabled Business
+              Structured Business Endpoint
             </span>
             <span className="font-mono text-xs text-muted-foreground">
               /businesses/{business.slug}
@@ -83,14 +83,14 @@ export default async function BusinessPage({
           </div>
         </header>
 
-        {/* Machine-Readable Agent Capabilities Notice */}
-        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <BotIcon className="size-4 text-emerald-600" />
-            <span>Agent Interaction Notice</span>
+        {/* Machine-Readable Capability Info */}
+        <div className="rounded-xl border border-border bg-card p-4 space-y-1.5 text-xs text-muted-foreground">
+          <div className="flex items-center justify-between">
+            <span className="font-medium text-foreground">Capability & Scheduling Specification</span>
+            <span className="font-mono text-[11px] text-muted-foreground">{business.timezone}</span>
           </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            This endpoint registers native browser WebMCP tools (<code className="font-mono text-[11px]">document.modelContext.registerTool</code>). Personal AI agents (e.g. ChatGPT Site Tools) can discover business information, check service territory eligibility, evaluate live calendar availability, and submit appointment requests without manual DOM navigation.
+          <p className="leading-relaxed">
+            Exposes structured profile, services, territory validation, and deterministic availability. Accessible directly or via native browser WebMCP (<code className="font-mono text-[11px]">document.modelContext</code>).
           </p>
         </div>
 

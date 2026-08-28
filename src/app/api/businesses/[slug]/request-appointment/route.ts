@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ensureDatabaseSeeded } from '@/db/init';
+import { ok } from '@/domain/errors';
 import { bookingService, handleServiceError } from '@/services/booking-service';
 
 export const runtime = 'nodejs';
@@ -23,7 +24,7 @@ export async function POST(
       service_address: body.service_address,
       notes: body.notes,
     });
-    return NextResponse.json(result);
+    return NextResponse.json(ok(result));
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });
   }
