@@ -1,26 +1,8 @@
-import localFont from 'next/font/local';
+import { Instrument_Sans } from 'next/font/google';
 
-export const scoutieSans = localFont({
-  src: [
-    {
-      path: '../fonts/scoutie-sans-latin.woff2',
-      weight: '200 800',
-      style: 'normal',
-    },
-    {
-      path: '../fonts/scoutie-sans-latin-italic.woff2',
-      weight: '200 800',
-      style: 'italic',
-    },
-  ],
+/** Site-wide UI type. Demo surfaces opt out with `font-system`. */
+export const instrumentSans = Instrument_Sans({
+  subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
 });
-
-export const playpenSansHebrew = localFont({
-  src: '../fonts/playpen-sans-hebrew.woff2',
-  variable: '--font-playpen-sans-hebrew',
-  weight: '400 600',
-  display: 'swap',
-});
-

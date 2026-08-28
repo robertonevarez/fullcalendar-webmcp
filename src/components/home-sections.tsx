@@ -2,7 +2,6 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ds, spacing } from '@/lib/design-system';
-import { playpenSansHebrew } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
 const DEMO_URL = '/demo';
@@ -39,8 +38,7 @@ function SectionHeading({
   return (
     <h2
       className={cn(
-        playpenSansHebrew.className,
-        'max-w-2xl text-3xl font-medium tracking-tighter text-balance md:text-4xl',
+        'max-w-2xl text-3xl font-semibold tracking-tighter text-balance md:text-4xl',
         className,
       )}
     >

@@ -8,8 +8,8 @@ import { getDefaultPreset } from '@/demo/presets';
 import type { DemoActivityStep } from '@/demo/types';
 
 vi.mock('@/lib/fonts', () => ({
-  scoutieSans: { className: 'font-scoutie-sans', variable: '--font-sans' },
-}));
+  instrumentSans: { className: 'font-instrument-sans', variable: '--font-sans' },
+});
 
 vi.mock('@/hooks/use-reduced-motion', () => ({
   useReducedMotion: () => true,

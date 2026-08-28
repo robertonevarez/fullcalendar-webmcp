@@ -28,7 +28,7 @@ export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProp
   }
 
   const brand = (
-    <Button variant="ghost" nativeButton={false} render={<Link href="/" />}>
+    <Button variant="ghost" nativeButton={false} render={<Link href="/" />} className="tracking-tight text-lg font-semibold">
       Protocol Tooling
     </Button>
   );

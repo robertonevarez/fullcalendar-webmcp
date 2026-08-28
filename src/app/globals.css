@@ -137,19 +137,7 @@
   }
 
   body {
-    @apply min-h-dvh text-foreground antialiased;
-    background-color: var(--background);
-    background-image:
-      radial-gradient(
-        ellipse 120% 75% at 50% 105%,
-        rgba(244, 114, 182, 0.04) 0%,
-        rgba(251, 191, 36, 0.035) 22%,
-        rgba(52, 211, 153, 0.03) 44%,
-        rgba(56, 189, 248, 0.035) 66%,
-        rgba(167, 139, 250, 0.03) 84%,
-        transparent 100%
-      );
-    background-attachment: fixed;
+    @apply min-h-dvh bg-background text-foreground antialiased;
   }
 }
 
