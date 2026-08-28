@@ -33,15 +33,17 @@ export default async function BusinessPage({
 
   return (
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
-      <main className="grid min-h-dvh place-items-center bg-background px-6 py-8 sm:px-8">
-        <article className="w-full max-w-[28rem] rounded-xl border border-border bg-card px-7 py-8 shadow-card sm:px-8 sm:py-9">
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            {business.name}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {business.address.city}, {business.address.region}
-          </p>
-          <p className="mt-7 text-base leading-7 text-foreground/80">
+      <main className="flex h-dvh w-full items-center justify-center p-6 sm:p-8 md:p-12 lg:p-16">
+        <article className="flex h-full w-full max-w-6xl flex-col justify-between rounded-2xl md:rounded-3xl border border-border bg-card p-8 sm:p-10 md:p-12 lg:p-14 shadow-card">
+          <div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              {business.name}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground sm:text-base md:text-lg">
+              {business.address.city}, {business.address.region}
+            </p>
+          </div>
+          <p className="mt-8 max-w-3xl text-base leading-relaxed text-foreground/80 sm:text-lg md:text-xl">
             {business.description}
           </p>
         </article>
