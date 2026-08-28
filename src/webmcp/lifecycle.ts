@@ -1,4 +1,4 @@
-import { getModelContext, registerBusinessTools, registrationErrorMessage, type RegisterBusinessToolsOptions, type RegistrationResult } from '@/webmcp/tools';
+import { getModelContext, registerBusinessTools, registrationErrorMessage, type RegistrationResult } from '@/webmcp/tools';
 
 export type WebMCPRegistrationState =
   | { phase: 'waiting'; supported: false; attempted: false }

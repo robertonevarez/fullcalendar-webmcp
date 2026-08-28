@@ -1,7 +1,5 @@
 import { AppError, ErrorCodes, ok, toErrorResponse } from '@/domain/errors';
 import {
-  allocateResources,
-  buildSlotId,
   checkServiceArea,
   findAvailability,
   isAppointmentActive,
@@ -118,7 +116,10 @@ async function buildSchedulerContext(businessId: string, serviceId: string): Pro
 
   const [resources, appointments, blocked] = await Promise.all([
     bookingRepository.listResources(businessId),
-    bookingRepository.listAppointments(businessId),
+    // Requested appointments reserve capacity until their bounded hold expires.
+    // The scheduler applies isAppointmentActive so stale requests stop blocking
+    // availability without rewriting their historical status.
+    bookingRepository.listAppointments(businessId, ['confirmed', 'requested']),
     bookingRepository.listBlockedTimes(businessId),
   ]);
 
