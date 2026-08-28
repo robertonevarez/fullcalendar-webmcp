@@ -2,6 +2,8 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+@plugin "tailwind-corner-smoothing";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -212,6 +214,25 @@
     transparent 0%,
     black 16px
   );
+}
+
+@utility smooth-corners {
+  corner-shape: squircle;
+  backface-visibility: hidden;
+  transform: translate3d(0, 0, 0);
+}
+
+@utility card-drop-shadow {
+  filter: drop-shadow(0 25px 50px rgb(0 0 0 / 0.25));
+}
+
+/* Prefer native squircles in Chromium; plugin mask-border is the Safari fallback */
+@supports (corner-shape: squircle) {
+  .smooth-corners-md,
+  .smooth-corners-sm,
+  .smooth-corners-lg {
+    mask-border: none;
+  }
 }
 
 .dark {
