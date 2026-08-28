@@ -177,29 +177,6 @@
   );
 }
 
-/* Landing page: preserve breathing room; only tighten on very short viewports */
-@media (max-height: 720px) {
-  .landing-shell {
-    padding-bottom: 1.25rem;
-    padding-top: 1rem;
-  }
-
-  .landing-demo-block {
-    gap: 0.5rem;
-  }
-}
-
-@media (max-height: 600px) {
-  .landing-shell {
-    padding-bottom: 0.75rem;
-    padding-top: 0.75rem;
-  }
-
-  .landing-subhead {
-    display: none;
-  }
-}
-
 @utility scroll-fade-b {
   mask-image: linear-gradient(
     to top,

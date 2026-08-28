@@ -33,7 +33,6 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
 import { spacing } from '@/lib/design-system';
-import { inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
 type ChatMessage = {
@@ -479,7 +478,8 @@ export function CustomerConversation({
     <div
       ref={stageRef}
       className={cn(
-        'relative flex h-full min-h-0 w-full max-w-[76rem] flex-1 flex-col items-stretch transition-all duration-700 ease-in-out',
+        'relative flex h-full min-h-0 w-full flex-col items-stretch transition-all duration-700 ease-in-out',
+        !landing && 'max-w-[76rem] flex-1',
       )}
     >
       <AgentCursor
@@ -494,7 +494,7 @@ export function CustomerConversation({
         className={cn(
           'flex w-full flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-2xl transition-all duration-700 ease-in-out',
           landing
-            ? 'min-h-0 h-full flex-1'
+            ? 'h-full min-h-0 overflow-hidden'
             : 'min-h-0 h-full max-h-full flex-1',
           isSplitView ? 'max-w-none' : 'max-w-[23.5rem] mx-auto',
         )}
@@ -551,7 +551,6 @@ export function CustomerConversation({
             data-demo-target="chat"
             data-demo-playback={playbackState}
             className={cn(
-              inter.className,
               'flex h-full min-h-0 flex-col bg-surface transition-all duration-700 ease-in-out',
               isSplitView ? 'w-[18rem] sm:w-[20rem] md:w-[23.5rem] shrink-0 border-r border-line/50' : 'w-full',
             )}

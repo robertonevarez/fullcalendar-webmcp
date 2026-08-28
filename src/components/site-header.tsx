@@ -3,12 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-} from '@/components/ui/navigation-menu';
 import { ArrowRightIcon } from 'lucide-react';
 
 const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
@@ -40,31 +34,33 @@ export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProp
   );
 
   const actions = (
-    <div className="flex items-center gap-2">
-      <NavigationMenu>
-        <NavigationMenuList>
-          {NAV_ITEMS.map((item) => (
-            <NavigationMenuItem key={item.href}>
-              {'external' in item ? (
-                <NavigationMenuLink
-                  href={item.href}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  {item.label}
-                </NavigationMenuLink>
-              ) : (
-                <NavigationMenuLink
-                  active={isActive(item.href)}
-                  render={<Link href={item.href} />}
-                >
-                  {item.label}
-                </NavigationMenuLink>
-              )}
-            </NavigationMenuItem>
-          ))}
-        </NavigationMenuList>
-      </NavigationMenu>
+    <div className="flex items-center gap-4">
+      {NAV_ITEMS.map((item) =>
+        'external' in item ? (
+          <Button
+            key={item.href}
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={
+              <a href={item.href} rel="noopener noreferrer" target="_blank" />
+            }
+          >
+            {item.label}
+          </Button>
+        ) : (
+          <Button
+            key={item.href}
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link href={item.href} />}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </Button>
+        ),
+      )}
 
       <Button size="sm" nativeButton={false} render={<Link href={DEMO_URL} />}>
         Try demo
@@ -75,7 +71,7 @@ export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProp
 
   if (landing || embedded) {
     return (
-      <header className="flex items-center justify-between">
+      <header className="flex shrink-0 items-center justify-between">
         {brand}
         {actions}
       </header>
@@ -84,7 +80,7 @@ export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProp
 
   return (
     <header className="sticky top-0 z-50 border-b bg-background">
-      <div className="container flex h-14 items-center justify-between">
+      <div className="container flex items-center justify-between px-4">
         {brand}
         {actions}
       </div>
