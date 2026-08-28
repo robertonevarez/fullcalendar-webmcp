@@ -45,21 +45,22 @@ const AUTO_HOURS: WorkingHours[] = [
 
 export async function seedDatabase(force = false) {
   return runInTransaction(async () => {
-    const countResult = await query<{ count: string }>('SELECT COUNT(*)::text as count FROM businesses');
-    const count = Number(countResult.rows[0]?.count ?? 0);
-    if (count > 0 && !force) return { seeded: false };
+    const mariaResult = await query<{ count: string }>(
+      "SELECT COUNT(*)::text as count FROM businesses WHERE slug = 'marias-cleaning'",
+    );
+    const hasMaria = Number(mariaResult.rows[0]?.count ?? 0) > 0;
+    if (hasMaria && !force) return { seeded: false };
 
-    if (force) {
-      await query('DELETE FROM appointment_resources');
-      await query('DELETE FROM appointments');
-      await query('DELETE FROM slot_tokens');
-      await query('DELETE FROM idempotency_records');
-      await query('DELETE FROM blocked_times');
-      await query('DELETE FROM service_area_zones');
-      await query('DELETE FROM resources');
-      await query('DELETE FROM services');
-      await query('DELETE FROM businesses');
-    }
+    // Clear and reseed full catalog when force=true or when Maria's is missing
+    await query('DELETE FROM appointment_resources');
+    await query('DELETE FROM appointments');
+    await query('DELETE FROM slot_tokens');
+    await query('DELETE FROM idempotency_records');
+    await query('DELETE FROM blocked_times');
+    await query('DELETE FROM service_area_zones');
+    await query('DELETE FROM resources');
+    await query('DELETE FROM services');
+    await query('DELETE FROM businesses');
 
     async function insertBusiness(
       id: string,
