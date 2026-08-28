@@ -5,6 +5,12 @@ import { WEBMCP_TOOL_NAMES } from '@/webmcp/tools';
 
 const SEEDED_BUSINESSES = [
   {
+    slug: 'marias-cleaning',
+    name: "Maria's Cleaning Service",
+    archetype: 'Residential Cleaning / Field Service',
+    description: 'WebMCP Challenge primary reference fixture in El Paso, TX. Territory validation, deep clean constraints, and live scheduling.',
+  },
+  {
     slug: 'acme-hvac',
     name: 'Acme Heating & Air',
     archetype: 'Field Service / HVAC',

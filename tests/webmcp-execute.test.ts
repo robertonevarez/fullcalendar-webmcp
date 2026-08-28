@@ -11,50 +11,50 @@ describe('WebMCP execute wrapper', () => {
 
   it('does not throw when execute is invoked with only input (Chrome executeTool shape)', async () => {
     const fetchMock = vi.fn(async () =>
-      Response.json({ ok: true, data: { services: [{ service_id: 'svc_ac_diagnostic' }] } }),
+      Response.json({ ok: true, data: { services: [{ id: 'svc_deep_cleaning' }] } }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
-    const tools = createBusinessTools('acme-hvac', 'Acme Heating & Air');
-    const search = tools.find((tool) => tool.name === 'search_services')!;
+    const tools = createBusinessTools('marias-cleaning', "Maria's Cleaning Service");
+    const search = tools.find((tool) => tool.name === 'get_services')!;
     const execute = search.execute as ToolExecute;
 
-    // Chrome 152 executeTool currently calls execute(input) with argc === 1.
-    await expect(execute({ query: 'AC maintenance' })).resolves.toEqual({
+    // Chrome executeTool invokes execute(input) with argc === 1.
+    await expect(execute({ query: 'deep cleaning' })).resolves.toEqual({
       ok: true,
-      data: { services: [{ service_id: 'svc_ac_diagnostic' }] },
+      data: { services: [{ id: 'svc_deep_cleaning' }] },
     });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/businesses/acme-hvac/search-services',
+      '/api/businesses/marias-cleaning/get-services',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ query: 'AC maintenance' }),
+        body: JSON.stringify({ query: 'deep cleaning' }),
       }),
     );
   });
 
   it('routes to explicit apiBaseUrl when configured', async () => {
     const fetchMock = vi.fn(async () =>
-      Response.json({ ok: true, data: { services: [{ service_id: 'svc_ac_diagnostic' }] } }),
+      Response.json({ ok: true, data: { services: [{ id: 'svc_deep_cleaning' }] } }),
     );
     vi.stubGlobal('fetch', fetchMock);
 
     const tools = createBusinessTools({
-      businessSlug: 'acme-hvac',
-      businessName: 'Acme Heating & Air',
+      businessSlug: 'marias-cleaning',
+      businessName: "Maria's Cleaning Service",
       apiBaseUrl: 'https://api.protocoltooling.com',
     });
-    const search = tools.find((tool) => tool.name === 'search_services')!;
+    const search = tools.find((tool) => tool.name === 'get_services')!;
     const execute = search.execute as ToolExecute;
 
-    await execute({ query: 'AC' });
+    await execute({ query: 'deep' });
 
     expect(fetchMock).toHaveBeenCalledWith(
-      'https://api.protocoltooling.com/api/businesses/acme-hvac/search-services',
+      'https://api.protocoltooling.com/api/businesses/marias-cleaning/get-services',
       expect.objectContaining({
         method: 'POST',
-        body: JSON.stringify({ query: 'AC' }),
+        body: JSON.stringify({ query: 'deep' }),
       }),
     );
   });
@@ -63,26 +63,26 @@ describe('WebMCP execute wrapper', () => {
     const fetchMock = vi.fn(async () => Response.json({ ok: true, data: {} }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const tools = createBusinessTools('acme-hvac', 'Acme Heating & Air');
-    const search = tools.find((tool) => tool.name === 'search_services')!;
+    const tools = createBusinessTools('marias-cleaning', "Maria's Cleaning Service");
+    const search = tools.find((tool) => tool.name === 'get_services')!;
     const execute = search.execute as ToolExecute;
     const controller = new AbortController();
 
-    await execute({ query: 'AC' }, { signal: controller.signal });
+    await execute({ query: 'cleaning' }, { signal: controller.signal });
 
     const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(init).toEqual(expect.objectContaining({ signal: controller.signal }));
   });
 
   it('accepts execute(input, undefined) without destructuring errors', async () => {
-    const fetchMock = vi.fn(async () => Response.json({ ok: true, data: { status: 'eligible' } }));
+    const fetchMock = vi.fn(async () => Response.json({ ok: true, data: { eligible: true } }));
     vi.stubGlobal('fetch', fetchMock);
 
-    const tools = createBusinessTools('acme-hvac', 'Acme Heating & Air');
-    const check = tools.find((tool) => tool.name === 'check_service_area')!;
+    const tools = createBusinessTools('marias-cleaning', "Maria's Cleaning Service");
+    const check = tools.find((tool) => tool.name === 'check_service_eligibility')!;
     const execute = check.execute as ToolExecute;
 
-    await expect(execute({ postal_code: '78701' }, undefined)).resolves.toMatchObject({
+    await expect(execute({ service_id: 'svc_deep_cleaning', postal_code: '79901' }, undefined)).resolves.toMatchObject({
       ok: true,
     });
   });
@@ -104,7 +104,7 @@ describe('WebMCP execute wrapper', () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     await expect(
-      postJson('/api/businesses/acme-hvac/check-service-area', { postal_code: '90210' }),
+      postJson('/api/businesses/marias-cleaning/check-service-eligibility', { service_id: 'svc_deep_cleaning', postal_code: '90210' }),
     ).resolves.toEqual(domainError);
 
     expect(errorSpy).not.toHaveBeenCalled();
@@ -117,7 +117,7 @@ describe('WebMCP execute wrapper', () => {
     );
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(postJson('/api/businesses/acme-hvac/search-services', { query: 'AC' })).resolves.toEqual({
+    await expect(postJson('/api/businesses/marias-cleaning/get-services', { query: 'clean' })).resolves.toEqual({
       ok: false,
       error: {
         code: 'INTERNAL_ERROR',
@@ -138,7 +138,7 @@ describe('WebMCP execute wrapper', () => {
     );
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(postJson('/api/businesses/acme-hvac/search-services', { query: 'AC' })).resolves.toMatchObject({
+    await expect(postJson('/api/businesses/marias-cleaning/get-services', { query: 'clean' })).resolves.toMatchObject({
       ok: false,
       error: { code: 'INTERNAL_ERROR' },
     });
@@ -153,7 +153,7 @@ describe('WebMCP execute wrapper', () => {
     );
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
-    await expect(postJson('/api/businesses/acme-hvac/search-services', { query: 'AC' })).resolves.toEqual({
+    await expect(postJson('/api/businesses/marias-cleaning/get-services', { query: 'clean' })).resolves.toEqual({
       ok: false,
       error: {
         code: 'INTERNAL_ERROR',

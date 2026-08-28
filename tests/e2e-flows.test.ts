@@ -35,11 +35,11 @@ describe('vertical compatibility flows', () => {
       customer: { name: 'Alex Morgan', email: 'alex@example.com' },
       notes: { description: 'Upstairs not cooling', location_detail: 'upstairs' },
     });
-    expect(created.ok).toBe(true);
-    const appointmentId = created.data.appointment_id;
+    expect(created.appointment_id).toBeTruthy();
+    const appointmentId = created.appointment_id;
 
     const fetched = await bookingService.getAppointment('acme-hvac', appointmentId);
-    expect(fetched.ok).toBe(true);
+    expect(fetched.appointment_id).toBe(appointmentId);
 
     const newAvailability = await bookingService.getAvailability('acme-hvac', {
       service_id: serviceId,
@@ -55,7 +55,7 @@ describe('vertical compatibility flows', () => {
       new_slot_id: newSlot.slot_id,
       idempotency_key: 'hvac-reschedule-1',
     });
-    expect(rescheduled.ok).toBe(true);
+    expect(rescheduled.starts_at).toBe(newSlot.starts_at);
 
     const cancelled = await bookingService.cancelAppointment({
       businessSlug: 'acme-hvac',
@@ -63,15 +63,14 @@ describe('vertical compatibility flows', () => {
       idempotency_key: 'hvac-cancel-1',
       reason: 'customer_request',
     });
-    expect(cancelled.ok).toBe(true);
-    expect(cancelled.data.status).toBe('cancelled');
+    expect(cancelled.status).toBe('cancelled');
 
     const cancelledAgain = await bookingService.cancelAppointment({
       businessSlug: 'acme-hvac',
       appointment_id: appointmentId,
       idempotency_key: 'hvac-cancel-2',
     });
-    expect(cancelledAgain.ok).toBe(true);
+    expect(cancelledAgain.status).toBe('cancelled');
   });
 
   it('Flow B — Salon haircut without service area', async () => {
@@ -98,8 +97,8 @@ describe('vertical compatibility flows', () => {
       idempotency_key: 'salon-flow-1',
       customer: { name: 'Jamie Lee' },
     });
-    expect(created.ok).toBe(true);
-    expect(created.data.provider).toBeTruthy();
+    expect(created.appointment_id).toBeTruthy();
+    expect(created.provider).toBeTruthy();
   });
 
   it('Flow C — Auto oil change allocates technician and bay', async () => {
@@ -124,10 +123,10 @@ describe('vertical compatibility flows', () => {
       idempotency_key: 'auto-flow-1',
       customer: { name: 'Taylor Kim' },
     });
-    expect(created.ok).toBe(true);
+    expect(created.appointment_id).toBeTruthy();
 
-    const fetched = await bookingService.getAppointment('mesa-auto-service', created.data.appointment_id);
-    expect(fetched.ok).toBe(true);
+    const fetched = await bookingService.getAppointment('mesa-auto-service', created.appointment_id);
+    expect(fetched.appointment_id).toBe(created.appointment_id);
   });
 
   it('prevents double booking on same slot', async () => {
@@ -211,12 +210,12 @@ describe('vertical compatibility flows', () => {
       }),
     ]);
 
-    expect(first.ok).toBe(true);
-    expect(second.ok).toBe(true);
-    expect(first.data.appointment_id).toBe(second.data.appointment_id);
+    expect(first.appointment_id).toBeTruthy();
+    expect(second.appointment_id).toBeTruthy();
+    expect(first.appointment_id).toBe(second.appointment_id);
 
     const appointments = await bookingRepository.listAppointments('biz_northline_salon');
-    const matches = appointments.filter((item) => item.id === first.data.appointment_id);
+    const matches = appointments.filter((item) => item.id === first.appointment_id);
     expect(matches).toHaveLength(1);
   });
 
@@ -233,7 +232,7 @@ describe('vertical compatibility flows', () => {
       idempotency_key: 'lifecycle-create',
       customer: { name: 'Lifecycle Customer' },
     });
-    const appointmentId = created.data.appointment_id;
+    const appointmentId = created.appointment_id;
 
     const laterAvailability = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
@@ -261,10 +260,10 @@ describe('vertical compatibility flows', () => {
 
     expect(cancelResult.status).toBe('fulfilled');
     const final = await bookingService.getAppointment('northline-salon', appointmentId);
-    expect(final.data.status).toBe('cancelled');
+    expect(final.status).toBe('cancelled');
 
     if (rescheduleResult.status === 'fulfilled') {
-      expect(rescheduleResult.value.data.status).toBe('confirmed');
+      expect(rescheduleResult.value.status).toBe('confirmed');
     } else {
       expect(rescheduleResult.reason).toBeInstanceOf(AppError);
       expect((rescheduleResult.reason as AppError).code).toBe('APPOINTMENT_NOT_RESCHEDULABLE');
@@ -298,7 +297,7 @@ describe('vertical compatibility flows', () => {
       idempotency_key: 'dual-reschedule-create',
       customer: { name: 'Dual Reschedule Customer' },
     });
-    const appointmentId = created.data.appointment_id;
+    const appointmentId = created.appointment_id;
 
     const later = await bookingService.getAvailability('northline-salon', {
       service_id: 'svc_haircut',
@@ -323,14 +322,11 @@ describe('vertical compatibility flows', () => {
       }),
     ]);
 
-    const fulfilled = results.filter((r) => r.status === 'fulfilled') as PromiseFulfilledResult<{
-      ok: true;
-      data: { starts_at: string; status: string };
-    }>[];
+    const fulfilled = results.filter((r) => r.status === 'fulfilled');
     expect(fulfilled.length).toBeGreaterThanOrEqual(1);
 
     const final = await bookingService.getAppointment('northline-salon', appointmentId);
-    expect(final.data.status).toBe('confirmed');
-    expect([slots[0].starts_at, slots[1].starts_at]).toContain(final.data.starts_at);
+    expect(final.status).toBe('confirmed');
+    expect([slots[0].starts_at, slots[1].starts_at]).toContain(final.starts_at);
   });
 });

@@ -39,6 +39,15 @@ export function toBusiness(row: Record<string, unknown>): Business {
 }
 
 export function toService(row: Record<string, unknown>): Service {
+  const intakeRaw = asJson<unknown>(row.intake_fields_json);
+  const isStructured = intakeRaw && typeof intakeRaw === 'object' && !Array.isArray(intakeRaw) && 'fields' in (intakeRaw as object);
+  const intakeFields = isStructured
+    ? ((intakeRaw as { fields?: string[] }).fields ?? [])
+    : (Array.isArray(intakeRaw) ? (intakeRaw as string[]) : []);
+  const eligibilityRules = isStructured
+    ? (intakeRaw as { eligibility_rules?: Service['eligibility_rules'] }).eligibility_rules
+    : undefined;
+
   return {
     id: String(row.id),
     business_id: String(row.business_id),
@@ -51,7 +60,8 @@ export function toService(row: Record<string, unknown>): Service {
     location_policy: row.location_policy as Service['location_policy'],
     service_area_required: Boolean(row.service_area_required),
     resource_requirements: asJson<Service['resource_requirements']>(row.resource_requirements_json),
-    intake_fields: asJson<string[]>(row.intake_fields_json),
+    intake_fields: intakeFields,
+    eligibility_rules: eligibilityRules,
   };
 }
 
@@ -110,5 +120,7 @@ export function toAppointment(
     currency: String(row.currency),
     idempotency_key: row.idempotency_key ? String(row.idempotency_key) : undefined,
     resource_allocations: resources,
+    created_at: row.created_at ? asIso(row.created_at) : undefined,
+    updated_at: row.updated_at ? asIso(row.updated_at) : undefined,
   };
 }

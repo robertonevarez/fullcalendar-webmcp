@@ -47,7 +47,7 @@ describe('business isolation and domain regressions', () => {
       idempotency_key: sharedKey,
       customer: { name: 'Salon Idempotency Customer' },
     });
-    expect(salonCreated.ok).toBe(true);
+    expect(salonCreated.appointment_id).toBeTruthy();
 
     const autoAvailability = await bookingService.getAvailability('mesa-auto-service', {
       service_id: 'svc_oil_change',
@@ -62,8 +62,8 @@ describe('business isolation and domain regressions', () => {
       idempotency_key: sharedKey,
       customer: { name: 'Auto Idempotency Customer' },
     });
-    expect(autoCreated.ok).toBe(true);
-    expect(autoCreated.data.appointment_id).not.toBe(salonCreated.data.appointment_id);
+    expect(autoCreated.appointment_id).toBeTruthy();
+    expect(autoCreated.appointment_id).not.toBe(salonCreated.appointment_id);
   });
 
   it('does not return create_appointment response when reusing idempotency key for cancel', async () => {
@@ -82,17 +82,16 @@ describe('business isolation and domain regressions', () => {
       idempotency_key: sharedKey,
       customer: { name: 'Idempotency Test Customer' },
     });
-    expect(created.ok).toBe(true);
+    expect(created.appointment_id).toBeTruthy();
 
     const cancelled = await bookingService.cancelAppointment({
       businessSlug: 'northline-salon',
-      appointment_id: created.data.appointment_id,
+      appointment_id: created.appointment_id,
       idempotency_key: sharedKey,
     });
-    expect(cancelled.ok).toBe(true);
-    expect(cancelled.data.status).toBe('cancelled');
-    expect(cancelled.data.appointment_id).toBe(created.data.appointment_id);
-    expect(cancelled.data).not.toEqual(created.data);
+    expect(cancelled.status).toBe('cancelled');
+    expect(cancelled.appointment_id).toBe(created.appointment_id);
+    expect(cancelled).not.toEqual(created);
   });
 
   it('uses full UUID entropy for appointment IDs', () => {
@@ -115,20 +114,19 @@ describe('business isolation and domain regressions', () => {
     });
 
     await expect(
-      bookingService.getAppointment('acme-hvac', salonAppointment.data.appointment_id),
+      bookingService.getAppointment('acme-hvac', salonAppointment.appointment_id),
     ).rejects.toThrow(AppError);
 
     await expect(
       bookingService.cancelAppointment({
         businessSlug: 'acme-hvac',
-        appointment_id: salonAppointment.data.appointment_id,
+        appointment_id: salonAppointment.appointment_id,
         idempotency_key: 'business-scope-cancel',
       }),
     ).rejects.toThrow(AppError);
 
-    expect(
-      (await bookingService.getAppointment('northline-salon', salonAppointment.data.appointment_id)).ok,
-    ).toBe(true);
+    const salonFetched = await bookingService.getAppointment('northline-salon', salonAppointment.appointment_id);
+    expect(salonFetched.appointment_id).toBe(salonAppointment.appointment_id);
   });
 
   it('allocates overlapping stylist requirements via backtracking', () => {

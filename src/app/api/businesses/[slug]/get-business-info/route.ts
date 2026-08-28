@@ -6,14 +6,13 @@ import { bookingService, handleServiceError } from '@/services/booking-service';
 export const runtime = 'nodejs';
 
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ slug: string }> },
 ) {
   await ensureDatabaseSeeded();
   const { slug } = await context.params;
-  const body = await request.json();
   try {
-    const result = await bookingService.rescheduleAppointment({ businessSlug: slug, ...body });
+    const result = await bookingService.getBusinessInfo(slug);
     return NextResponse.json(ok(result));
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });

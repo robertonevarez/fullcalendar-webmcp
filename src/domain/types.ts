@@ -1,6 +1,6 @@
 export type LocationMode = 'CUSTOMER_LOCATION' | 'BUSINESS_LOCATION' | 'EITHER';
 export type LocationPolicy = 'CUSTOMER' | 'BUSINESS' | 'NONE';
-export type AppointmentStatus = 'confirmed' | 'cancelled';
+export type AppointmentStatus = 'requested' | 'confirmed' | 'cancelled' | 'declined' | 'completed';
 
 export interface WorkingHours {
   /** 0=Sunday … 6=Saturday */
@@ -33,6 +33,15 @@ export interface ResourceRequirement {
   preferred_resource_id?: string;
 }
 
+export interface ServiceEligibilityRules {
+  max_bedrooms?: number;
+  max_bathrooms?: number;
+  max_square_footage?: number;
+  property_types_supported?: string[];
+  requires_water_and_power?: boolean;
+  general_requirements?: string[];
+}
+
 export interface Service {
   id: string;
   business_id: string;
@@ -46,6 +55,7 @@ export interface Service {
   service_area_required: boolean;
   resource_requirements: ResourceRequirement[];
   intake_fields: string[];
+  eligibility_rules?: ServiceEligibilityRules;
 }
 
 export interface Resource {
@@ -98,6 +108,8 @@ export interface Appointment {
   currency: string;
   idempotency_key?: string;
   resource_allocations: SlotResourceAllocation[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SlotResourceAllocation {
@@ -122,8 +134,10 @@ export interface TimeRange {
 
 export interface AvailabilityQuery {
   service_id: string;
-  start_date: string;
-  end_date: string;
+  start_date?: string;
+  end_date?: string;
+  date_from?: string;
+  date_to?: string;
   postal_code?: string;
   time_preference?: string;
   preferred_resource_id?: string;
@@ -137,4 +151,55 @@ export interface ServiceSearchResult {
   duration_minutes: number;
   price_cents: number;
   score: number;
+}
+
+export interface BusinessInfo {
+  business_id: string;
+  slug: string;
+  name: string;
+  category: string;
+  timezone: string;
+  location: {
+    address?: string;
+    city: string;
+    state: string;
+    postal_code: string;
+  };
+  service_area: string[];
+  contact: {
+    phone?: string;
+    email?: string;
+  };
+  working_hours: WorkingHours[];
+  capabilities: string[];
+  service_ids: string[];
+}
+
+export interface ServiceEligibilityQuery {
+  service_id: string;
+  postal_code?: string;
+  property_type?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  square_footage?: number;
+}
+
+export interface ServiceEligibilityResult {
+  eligible: boolean;
+  service_id: string;
+  service_name?: string;
+  requirements: string[];
+  reason: string | null;
+  zone_id?: string | null;
+}
+
+export interface AppointmentRequestInput {
+  service_id: string;
+  slot_id?: string;
+  start?: string;
+  idempotency_key: string;
+  postal_code?: string;
+  customer: CustomerInput;
+  service_address?: BusinessAddress;
+  notes?: AppointmentNotes;
 }

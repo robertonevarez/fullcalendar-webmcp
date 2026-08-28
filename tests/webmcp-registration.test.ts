@@ -58,12 +58,12 @@ describe('WebMCP registration lifecycle', () => {
   });
 
   it('continues registering when one tool fails and reports the error', async () => {
-    installModelContext({ failTools: ['get_availability'] });
-    const result = await registerBusinessTools('acme-hvac', 'Acme Heating & Air', new AbortController().signal);
+    installModelContext({ failTools: ['check_availability'] });
+    const result = await registerBusinessTools('marias-cleaning', "Maria's Cleaning Service", new AbortController().signal);
 
-    expect(result.registered).toEqual(WEBMCP_TOOL_NAMES.filter((name) => name !== 'get_availability'));
+    expect(result.registered).toEqual(WEBMCP_TOOL_NAMES.filter((name) => name !== 'check_availability'));
     expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]?.tool).toBe('get_availability');
+    expect(result.errors[0]?.tool).toBe('check_availability');
   });
 
   it('polls until modelContext appears', async () => {

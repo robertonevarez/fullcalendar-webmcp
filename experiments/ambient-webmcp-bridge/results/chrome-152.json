@@ -1,0 +1,40 @@
+{
+  "tested_at": "2026-08-28",
+  "browser": "Chrome for Testing 152.0.7977.64 (arm64)",
+  "note": "document.modelContext.getTools and executeTool observed through Chrome DevTools Protocol; not an LLM-agent discovery test",
+  "results": [
+    { "name": "isolated world", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    { "name": "manifest MAIN world", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    {
+      "name": "structured mock appointment",
+      "tools": ["get_business_info", "request_appointment"],
+      "invocation": {
+        "status": "request_received",
+        "business": "Maria's Deep Cleaning",
+        "service": "Deep Cleaning",
+        "preferred_date": "2026-09-01",
+        "preferred_time": "10:00 AM",
+        "customer_name": "Test Customer",
+        "mock": true
+      }
+    },
+    { "name": "scripting MAIN world", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    { "name": "ordinary CSP", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    { "name": "restrictive CSP", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    { "name": "restrictive CSP via scripting MAIN", "tools": ["get_business_info", "request_appointment"], "invocation_succeeded": true },
+    {
+      "name": "permissions denied",
+      "tools": [],
+      "invocation_succeeded": false,
+      "error": "NotAllowedError: Access to the feature tools is disallowed by permissions policy."
+    },
+    {
+      "name": "origin isolation disabled",
+      "tools": [],
+      "invocation_succeeded": false,
+      "error": "SecurityError: document.modelContext cannot be used when document.domain is enabled."
+    },
+    { "name": "public third-party origin", "tools": ["get_page_context"], "invocation_succeeded": true },
+    { "name": "extension absent in fresh profile", "tools": [], "invocation_succeeded": false }
+  ]
+}

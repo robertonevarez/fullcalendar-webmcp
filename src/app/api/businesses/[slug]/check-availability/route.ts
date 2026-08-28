@@ -11,9 +11,19 @@ export async function POST(
 ) {
   await ensureDatabaseSeeded();
   const { slug } = await context.params;
-  const body = await request.json();
   try {
-    const result = await bookingService.rescheduleAppointment({ businessSlug: slug, ...body });
+    const body = await request.json();
+    const result = await bookingService.checkAvailability(slug, {
+      service_id: body.service_id,
+      date_from: body.date_from ?? body.start_date,
+      date_to: body.date_to ?? body.end_date,
+      start_date: body.start_date ?? body.date_from,
+      end_date: body.end_date ?? body.date_to,
+      postal_code: body.postal_code,
+      time_preference: body.time_preference,
+      preferred_resource_id: body.preferred_resource_id,
+      limit: body.limit,
+    });
     return NextResponse.json(ok(result));
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });

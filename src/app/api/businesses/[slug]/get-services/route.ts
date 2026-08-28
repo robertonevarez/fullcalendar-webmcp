@@ -11,9 +11,15 @@ export async function POST(
 ) {
   await ensureDatabaseSeeded();
   const { slug } = await context.params;
-  const body = await request.json();
+  let query: string | undefined;
   try {
-    const result = await bookingService.rescheduleAppointment({ businessSlug: slug, ...body });
+    const body = await request.json().catch(() => ({}));
+    query = body?.query;
+  } catch {
+    // empty body is valid
+  }
+  try {
+    const result = await bookingService.getServices(slug, query);
     return NextResponse.json(ok(result));
   } catch (error) {
     return NextResponse.json(handleServiceError(error), { status: 400 });
