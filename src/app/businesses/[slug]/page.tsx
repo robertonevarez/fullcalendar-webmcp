@@ -1,5 +1,7 @@
+import { CheckIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { CardPhotoBackground } from '@/components/card-photo-background';
+import { Separator } from '@/components/ui/separator';
 import { WebMCPBusinessProvider } from '@/components/webmcp-business-provider';
 import { ensureDatabaseSeeded } from '@/db/init';
 import { bookingRepository } from '@/db/repository';
@@ -32,6 +34,9 @@ export default async function BusinessPage({
   const business = await bookingRepository.getBusinessBySlug(slug);
   if (!business) notFound();
 
+  const services = await bookingRepository.listServices(business.id);
+  const serviceNames = services.map((service) => service.name);
+
   return (
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
       <main className="flex h-dvh w-full items-center justify-center p-5 sm:p-7 md:p-10 lg:p-14">
@@ -44,10 +49,23 @@ export default async function BusinessPage({
                 {business.address.city}, {business.address.region}
               </p>
             </div>
-            <div className="relative z-10 w-full [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))_drop-shadow(0_2px_10px_rgba(0,0,0,0.55))]">
-              <p className="line-clamp-3 text-base font-medium leading-snug tracking-tight text-white sm:text-lg md:text-xl">
+            <div className="relative z-10 flex w-full flex-col gap-2 [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))_drop-shadow(0_2px_10px_rgba(0,0,0,0.55))]">
+              <p className="line-clamp-3 text-sm font-medium leading-snug tracking-tight text-white sm:text-base md:text-lg">
                 {business.description}
               </p>
+              {serviceNames.length > 0 ? (
+                <>
+                  <Separator className="bg-white/30" />
+                  <ul className="flex min-w-0 flex-wrap gap-x-6 gap-y-2.5 text-sm font-medium tracking-tight text-white/80 sm:gap-x-8 sm:text-base md:text-lg">
+                    {serviceNames.map((name) => (
+                      <li key={name} className="flex min-w-0 items-center gap-1.5">
+                        <CheckIcon className="size-3.5 shrink-0 sm:size-4" aria-hidden />
+                        <span className="truncate">{name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
             </div>
           </article>
         </div>
