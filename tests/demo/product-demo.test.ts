@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { AppError, ErrorCodes } from '@/domain/errors';
-import { DEFAULT_CUSTOMER_PROMPT, DEFAULT_DEMO_CONFIG } from '@/demo/defaults';
 import { DemoBookingEngine, emptyConversationState } from '@/demo/engine';
 import { processDemoTurn, processDemoTurnSafe } from '@/demo/conversation';
 import { parseCustomerIntent, parseSpokenTime } from '@/demo/intent';
@@ -14,13 +13,13 @@ import {
 import { addDaysToDateString, formatPriceCents } from '@/demo/format';
 import { formatDateInZone } from '@/lib/time';
 
-function nextOpenWeekday(timeZone = 'America/Chicago'): string {
+function nextOpenDay(days: number[] = [1, 2, 3, 4, 5], timeZone = 'America/Chicago'): string {
   const today = formatDateInZone(new Date(), timeZone);
-  for (let i = 1; i <= 10; i += 1) {
+  for (let i = 1; i <= 14; i += 1) {
     const date = addDaysToDateString(today, i);
     const [y, m, d] = date.split('-').map(Number);
     const weekday = new Date(Date.UTC(y, m - 1, d, 12)).getUTCDay();
-    if (weekday >= 1 && weekday <= 5) return date;
+    if (days.includes(weekday)) return date;
   }
   return addDaysToDateString(today, 1);
 }
@@ -31,8 +30,8 @@ describe('demo presets', () => {
     expect(DEFAULT_PRESET_ID).toBe('acme-hvac');
     expect(getDefaultPreset().id).toBe('acme-hvac');
     expect(getDefaultPreset().config.businessName).toBe('Acme Heating & Air');
-    expect(DEFAULT_DEMO_CONFIG.archetype).toBe('field_service');
-    expect(DEFAULT_CUSTOMER_PROMPT).toBe("my ac is blowing warm air, can you check what's up?");
+    expect(getDefaultPreset().config.archetype).toBe('field_service');
+    expect(getDefaultPreset().customerPrompt).toBe("my ac is blowing warm air, can you check what's up?");
   });
 
   it('normalizes each archetype into domain objects', () => {
@@ -62,7 +61,7 @@ describe('demo isolation', () => {
     const config = getDefaultPreset().config;
     const engineA = new DemoBookingEngine(config);
     const engineB = new DemoBookingEngine(config);
-    const day = nextOpenWeekday();
+    const day = nextOpenDay(config.availability.days);
 
     const slotsA = engineA.findSlots([], {
       service_id: config.services[0].id,
@@ -98,13 +97,14 @@ describe('demo isolation', () => {
   it('does not leak appointments when switching preset configs', () => {
     const acme = getDemoPreset('acme-hvac').config;
     const salon = getDemoPreset('northline-salon').config;
-    const day = nextOpenWeekday();
+    const acmeDay = nextOpenDay(acme.availability.days);
+    const salonDay = nextOpenDay(salon.availability.days);
 
     const acmeEngine = new DemoBookingEngine(acme);
     const slots = acmeEngine.findSlots([], {
       service_id: acme.services[0].id,
-      start_date: day,
-      end_date: day,
+      start_date: acmeDay,
+      end_date: acmeDay,
       postal_code: '78701',
       limit: 1,
     });
@@ -120,8 +120,8 @@ describe('demo isolation', () => {
     const salonEngine = new DemoBookingEngine(salon);
     const salonSlots = salonEngine.findSlots([], {
       service_id: salon.services[0].id,
-      start_date: day,
-      end_date: day,
+      start_date: salonDay,
+      end_date: salonDay,
       time_preference: 'morning',
       limit: 2,
     });
@@ -148,7 +148,7 @@ describe('demo scheduling reuse', () => {
   it('generates salon availability without postal code', () => {
     const config = getDemoPreset('northline-salon').config;
     const engine = new DemoBookingEngine(config);
-    const day = nextOpenWeekday();
+    const day = nextOpenDay(config.availability.days);
     const slots = engine.findSlots([], {
       service_id: config.services[0].id,
       start_date: day,
@@ -164,7 +164,7 @@ describe('demo scheduling reuse', () => {
   it('allocates technician and service bay for auto oil change', () => {
     const config = getDemoPreset('mesa-auto').config;
     const engine = new DemoBookingEngine(config);
-    const day = nextOpenWeekday();
+    const day = nextOpenDay(config.availability.days);
     const slots = engine.findSlots([], {
       service_id: config.services[0].id,
       start_date: day,

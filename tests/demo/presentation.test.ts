@@ -9,7 +9,7 @@ import type { DemoActivityStep } from '@/demo/types';
 
 vi.mock('@/lib/fonts', () => ({
   instrumentSans: { className: 'font-instrument-sans', variable: '--font-sans' },
-});
+}));
 
 vi.mock('@/hooks/use-reduced-motion', () => ({
   useReducedMotion: () => true,

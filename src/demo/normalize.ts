@@ -7,11 +7,10 @@ import type {
   Service,
   WorkingHours,
 } from '@/domain/types';
-import {
-  DEMO_BUSINESS_ID,
-  DEMO_BUSINESS_SLUG,
-} from '@/demo/defaults';
 import type { DemoArchetype, DemoConfig, DemoServiceInput } from '@/demo/types';
+
+export const DEMO_BUSINESS_ID = 'demo_biz_ephemeral';
+export const DEMO_BUSINESS_SLUG = 'demo-ephemeral';
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const POSTAL_RE = /^\d{5}$/;

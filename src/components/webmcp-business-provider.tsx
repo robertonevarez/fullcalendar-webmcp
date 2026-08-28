@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, type ReactNode } from 'react';
-import { WebMCPRegistrar } from '@/components/WebMCPRegistrar';
+import { WebMCPRegistrar } from '@/components/webmcp-registrar';
 import type { WebMCPRegistrationState } from '@/webmcp/lifecycle';
 import { isWebMCPSupported } from '@/webmcp/tools';
 

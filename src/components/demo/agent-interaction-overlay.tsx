@@ -30,7 +30,6 @@ export function AgentInteractionOverlay({
 }: Props) {
   const isRunning = status === 'running';
   const target = step.target;
-  const result = step.result;
 
   const searchStep = completedSteps.find((s) => s.target === 'services') ?? (target === 'services' ? step : undefined);
   const areaStep = completedSteps.find((s) => s.target === 'service_area') ?? (target === 'service_area' ? step : undefined);

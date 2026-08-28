@@ -4,7 +4,7 @@ import { AppError, ErrorCodes } from '@/domain/errors';
 import { allocateResources, findAvailability, newAppointmentId } from '@/domain/scheduler';
 import { Business, Resource, Service } from '@/domain/types';
 
-describe('PR #2 remediation regressions', () => {
+describe('business isolation and domain regressions', () => {
   it('rejects create_appointment when postal code is outside service area', async () => {
     const search = await bookingService.searchServices('acme-hvac', 'AC');
     const serviceId = search.data.services[0].service_id;

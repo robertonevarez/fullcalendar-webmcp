@@ -32,7 +32,6 @@ import {
 } from '@/demo/walkthrough';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useReducedMotion } from '@/hooks/use-reduced-motion';
-import { spacing } from '@/lib/design-system';
 import { cn } from '@/lib/utils';
 
 type ChatMessage = {
@@ -427,18 +426,6 @@ export function CustomerConversation({
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
-
-    conversationRef.current = emptyConversationState();
-    setConversation(emptyConversationState());
-    setBusinessNotice(null);
-    setMessages([]);
-    setDraft('');
-    browserStateRef.current = 'blank';
-    setBrowserState('blank');
-    isSplitViewRef.current = false;
-    setIsSplitView(false);
-    setShowThinking(false);
-    setStatusText(null);
 
     void (async () => {
       try {

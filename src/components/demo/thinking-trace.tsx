@@ -18,17 +18,14 @@ export type ThinkingStatus = 'active' | 'resolved';
 const STAGES = [400, 500, 700, 900, 600];
 
 function useSequence(steps: number[], reducedMotion = false) {
-  const [stage, setStage] = useState(0);
+  const [stage, setStage] = useState(reducedMotion ? steps.length - 1 : 0);
   useEffect(() => {
-    if (reducedMotion) {
-      setStage(steps.length - 1);
-      return;
-    }
+    if (reducedMotion) return;
     if (stage >= steps.length - 1) return;
     const t = setTimeout(() => setStage((s) => s + 1), steps[stage]);
     return () => clearTimeout(t);
   }, [stage, steps, reducedMotion]);
-  return stage;
+  return reducedMotion ? steps.length - 1 : stage;
 }
 
 type Row = {
