@@ -3,86 +3,53 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { ArrowRightIcon } from 'lucide-react';
+import { ArrowUpRightIcon } from 'lucide-react';
 
-const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
-const DEMO_URL = '/demo';
+const GITHUB_CORE_URL = 'https://github.com/robertonevarez/protocoltooling';
+const DEMO_REPO_URL = 'https://github.com/robertonevarez/protocoltooling-demo';
 
-const NAV_ITEMS = [
-  { href: '/docs', label: 'Docs' },
-  { href: GITHUB_URL, label: 'GitHub', external: true },
-] as const;
-
-type SiteHeaderProps = {
-  /** Renders inside the landing hero shell — no outer container or sticky positioning. */
-  embedded?: boolean;
-  /** Single-line landing nav: brand on the left, links on the right. */
-  landing?: boolean;
-};
-
-export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProps) {
+export function SiteHeader() {
   const pathname = usePathname();
 
   function isActive(href: string) {
-    return pathname === href || pathname.startsWith(`${href}/`);
-  }
-
-  const brand = (
-    <Button variant="ghost" nativeButton={false} render={<Link href="/" />} className="tracking-tight text-lg font-semibold">
-      Protocol Tooling
-    </Button>
-  );
-
-  const actions = (
-    <div className="flex items-center gap-4">
-      {NAV_ITEMS.map((item) =>
-        'external' in item ? (
-          <Button
-            key={item.href}
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            render={
-              <a href={item.href} rel="noopener noreferrer" target="_blank" />
-            }
-          >
-            {item.label}
-          </Button>
-        ) : (
-          <Button
-            key={item.href}
-            variant="ghost"
-            size="sm"
-            nativeButton={false}
-            render={<Link href={item.href} />}
-            aria-current={isActive(item.href) ? 'page' : undefined}
-          >
-            {item.label}
-          </Button>
-        ),
-      )}
-
-      <Button size="sm" nativeButton={false} render={<Link href={DEMO_URL} />}>
-        Try demo
-        <ArrowRightIcon />
-      </Button>
-    </div>
-  );
-
-  if (landing || embedded) {
-    return (
-      <header className="flex shrink-0 items-center justify-between">
-        {brand}
-        {actions}
-      </header>
-    );
+    return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b bg-background">
-      <div className="container flex items-center justify-between px-4">
-        {brand}
-        {actions}
+    <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur-xs">
+      <div className="container mx-auto flex h-14 items-center justify-between px-4">
+        <div className="flex items-center gap-6">
+          <Link href="/" className="text-sm font-semibold tracking-tight">
+            Protocol Tooling
+            <span className="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-normal text-muted-foreground">
+              Core
+            </span>
+          </Link>
+          <nav className="flex items-center gap-4 text-sm">
+            <Link
+              href="/docs"
+              className={isActive('/docs') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}
+            >
+              Docs &amp; Tools
+            </Link>
+            <Link
+              href="/businesses/acme-hvac"
+              className={isActive('/businesses') ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'}
+            >
+              Reference Endpoint
+            </Link>
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Button variant="outline" size="sm" nativeButton={false} render={<a href={DEMO_REPO_URL} target="_blank" rel="noopener noreferrer" />}>
+            Showcase Repo
+            <ArrowUpRightIcon className="size-3.5" />
+          </Button>
+          <Button size="sm" nativeButton={false} render={<a href={GITHUB_CORE_URL} target="_blank" rel="noopener noreferrer" />}>
+            GitHub
+          </Button>
+        </div>
       </div>
     </header>
   );

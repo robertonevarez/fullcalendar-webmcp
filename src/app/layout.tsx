@@ -6,23 +6,23 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Protocol Tooling — Infrastructure for the agent-native web',
+    default: 'Protocol Tooling — Agent-native scheduling infrastructure',
     template: '%s · Protocol Tooling',
   },
   description:
-    'Infrastructure for the agent-native web. This implementation exposes service-business scheduling and booking capabilities to personal AI agents through WebMCP.',
+    'Agent-native scheduling infrastructure for service businesses, exposed through WebMCP.',
   openGraph: {
-    title: 'Protocol Tooling — Infrastructure for the agent-native web',
+    title: 'Protocol Tooling — Agent-native scheduling infrastructure',
     description:
-      'Infrastructure for the agent-native web. This implementation exposes service-business scheduling and booking capabilities to personal AI agents through WebMCP.',
+      'Agent-native scheduling infrastructure for service businesses, exposed through WebMCP.',
     type: 'website',
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn('h-dvh font-sans overflow-hidden', instrumentSans.variable)}>
-      <body className="flex h-dvh max-h-dvh flex-col overflow-hidden text-foreground antialiased selection:bg-muted">
+    <html lang="en" className={cn('min-h-dvh font-sans', instrumentSans.variable)}>
+      <body className="flex min-h-dvh flex-col bg-background text-foreground antialiased selection:bg-muted">
         <RootChrome>{children}</RootChrome>
       </body>
     </html>

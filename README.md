@@ -1,113 +1,151 @@
-# Protocol Tooling
+# Protocol Tooling (Core Infrastructure)
 
-Protocol Tooling is infrastructure for the agent-native web.
+> Agent-native scheduling infrastructure for service businesses, exposed through WebMCP.
 
-This repository demonstrates that concept through service-business scheduling and booking capabilities exposed to personal AI agents via WebMCP, built for the [OpenAI WebMCP Challenge](https://webmcp.devpost.com/).
+This repository is the canonical core implementation of **Protocol Tooling**. It provides the deterministic domain logic, booking service, availability engine, multi-resource constraints, service-area boundaries, PostgreSQL persistence layer, REST API, and WebMCP tool registration lifecycle for personal AI agents.
 
-Personal AI agents discover and invoke structured WebMCP tools on a per-business page. The scheduling engine is generic across field service, salon, clinic, and multi-resource auto workflows.
+Looking for the interactive product showcase and visual demo? See [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo).
 
-> Your customers have agents. Let them book you.
-
-## Quick start
-
-```bash
-npm install
-cp .env.example .env.local
-# Set DATABASE_URL (PlanetScale :6432, or local Postgres for dev)
-npm run db:migrate
-npm run db:seed
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000). The landing page explains the product; [`/demo`](http://localhost:3000/demo) is a guided product walkthrough; each business page at `/businesses/{slug}` registers eight WebMCP tools.
-
-```bash
-npm test
-npm run build
-npm run db:seed   # intentional catalog / conflict reseed
-```
-
-## Seeded businesses
-
-| Slug | Archetype |
-|------|-----------|
-| `acme-hvac` | HVAC / home services (field, service area) |
-| `blue-pipe-plumbing` | Plumbing / field services |
-| `northline-salon` | Salon / provider appointments |
-| `harbor-physical-therapy` | Healthcare / wellness (provider + room) |
-| `mesa-auto-service` | Auto service (technician + service bay) |
-
-## WebMCP tools (per business page)
-
-- `search_services`
-- `get_service_details`
-- `check_service_area`
-- `get_availability`
-- `create_appointment`
-- `get_appointment`
-- `reschedule_appointment`
-- `cancel_appointment`
-
-Business context is determined by the page URL: `/businesses/{slug}`.
-
-## WebMCP verification status
-
-| Path | Status |
-|------|--------|
-| Automated tests | Passing |
-| Chrome `executeTool` lifecycle | Verified (create / get / reschedule / cancel) |
-| Model Context Tool Inspector + NL agent | Verified (positive `78701`, negative `90210`) |
-| ChatGPT in-app browser | Primary judge path — confirm on the deployed HTTPS URL |
-
-### Manual testing
-
-1. **Primary:** Open a business page in **ChatGPT's in-app browser**.
-2. **Secondary:** Chrome with `chrome://flags/#enable-webmcp-testing` + Model Context Tool Inspector.
-3. Visit `/businesses/acme-hvac` and try:
-
-```text
-I need someone to look at my AC tomorrow after 4.
-The upstairs isn't cooling.
-I'm in 78701.
-Find the right service and tell me what's available.
-```
-
-Negative constraint check:
-
-```text
-I need an AC tune-up in 90210.
-```
+---
 
 ## Architecture
 
-```
-Browser / personal agent
-        ↓ WebMCP
-Vercel-hosted Next.js 16
+```text
+Browser / Personal Agent (ChatGPT / Chrome WebMCP)
+        ↓  WebMCP document.modelContext.registerTool()
+Vercel-hosted Next.js API Routes (/api/businesses/[slug]/*)
         ↓
-BookingService + deterministic scheduler
+BookingService (Application Layer)
         ↓
-PlanetScale Postgres (PgBouncer)
+Domain Scheduler & Multi-Resource Constraints (Pure TS Engine)
+        ↓
+PostgreSQL Persistence (PlanetScale PgBouncer / Transaction Isolation)
 ```
 
-See [docs/deployment.md](docs/deployment.md), [docs/postgres-migration.md](docs/postgres-migration.md), and [docs/phase-1-vertical-slice.md](docs/phase-1-vertical-slice.md).
+---
 
-Developer tool reference: [/docs](/docs) when the app is running.
+## Capabilities & WebMCP Tools
 
-## Persistence & deployment
+Every business endpoint (`/businesses/[slug]`) registers 8 standardized WebMCP tools directly into the browser agent runtime:
 
-- **Canonical production:** Vercel + PlanetScale Postgres (no local filesystem dependency).
-- **Live demo:** https://protocoltooling.com
-- **Repository:** https://github.com/robertonevarez/protocoltooling
-- **Local:** set `DATABASE_URL` to PlanetScale (preferred) or optional local Postgres for convenience; then `npm run db:migrate` and `npm run db:seed`.
-- Details: [docs/deployment.md](docs/deployment.md).
+| Tool Name | Type | Purpose |
+|-----------|------|---------|
+| `search_services` | Read-only | Deterministic keyword and semantic service discovery |
+| `get_service_details` | Read-only | Returns service metadata, duration, price, and location policy |
+| `check_service_area` | Read-only | Validates postal code eligibility against service area rules |
+| `get_availability` | Read-only | Generates conflict-free viable appointment slots |
+| `create_appointment` | Mutation | Atomically books appointment with idempotency & re-validation |
+| `get_appointment` | Read-only | Retrieves booking details and status by appointment ID |
+| `reschedule_appointment` | Mutation | Atomically moves an appointment to a new slot |
+| `cancel_appointment` | Mutation | Cancels an appointment and releases resource allocations |
 
-## Project identity
+---
 
-| Surface | Canonical form |
-|---------|----------------|
-| Human-facing brand | **Protocol Tooling** |
-| Technical identifier | `protocoltooling` |
+## Seeded Archetypes & Reference Endpoints
+
+The repository includes pre-configured reference businesses representing diverse service scheduling archetypes:
+
+- **Field Service / HVAC (`acme-hvac`):** Single resource dispatch with geographic postal code validation (Austin TX 78701 eligible, 90210 outside service area).
+- **Field Service / Plumbing (`blue-pipe-plumbing`):** Residential service dispatch with emergency routing.
+- **Salon / Provider (`northline-salon`):** Provider-centric booking with no geographic restriction.
+- **Healthcare / Physical Therapy (`harbor-physical-therapy`):** Multi-resource scheduling (Licensed Physical Therapist + Private Treatment Room).
+- **Auto Service (`mesa-auto-service`):** Multi-resource co-allocation (Certified Technician + Hydraulic Service Bay).
+
+---
+
+## Quick Start
+
+### 1. Installation
+
+```bash
+npm install
+```
+
+### 2. Environment Setup
+
+```bash
+cp .env.example .env.local
+# Set DATABASE_URL to your PostgreSQL connection string (PlanetScale or local)
+```
+
+### 3. Database Migration & Seeding
+
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+### 4. Start Development Server
+
+```bash
+npm run dev
+```
+
+Visit [http://localhost:3000](http://localhost:3000) for the developer overview and [http://localhost:3000/docs](http://localhost:3000/docs) for the full WebMCP tool specifications.
+
+---
+
+## Testing & Verification
+
+Run the comprehensive domain and integration test suite:
+
+```bash
+npm test
+```
+
+### Test Coverage
+
+- **Domain Schedulers:** Resource allocation, multi-resource constraints, slot generation, buffer times, timezone handling.
+- **Service Area & Search:** Negative postal code rejections, keyword relevance, prefix matching.
+- **WebMCP Tool Contract:** Schema compliance, execution wrappers, error serialization.
+- **Concurrency & Idempotency:** Concurrent creates/cancels/reschedules, duplicate idempotency key reuse across businesses.
+- **Remediation:** Business isolation, cross-tenant scoping, error propagation.
+
+---
+
+## Repository Structure
+
+```text
+src/
+├── app/
+│   ├── api/businesses/[slug]/    # REST API endpoints for WebMCP tools
+│   ├── businesses/[slug]/        # Minimal reference WebMCP integration page
+│   ├── docs/                     # WebMCP tool specifications
+│   ├── layout.tsx
+│   └── page.tsx                  # Core developer overview
+├── components/
+│   ├── webmcp-business-provider.tsx # React Context provider for WebMCP
+│   ├── webmcp-registrar.tsx         # Page lifecycle registration hook
+│   └── webmcp-status.tsx            # Developer diagnostics panel
+├── db/
+│   ├── client.ts                 # PostgreSQL connection pool (pg)
+│   ├── repository.ts             # Atomic queries, advisory locking, transactions
+│   ├── mappers.ts                # Database row to domain type mappers
+│   ├── init.ts                   # Schema initialization
+│   └── seed.ts                   # Seed data loader
+├── domain/
+│   ├── scheduler.ts              # Pure scheduling algorithms & slot generation
+│   ├── search.ts                 # Service search and ranking
+│   ├── types.ts                  # Pure domain types (Business, Service, Resource, Slot)
+│   └── errors.ts                 # Structured error codes and AppError class
+├── services/
+│   └── booking-service.ts        # Application service layer
+└── webmcp/
+    ├── tools.ts                  # WebMCP tool definitions and execution handlers
+    └── lifecycle.ts              # Browser registration and polling lifecycle
+docs/                             # Technical briefs and architecture documentation
+db/migrations/                    # SQL schema migrations
+scripts/                          # Migration and seeding CLI scripts
+tests/                            # Vitest domain, contract, and e2e tests
+```
+
+---
+
+## Related Repositories
+
+- **Demo & Frontend Showcase:** [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo) — Interactive walkthrough, animated AI agent simulation, visual overlay, and marketing landing page.
+
+---
 
 ## License
 
