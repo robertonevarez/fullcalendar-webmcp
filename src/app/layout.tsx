@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { RootChrome } from '@/components/root-chrome';
-import { inter } from '@/lib/fonts';
+import { geistMono, inter } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import './globals.css';
 
@@ -21,7 +21,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cn('min-h-dvh font-sans', inter.variable)}>
+    <html
+      lang="en"
+      className={cn('min-h-dvh font-sans', inter.variable, geistMono.variable)}
+    >
       <body className="flex min-h-dvh flex-col bg-muted text-foreground antialiased selection:bg-muted">
         <RootChrome>{children}</RootChrome>
       </body>

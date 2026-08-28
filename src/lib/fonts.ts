@@ -1,4 +1,4 @@
-import { Inter } from 'next/font/google';
+import { Geist_Mono, Inter } from 'next/font/google';
 
 /** Site-wide UI type. */
 export const inter = Inter({
@@ -7,3 +7,9 @@ export const inter = Inter({
   display: 'swap',
 });
 
+/** Technical / protocol monospace (WebMCP inspect, code). */
+export const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+});
