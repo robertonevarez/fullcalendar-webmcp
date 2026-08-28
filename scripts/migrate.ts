@@ -5,7 +5,10 @@
  */
 import fs from 'fs';
 import path from 'path';
+import { loadEnvConfig } from '@next/env';
 import { Client } from 'pg';
+
+loadEnvConfig(process.cwd());
 
 function migrationConnectionString(): string {
   const url = process.env.DATABASE_MIGRATE_URL ?? process.env.DATABASE_URL;
