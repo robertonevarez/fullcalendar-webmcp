@@ -59,6 +59,15 @@
   }
 }
 
+@keyframes shimmer-text {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @keyframes pop-in {
   from {
     transform: scale(0.6);
@@ -122,7 +131,88 @@
   }
 
   body {
-    @apply min-h-screen bg-background text-foreground antialiased;
+    @apply min-h-dvh text-foreground antialiased;
+    background-color: var(--background);
+    background-image:
+      radial-gradient(
+        ellipse 120% 75% at 50% 105%,
+        rgba(244, 114, 182, 0.28) 0%,
+        rgba(251, 191, 36, 0.24) 22%,
+        rgba(52, 211, 153, 0.22) 44%,
+        rgba(56, 189, 248, 0.24) 66%,
+        rgba(167, 139, 250, 0.22) 84%,
+        transparent 100%
+      );
+    background-attachment: fixed;
+  }
+}
+
+@utility scroll-fade {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16px,
+    black calc(100% - 16px),
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16px,
+    black calc(100% - 16px),
+    transparent 100%
+  );
+}
+
+@utility scroll-fade-t {
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16px
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 16px
+  );
+}
+
+/* Landing page: preserve breathing room; only tighten on very short viewports */
+@media (max-height: 720px) {
+  .landing-shell {
+    padding-bottom: 1.25rem;
+    padding-top: 1rem;
   }
 
+  .landing-chrome {
+    padding-block: 0.125rem;
+  }
+
+  .landing-demo-block {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-height: 600px) {
+  .landing-shell {
+    padding-bottom: 0.75rem;
+    padding-top: 0.75rem;
+  }
+
+  .landing-subhead {
+    display: none;
+  }
+}
+
+@utility scroll-fade-b {
+  mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    black 16px
+  );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    black 16px
+  );
 }

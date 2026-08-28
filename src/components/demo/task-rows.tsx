@@ -26,7 +26,7 @@ function useTick(intervals: number[]) {
 }
 
 export function SpinnerRing({ active, children }: { active?: boolean; children?: React.ReactNode }) {
-  const size = 24, stroke = 2;
+  const size = 20, stroke = 2;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   return (
@@ -44,7 +44,7 @@ export function SpinnerRing({ active, children }: { active?: boolean; children?:
           />
         )}
       </svg>
-      <span className="relative text-[10.5px] font-semibold tabular-nums text-ink">{children}</span>
+      <span className="relative text-xs font-semibold tabular-nums text-ink">{children}</span>
     </span>
   );
 }
@@ -52,7 +52,7 @@ export function SpinnerRing({ active, children }: { active?: boolean; children?:
 export function Badge({ tone, children }: { tone: 'red' | 'green'; children: React.ReactNode }) {
   return (
     <span
-      className={`flex size-5.5 shrink-0 items-center justify-center rounded-full text-white
+      className={`flex size-5 shrink-0 items-center justify-center rounded-full text-white
         ${tone === 'red' ? 'bg-red' : 'bg-green'}`}
       style={{ animation: 'pop-in 300ms cubic-bezier(0.23,1,0.32,1) both' }}
     >
@@ -83,7 +83,7 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
       label: 'Verified vendor records',
       amount: '12 suppliers',
       pill: (
-        <span className="inline-flex h-5.5 items-center rounded-full bg-green-tint px-2 text-[12px] font-medium text-green">
+        <span className="inline-flex h-5 items-center rounded-full bg-green-tint px-1.5 text-xs font-medium text-green">
           Completed
         </span>
       ),
@@ -117,11 +117,11 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
       amount: '2 messages',
       pill:
         row2 === 'failed' ? (
-          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-red-tint px-2 text-[12px] font-medium text-red" style={{ animation: 'fade-in 200ms ease-out both' }}>
+          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-red-tint px-1.5 text-xs font-medium text-red" style={{ animation: 'fade-in 200ms ease-out both' }}>
             Failed <span style={{ animation: 'spin 1.2s linear infinite' }} className="flex">{RetryIcon}</span>
           </span>
         ) : row2 === 'done' ? (
-          <span className="inline-flex h-5.5 items-center gap-1.5 rounded-full bg-green-tint px-2 text-[12px] font-medium text-green" style={{ animation: 'fade-in 200ms ease-out both' }}>
+          <span className="inline-flex h-5 items-center gap-1 rounded-full bg-green-tint px-1.5 text-xs font-medium text-green" style={{ animation: 'fade-in 200ms ease-out both' }}>
             Completed
           </span>
         ) : null,
@@ -156,15 +156,15 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
               type="button"
               aria-expanded={open}
               onClick={() => setManualOpen((current) => ({ ...current, [row.key]: !open }))}
-              className="flex h-11 w-full items-center gap-2.5 px-2.5 text-left"
+              className="flex h-9 w-full items-center gap-2 px-2 text-left text-xs"
             >
               <span className="flex size-6 shrink-0 items-center justify-center">
                 {row.badge}
               </span>
-              <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-ink">
+              <span className="min-w-0 flex-1 truncate font-medium text-ink">
                 {row.label}
               </span>
-              <span className="text-[13px] text-ink-2 tabular-nums">{row.amount}</span>
+              <span className="text-ink-2 tabular-nums">{row.amount}</span>
               {row.pill}
               <span
                 aria-hidden="true"
@@ -190,9 +190,9 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
               }}
             >
               <div className="overflow-hidden">
-                <div className="mb-2.5 grid grid-cols-[24px_1fr] gap-2.5 px-2.5">
+                <div className="mb-2 grid grid-cols-[20px_1fr] gap-2 px-2">
                   <span aria-hidden className="mx-auto h-full w-px bg-line" />
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-col gap-1">
                     {row.details.map((d, j) => (
                       <div
                         key={d.label}
@@ -203,8 +203,8 @@ export default function TaskRows({ variant = 'Capsules' }: { variant?: string })
                             : undefined
                         }
                       >
-                        <span className="text-[13px] text-ink-2">{d.label}</span>
-                        <span className="font-mono text-[12.5px] text-ink-3 tabular-nums">
+                        <span className="text-ink-2">{d.label}</span>
+                        <span className="font-mono text-ink-3 tabular-nums">
                           {d.meta}
                         </span>
                       </div>

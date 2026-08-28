@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <Hero />
     </main>
   );

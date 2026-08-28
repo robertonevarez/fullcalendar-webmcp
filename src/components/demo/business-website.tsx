@@ -13,6 +13,7 @@ type Props = {
   isAgentAccess?: boolean;
   overlay?: ReactNode;
   browserState?: BrowserState;
+  showHeader?: boolean;
   className?: string;
 };
 
@@ -25,6 +26,7 @@ export function BusinessWebsite({
   isAgentAccess = false,
   overlay,
   browserState = 'loaded',
+  showHeader = true,
   className,
 }: Props) {
   const isLoaded = browserState === 'loaded';
@@ -37,13 +39,13 @@ export function BusinessWebsite({
       data-agent-access={isAgentAccess ? 'true' : 'false'}
       data-browser-state={browserState}
       className={cn(
-        'relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans text-[#222]',
+        'relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans text-xs leading-snug text-[#222]',
         className,
       )}
       aria-label={`${config.businessName} website`}
     >
       {/* Top Browser Toolbar Chrome */}
-      <BrowserToolbar url={websiteUrl} browserState={browserState} />
+      {showHeader && <BrowserToolbar url={websiteUrl} browserState={browserState} />}
 
       {/* Website Body with smooth ease-in and ease-out */}
       <div
@@ -55,23 +57,24 @@ export function BusinessWebsite({
         )}
       >
         <ScrollArea
+          hideScrollbar
           className="min-h-0 flex-1"
           viewportClassName={cn(
-            'p-3 text-[12px] leading-tight transition-all duration-500 ease-in-out',
+            'p-2 text-xs leading-tight transition-all duration-500 ease-in-out',
             isAgentAccess && 'opacity-20 blur-[2px] scale-[0.99] pointer-events-none select-none',
           )}
         >
-          <div className="pointer-events-none mx-auto w-full select-none space-y-3 pb-8">
+          <div className="pointer-events-none mx-auto w-full select-none space-y-2 pb-8">
             {/* Top Brand & Search Header */}
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#ddd] pb-2">
             <div className="flex items-baseline gap-2">
-              <span className="text-[22px] font-black tracking-tight text-[#d32f2f]">
+              <span className="text-xs font-black tracking-tight text-[#d32f2f]">
                 acme
               </span>
-              <span className="text-[22px] font-bold tracking-tight text-[#111]">
+              <span className="text-xs font-bold tracking-tight text-[#111]">
                 hvac
               </span>
-              <span className="hidden text-[11px] text-[#666] sm:inline">
+              <span className="hidden text-xs text-[#666] sm:inline">
                 replace the heat — certified emergency heating &amp; air conditioning dispatch
               </span>
             </div>
@@ -80,12 +83,12 @@ export function BusinessWebsite({
                 readOnly
                 tabIndex={-1}
                 value="e.g. ac repair, 78701"
-                className="w-40 rounded-none border border-[#999] px-2 py-0.5 text-[11px] text-[#555] outline-none"
+                className="w-40 rounded-none border border-[#999] px-2 py-0.5 text-xs text-[#555] outline-none"
               />
               <button
                 type="button"
                 tabIndex={-1}
-                className="border border-[#777] bg-[#eee] px-2.5 py-0.5 text-[11px] font-bold text-[#222]"
+                className="border border-[#777] bg-[#eee] px-2 py-0.5 text-xs font-bold text-[#222]"
               >
                 Search
               </button>
@@ -93,36 +96,36 @@ export function BusinessWebsite({
           </div>
 
           {/* Austin Heat Advisory Banner */}
-          <div className="flex items-center justify-between border border-[#e65100] bg-[#fff3e0] px-2.5 py-1 text-[11px] text-[#b71c1c]">
+          <div className="flex items-center justify-between border border-[#e65100] bg-[#fff3e0] px-2 py-1 text-xs text-[#b71c1c]">
             <div>
               <span className="font-bold">⚠️ AUSTIN HEAT ADVISORY (104°F High):</span>{' '}
               Priority dispatch active for systems blowing warm air or experiencing frozen coils.
             </div>
-            <span className="hidden text-[10px] text-[#e65100] sm:inline">Dispatch Line: (512) 555-0199</span>
+            <span className="hidden text-xs text-[#e65100] sm:inline">Dispatch Line: (512) 555-0199</span>
           </div>
 
           {/* Dual Big Banner Ads */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <div className="border-2 border-[#0033aa] bg-[#0044cc] p-2 text-center text-white shadow-xs">
-              <div className="text-[12px] font-black tracking-wide">
+              <div className="text-xs font-black tracking-wide">
                 ★ 24/7 EMERGENCY DISPATCH ★
               </div>
-              <div className="text-[10px] opacity-90">
+              <div className="text-xs opacity-90">
                 call (512) 555-0199 • Austin, Round Rock, Cedar Park &amp; Travis County
               </div>
             </div>
             <div className="border-2 border-[#006611] bg-[#008822] p-2 text-center text-white shadow-xs">
-              <div className="text-[12px] font-black tracking-wide">
+              <div className="text-xs font-black tracking-wide">
                 ★ $20 OFF FIRST DIAGNOSTIC VISIT ★
               </div>
-              <div className="text-[10px] opacity-90">
+              <div className="text-xs opacity-90">
                 flat-rate pricing • certified technicians • Texas License #TACLA019284E
               </div>
             </div>
           </div>
 
           {/* Solid Blue Navbar */}
-          <nav className="flex items-center justify-between bg-[#003399] px-3 py-1.5 text-[11px] font-bold text-white">
+          <nav className="flex items-center justify-between bg-[#003399] px-3 py-1 text-xs font-bold text-white">
             <div className="flex flex-wrap gap-x-3.5 gap-y-1">
               <span className="cursor-pointer underline">home</span>
               <span className="cursor-pointer underline">services (18)</span>
@@ -139,12 +142,12 @@ export function BusinessWebsite({
           {/* Main 3-Column Layout */}
           <div className="grid grid-cols-1 gap-3 pt-1 md:grid-cols-[9.5rem_1fr_10.5rem]">
             {/* Left Sidebar: Categories & Badges */}
-            <aside className="space-y-3">
+            <aside className="space-y-2">
               <div className="border border-[#ddd]">
-                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-[11px] font-bold text-black">
+                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-xs font-bold text-black">
                   Service Categories
                 </div>
-                <ul className="space-y-1 p-2 text-[11px] text-[#0033cc]">
+                <ul className="space-y-1 p-2 text-xs text-[#0033cc]">
                   <li className="underline">AC Diagnostics <span className="text-[#666]">(14)</span></li>
                   <li className="underline">Heating &amp; Furnaces <span className="text-[#666]">(8)</span></li>
                   <li className="underline">Seasonal Tune-Ups <span className="text-[#666]">(6)</span></li>
@@ -159,7 +162,7 @@ export function BusinessWebsite({
               </div>
 
               {/* Service Certifications Box */}
-              <div className="border border-[#ddd] bg-[#fbfbfb] p-2 text-[10px] space-y-1.5">
+              <div className="border border-[#ddd] bg-[#fbfbfb] p-2 text-xs space-y-1.5">
                 <div className="font-bold text-[#111] border-b border-[#eee] pb-1">Certifications &amp; License</div>
                 <div className="flex items-center gap-1 text-[#333]">
                   <span className="font-mono font-bold text-[#0033aa]">[EPA-608]</span>
@@ -180,31 +183,31 @@ export function BusinessWebsite({
               </div>
 
               {/* Brand Support Box */}
-              <div className="border border-[#ddd] bg-[#fbfbfb] p-2 text-[10px] space-y-1">
+              <div className="border border-[#ddd] bg-[#fbfbfb] p-2 text-xs space-y-1">
                 <div className="font-bold text-[#111] border-b border-[#eee] pb-1">Brands Serviced</div>
-                <div className="text-[10px] text-[#555] leading-relaxed">
+                <div className="text-xs text-[#555] leading-relaxed">
                   Carrier • Trane • Lennox • Rheem • Goodman • York • Daikin • Ruud • American Standard
                 </div>
               </div>
 
               {/* Technician On Duty Photo Mock */}
               <div className="border border-[#ddd] p-2 bg-[#fdfdfd] space-y-1.5">
-                <div className="font-bold text-[10px] text-[#222]">On-Call Dispatch Crew</div>
+                <div className="font-bold text-xs text-[#222]">On-Call Dispatch Crew</div>
                 <div className="flex items-center gap-2 pt-0.5">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xs border border-[#999] bg-[#e4e7eb] font-mono text-[10px] font-bold text-[#335588]">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-xs border border-[#999] bg-[#e4e7eb] font-mono text-xs font-bold text-[#335588]">
                     TECH
                   </div>
-                  <div className="text-[10px] leading-tight">
+                  <div className="text-xs leading-tight">
                     <div className="font-bold text-[#111]">Dave H.</div>
                     <div className="text-[#666]">Lead Tech (22 yrs exp)</div>
                     <div className="text-[#2e7d32] font-semibold">● Active in 78701</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 border-t border-[#eee] pt-1">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xs border border-[#999] bg-[#e4e7eb] font-mono text-[10px] font-bold text-[#335588]">
+                  <div className="flex size-7 shrink-0 items-center justify-center rounded-xs border border-[#999] bg-[#e4e7eb] font-mono text-xs font-bold text-[#335588]">
                     TECH
                   </div>
-                  <div className="text-[10px] leading-tight">
+                  <div className="text-xs leading-tight">
                     <div className="font-bold text-[#111]">Carlos R.</div>
                     <div className="text-[#666]">Truck #2 • South Austin</div>
                     <div className="text-[#2e7d32] font-semibold">● Active in 78704</div>
@@ -214,33 +217,33 @@ export function BusinessWebsite({
             </aside>
 
             {/* Center Content: Description + Featured Box + Listings Table + FAQs */}
-            <main className="space-y-3">
-              <p className="text-[11px] text-[#555]">
+            <main className="space-y-2">
+              <p className="text-xs text-[#555]">
                 family-owned independent hvac service company in austin since 1994. flat-rate verified pricing, certified diagnostics, and guaranteed same-day dispatch.
               </p>
 
               {/* Featured Card */}
               <div className="border border-[#cca300] bg-[#fffdf0]">
-                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-[11px] font-bold text-black">
+                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-xs font-bold text-black">
                   ★ Featured Service
                 </div>
-                <div className="space-y-1.5 p-2.5">
-                  <div className="flex flex-wrap items-baseline gap-1.5">
-                    <span className="font-bold text-[#0033cc] underline text-[13px]">
+                <div className="space-y-1.5 p-2">
+                  <div className="flex flex-wrap items-baseline gap-1">
+                    <span className="font-bold text-[#0033cc] underline text-xs">
                       {config.services[0]?.name || 'AC Diagnostic Visit'}
                     </span>
-                    <span className="border border-[#b7e1cd] bg-[#e6f4ea] px-1 font-mono text-[9px] font-bold text-[#137333]">
+                    <span className="border border-[#b7e1cd] bg-[#e6f4ea] px-1 font-mono text-xs font-bold text-[#137333]">
                       FLAT-RATE $89
                     </span>
-                    <span className="text-[10px] text-[#b8860b]">★★★★★ (184 reviews)</span>
+                    <span className="text-xs text-[#b8860b]">★★★★★ (184 reviews)</span>
                   </div>
-                  <div className="text-[11px] text-[#444]">
+                  <div className="text-xs text-[#444]">
                     replaces Mystery repair fees &amp; unverified contractor hourly quotes
                   </div>
-                  <p className="text-[11px] leading-snug text-[#555]">
+                  <p className="text-xs leading-snug text-[#555]">
                     Comprehensive on-site inspection covering compressor health, refrigerant pressure check, electrical capacitors, evaporator coils, and thermostat calibration.
                   </p>
-                  <div className="flex items-center justify-between pt-0.5 text-[10px]">
+                  <div className="flex items-center justify-between pt-0.5 text-xs">
                     <span className="text-[#0033cc] underline cursor-pointer">
                       view technician diagnostic checklist »
                     </span>
@@ -252,112 +255,112 @@ export function BusinessWebsite({
               {/* Services Listings Table (Extended Full Catalog) */}
               <div className="space-y-1">
                 <div className="flex items-baseline justify-between">
-                  <div className="text-[11px] font-bold text-[#111]">
+                  <div className="text-xs font-bold text-[#111]">
                     All Services &amp; Flat Rates
                   </div>
-                  <span className="text-[10px] text-[#666]">Updated daily for Travis County</span>
+                  <span className="text-xs text-[#666]">Updated daily for Travis County</span>
                 </div>
-                <table className="w-full border-collapse border border-[#ccc] text-[11px]">
+                <table className="w-full border-collapse border border-[#ccc] text-xs">
                   <thead>
                     <tr className="bg-[#003399] text-left text-white">
-                      <th className="p-1.5 font-bold">Service Description</th>
-                      <th className="p-1.5 font-bold">Est. Duration</th>
-                      <th className="p-1.5 font-bold">Standard Rate</th>
-                      <th className="p-1.5 font-bold">Rating</th>
-                      <th className="p-1.5 text-right font-bold">Status</th>
+                      <th className="p-1 font-bold">Service Description</th>
+                      <th className="p-1 font-bold">Est. Duration</th>
+                      <th className="p-1 font-bold">Standard Rate</th>
+                      <th className="p-1 font-bold">Rating</th>
+                      <th className="p-1 text-right font-bold">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {config.services.map((svc) => (
                       <tr key={svc.id} className="border-b border-[#ddd] odd:bg-white even:bg-[#f9f9f9]">
-                        <td className="p-1.5 font-bold text-[#0033cc] underline">
+                        <td className="p-1 font-bold text-[#0033cc] underline">
                           {svc.name}
                         </td>
-                        <td className="p-1.5 text-[#555]">
+                        <td className="p-1 text-[#555]">
                           ~{svc.duration_minutes} mins
                         </td>
-                        <td className="p-1.5 font-mono font-bold text-[#2e7d32]">
+                        <td className="p-1 font-mono font-bold text-[#2e7d32]">
                           ${svc.price_dollars.toFixed(2)}
                         </td>
-                        <td className="p-1.5 text-[#b8860b]">
+                        <td className="p-1 text-[#b8860b]">
                           ★★★★★
                         </td>
-                        <td className="p-1.5 text-right text-[#0033cc] underline">
+                        <td className="p-1 text-right text-[#0033cc] underline">
                           Bookable
                         </td>
                       </tr>
                     ))}
                     <tr className="border-b border-[#ddd] bg-white">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Emergency Coil &amp; Capacitor Repair
                       </td>
-                      <td className="p-1.5 text-[#555]">~60 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$149.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~60 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$149.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-[#f9f9f9]">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Refrigerant Pressure Audit &amp; Leak Test
                       </td>
-                      <td className="p-1.5 text-[#555]">~60 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$139.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★☆</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~60 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$139.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★☆</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-white">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Condenser Fan Motor Replacement
                       </td>
-                      <td className="p-1.5 text-[#555]">~75 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$189.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~75 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$189.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-[#f9f9f9]">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Blower Motor Diagnostics &amp; Electrical Check
                       </td>
-                      <td className="p-1.5 text-[#555]">~60 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$119.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★☆</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~60 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$119.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★☆</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-white">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Smart Thermostat Installation &amp; Setup
                       </td>
-                      <td className="p-1.5 text-[#555]">~45 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$69.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~45 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$69.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-[#f9f9f9]">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Air Duct Flow &amp; Filter Balancing
                       </td>
-                      <td className="p-1.5 text-[#555]">~45 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$49.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~45 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$49.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-white">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Evaporator Coil Chemical Deep Clean
                       </td>
-                      <td className="p-1.5 text-[#555]">~90 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$169.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Bookable</td>
+                      <td className="p-1 text-[#555]">~90 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$169.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Bookable</td>
                     </tr>
                     <tr className="border-b border-[#ddd] bg-[#f9f9f9]">
-                      <td className="p-1.5 font-bold text-[#0033cc] underline">
+                      <td className="p-1 font-bold text-[#0033cc] underline">
                         Commercial Rooftop Unit Package Inspection
                       </td>
-                      <td className="p-1.5 text-[#555]">~120 mins</td>
-                      <td className="p-1.5 font-mono font-bold text-[#2e7d32]">$249.00</td>
-                      <td className="p-1.5 text-[#b8860b]">★★★★★</td>
-                      <td className="p-1.5 text-right text-[#0033cc] underline">Priority</td>
+                      <td className="p-1 text-[#555]">~120 mins</td>
+                      <td className="p-1 font-mono font-bold text-[#2e7d32]">$249.00</td>
+                      <td className="p-1 text-[#b8860b]">★★★★★</td>
+                      <td className="p-1 text-right text-[#0033cc] underline">Priority</td>
                     </tr>
                   </tbody>
                 </table>
@@ -365,25 +368,25 @@ export function BusinessWebsite({
 
               {/* Troubleshooting FAQs Box */}
               <div className="border border-[#ddd] p-3 bg-[#fdfdfd] space-y-2">
-                <div className="font-bold text-[11px] text-[#111] border-b border-[#eee] pb-1">
+                <div className="font-bold text-xs text-[#111] border-b border-[#eee] pb-1">
                   Common AC Troubleshooting FAQs
                 </div>
-                <div className="space-y-1.5 text-[11px] text-[#444]">
+                <div className="space-y-1.5 text-xs text-[#444]">
                   <div>
                     <strong className="text-[#0033cc]">Q: Why is my AC running but blowing warm air?</strong>
-                    <p className="text-[10px] text-[#666] mt-0.5">
+                    <p className="text-xs text-[#666] mt-0.5">
                       A: Most frequently caused by a blown dual-run capacitor preventing the outdoor compressor from engaging, frozen coils due to a clogged air filter, or an R-410A refrigerant pressure drop. Our $89 diagnostic checks all three.
                     </p>
                   </div>
                   <div>
                     <strong className="text-[#0033cc]">Q: Are your diagnostic and repair rates flat-rate?</strong>
-                    <p className="text-[10px] text-[#666] mt-0.5">
+                    <p className="text-xs text-[#666] mt-0.5">
                       A: Yes. All prices listed on this site are firm and upfront. We never charge travel surcharge fees within our active Travis County service ZIP codes.
                     </p>
                   </div>
                   <div>
                     <strong className="text-[#0033cc]">Q: How quickly can a technician reach 78701?</strong>
-                    <p className="text-[10px] text-[#666] mt-0.5">
+                    <p className="text-xs text-[#666] mt-0.5">
                       A: Standard same-day dispatch window is within 60–90 minutes for Downtown and Central Austin.
                     </p>
                   </div>
@@ -391,9 +394,9 @@ export function BusinessWebsite({
               </div>
 
               {/* Customer Testimonials Box */}
-              <div className="border border-[#ddd] p-2.5 bg-[#fcfcfc] space-y-1.5">
-                <div className="font-bold text-[11px] text-[#111]">Recent Customer Reviews</div>
-                <div className="space-y-1 text-[10px] text-[#444]">
+              <div className="border border-[#ddd] p-2 bg-[#fcfcfc] space-y-1.5">
+                <div className="font-bold text-xs text-[#111]">Recent Customer Reviews</div>
+                <div className="space-y-1 text-xs text-[#444]">
                   <p className="border-l-2 border-[#b8860b] pl-2 italic">
                     &ldquo;AC was blowing hot air on a 102-degree afternoon. Dave arrived within an hour and replaced the capacitor. Great flat-rate price.&rdquo;
                     <span className="block text-[#777] not-italic">— Sarah M., Austin 78704 (Aug 2026)</span>
@@ -414,12 +417,12 @@ export function BusinessWebsite({
             <aside className="space-y-2.5">
               {/* Service Area block */}
               <div className="border border-[#ddd]">
-                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-[11px] font-bold text-black">
+                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-xs font-bold text-black">
                   Service Area (Travis Co.)
                 </div>
-                <div className="space-y-1.5 p-2 text-[10px] text-[#444]">
+                <div className="space-y-1.5 p-2 text-xs text-[#444]">
                   <p className="font-semibold text-[#111]">Coverage Neighborhoods:</p>
-                  <ul className="text-[10px] text-[#555] space-y-0.5 leading-tight">
+                  <ul className="text-xs text-[#555] space-y-0.5 leading-tight">
                     <li>• Downtown Austin (78701)</li>
                     <li>• East Austin (78702)</li>
                     <li>• Westlake / Clarksville (78703)</li>
@@ -433,12 +436,12 @@ export function BusinessWebsite({
                       readOnly
                       tabIndex={-1}
                       value="78701"
-                      className="w-full border border-[#aaa] px-1 py-0.5 text-[10px]"
+                      className="w-full border border-[#aaa] px-1 py-0.5 text-xs"
                     />
                     <button
                       type="button"
                       tabIndex={-1}
-                      className="border border-[#888] bg-[#eee] px-1.5 text-[10px] font-bold"
+                      className="border border-[#888] bg-[#eee] px-1.5 text-xs font-bold"
                     >
                       Check
                     </button>
@@ -448,51 +451,51 @@ export function BusinessWebsite({
 
               {/* Live Dispatch Stats block */}
               <div className="border border-[#ddd]">
-                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-[11px] font-bold text-black">
+                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-xs font-bold text-black">
                   Live Dispatch Status
                 </div>
-                <div className="space-y-1 p-2 text-[11px] text-[#333]">
-                  <div><strong className="text-[13px] text-[#111]">3</strong> active trucks</div>
-                  <div><strong className="text-[13px] text-[#111]">184</strong> jobs this month</div>
-                  <div><strong className="text-[13px] text-[#111]">4.9★</strong> average rating</div>
-                  <div className="text-[10px] text-[#2e7d32] font-semibold pt-0.5">● Open for immediate booking</div>
+                <div className="space-y-1 p-2 text-xs text-[#333]">
+                  <div><strong className="text-xs text-[#111]">3</strong> active trucks</div>
+                  <div><strong className="text-xs text-[#111]">184</strong> jobs this month</div>
+                  <div><strong className="text-xs text-[#111]">4.9★</strong> average rating</div>
+                  <div className="text-xs text-[#2e7d32] font-semibold pt-0.5">● Open for immediate booking</div>
                 </div>
               </div>
 
               {/* Wanted / Dispatch requests */}
               <div className="border border-[#ddd]">
-                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-[11px] font-bold text-black">
+                <div className="border-b border-[#cca300] bg-[#ffcc00] px-2 py-0.5 text-xs font-bold text-black">
                   Dispatch Requests
                 </div>
-                <ul className="space-y-1 p-2 text-[10px] text-[#0033cc]">
+                <ul className="space-y-1 p-2 text-xs text-[#0033cc]">
                   <li className="underline">• 78701: AC blowing warm air</li>
                   <li className="underline">• 78704: Dual-run capacitor</li>
                   <li className="underline">• 78751: Frozen evaporator coil</li>
                   <li className="underline">• 78745: Seasonal tune-up</li>
                 </ul>
-                <div className="border-t border-[#eee] px-2 py-0.5 text-[10px] text-[#0033cc] underline">
+                <div className="border-t border-[#eee] px-2 py-0.5 text-xs text-[#0033cc] underline">
                   view all live requests »
                 </div>
               </div>
 
               {/* Austin Energy Rebate Banner */}
-              <div className="border border-[#006611] bg-[#e8f5e9] p-2 text-[10px] text-[#1b5e20] space-y-0.5">
+              <div className="border border-[#006611] bg-[#e8f5e9] p-2 text-xs text-[#1b5e20] space-y-0.5">
                 <div className="font-bold">⚡ Austin Energy Rebates</div>
-                <p className="text-[9px] leading-tight">
+                <p className="text-xs leading-tight">
                   Save up to $800 on qualifying heat pump &amp; high-efficiency system replacements.
                 </p>
               </div>
 
               {/* 100% Guarantee Badge */}
-              <div className="border border-[#b8860b] bg-[#fffdf0] p-2 text-[10px] text-center space-y-0.5">
+              <div className="border border-[#b8860b] bg-[#fffdf0] p-2 text-xs text-center space-y-0.5">
                 <div className="font-bold text-[#8b0000]">100% Satisfaction Guarantee</div>
-                <p className="text-[9px] text-[#666]">All diagnostic parts &amp; labor warrantied for 1 full year.</p>
+                <p className="text-xs text-[#666]">All diagnostic parts &amp; labor warrantied for 1 full year.</p>
               </div>
             </aside>
           </div>
 
           {/* Full Web Footer */}
-          <footer className="border-t border-[#ccc] pt-3 text-center text-[10px] text-[#666] space-y-1">
+          <footer className="border-t border-[#ccc] pt-3 text-center text-xs text-[#666] space-y-1">
             <div className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 text-[#0033cc]">
               <span className="underline">About Acme HVAC</span>
               <span>•</span>

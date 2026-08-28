@@ -3,6 +3,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { AgentInteractionOverlay } from '@/components/demo/agent-interaction-overlay';
 import { BusinessWebsite } from '@/components/demo/business-website';
+import { ThinkingTrace } from '@/components/demo/thinking-trace';
 import { getDefaultPreset } from '@/demo/presets';
 import type { DemoActivityStep } from '@/demo/types';
 
@@ -34,7 +35,7 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('aria-label="Send"');
   });
 
-  it('renders full left surface with mock browser toolbar and initial blank session', () => {
+  it('renders initial focused chat panel in unified window with AI Agent toolbar', () => {
     const html = renderToStaticMarkup(
       createElement(CustomerConversation, {
         config,
@@ -44,9 +45,24 @@ describe('demo presentation surfaces', () => {
     expect(html).not.toContain('protocol-tooling://agent');
     expect(html).not.toContain('Agent activity terminal');
     expect(html).not.toContain('waiting for agent request...');
-    expect(html).toContain('aria-label="Browser toolbar"');
-    expect(html).toContain('about:blank');
-    expect(html).not.toContain('In-App Browser Session');
+    expect(html).toContain('aria-label="Agent window toolbar"');
+    expect(html).toContain('AI Agent');
+    expect(html).toContain('data-demo-target="chat"');
+    expect(html).toContain('max-w-[23.5rem]');
+    expect(html).not.toContain('class="order-');
+  });
+
+  it('renders expandable ThinkingTrace primitive with steps', () => {
+    const html = renderToStaticMarkup(
+      createElement(ThinkingTrace, {
+        variant: 'Steps',
+        reducedMotion: true,
+      }),
+    );
+    expect(html).toContain('aria-label="Agent thinking trace"');
+    expect(html).toContain('Analyzing service request for 78701');
+    expect(html).toContain('Discovering WebMCP providers');
+    expect(html).toContain('Acme HVAC');
   });
 
   it('renders blank browser session when browserState is blank', () => {

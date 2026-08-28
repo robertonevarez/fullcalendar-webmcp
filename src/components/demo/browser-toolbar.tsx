@@ -24,7 +24,7 @@ export function BrowserToolbar({
   return (
     <div
       className={cn(
-        'relative flex h-6.5 select-none items-center justify-between border-b border-border/50 bg-background/60 px-2.5 text-[11px] text-muted-foreground',
+        'relative flex h-6 select-none items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl backdrop-saturate-150 px-2 text-xs text-muted-foreground',
         className,
       )}
       role="region"
@@ -38,7 +38,7 @@ export function BrowserToolbar({
       </div>
 
       {/* Address Bar - minimal, no mono, normal font */}
-      <div className="flex items-center gap-1.5 text-[11px]">
+      <div className="flex items-center gap-1 text-xs">
         <span
           className={cn(
             'transition-colors',
@@ -49,14 +49,14 @@ export function BrowserToolbar({
         </span>
 
         {isLoaded && (
-          <span className="inline-flex items-center gap-1 text-[11px] font-normal text-emerald-600 dark:text-emerald-400">
+          <span className="inline-flex items-center gap-1 text-xs font-normal text-emerald-600 dark:text-emerald-400">
             <span>·</span>
             <span>WebMCP Active</span>
           </span>
         )}
 
         {isNavigating && (
-          <span className="text-[11px] text-muted-foreground animate-pulse">
+          <span className="text-xs text-muted-foreground animate-pulse">
             · Connecting…
           </span>
         )}
