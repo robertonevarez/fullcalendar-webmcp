@@ -9,7 +9,7 @@ export interface PhotoConfig {
 }
 
 const SHARP_LAYER_MASK =
-  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.45) 12%, rgba(0,0,0,0.82) 20%, black 28%, black 72%, rgba(0,0,0,0.82) 80%, rgba(0,0,0,0.45) 88%, transparent 100%)';
+  'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.25) 14%, rgba(0,0,0,0.7) 28%, black 40%, black 60%, rgba(0,0,0,0.7) 72%, rgba(0,0,0,0.25) 86%, transparent 100%)';
 
 /** Sharp layer: no upscale — object-cover alone fills the container. */
 const SHARP_SCALE_IDLE = 'scale-100';
@@ -109,10 +109,10 @@ export function CardPhotoBackground({
             }`}
           >
             {/* Ambient underlay — scaled + blurred; fills aspect-ratio gaps */}
-            <div className="absolute inset-0 opacity-35">
+            <div className="absolute inset-0 opacity-40">
               <CardPhotoImage
                 src={photo.src}
-                className={`object-cover ${AMBIENT_SCALE} blur-3xl brightness-95 ${objectPosition}`}
+                className={`object-cover ${AMBIENT_SCALE} blur-[64px] brightness-90 ${objectPosition}`}
               />
             </div>
 
@@ -120,7 +120,7 @@ export function CardPhotoBackground({
             <div className="absolute inset-0">
               <CardPhotoImage
                 src={photo.src}
-                className={`object-cover blur-2xl brightness-95 ${objectPosition} transition-transform duration-[6500ms] ease-out ${
+                className={`object-cover blur-[40px] brightness-90 ${objectPosition} transition-transform duration-[6500ms] ease-out ${
                   isActive ? BLUR_SCALE_ACTIVE : BLUR_SCALE_IDLE
                 }`}
               />

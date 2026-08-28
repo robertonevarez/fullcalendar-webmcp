@@ -38,17 +38,17 @@ export default async function BusinessPage({
         <div className="relative h-full w-full max-w-6xl card-drop-shadow">
           <article className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[2rem] md:rounded-[2.75rem] smooth-corners isolate p-6 sm:p-8 md:p-9 lg:p-10">
             <CardPhotoBackground slug={business.slug} />
-            <div className="relative z-10 max-w-2xl">
-              <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl md:text-4xl drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
-                {business.name}
-              </h1>
-              <p className="mt-1 text-xs font-medium text-white/90 sm:text-sm md:text-base drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+            <div className="relative z-10 flex w-full items-baseline justify-between gap-3 text-base font-medium tracking-tight text-white sm:text-lg md:text-xl [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))_drop-shadow(0_2px_10px_rgba(0,0,0,0.55))]">
+              <h1 className="min-w-0 truncate">{business.name}</h1>
+              <p className="max-w-[45%] shrink-0 truncate text-right">
                 {business.address.city}, {business.address.region}
               </p>
             </div>
-            <p className="relative z-10 max-w-2xl text-sm leading-relaxed text-white/95 sm:text-base md:text-lg drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
-              {business.description}
-            </p>
+            <div className="relative z-10 w-full [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))_drop-shadow(0_2px_10px_rgba(0,0,0,0.55))]">
+              <p className="line-clamp-3 text-base font-medium leading-snug tracking-tight text-white sm:text-lg md:text-xl">
+                {business.description}
+              </p>
+            </div>
           </article>
         </div>
       </main>

@@ -209,7 +209,7 @@ export async function seedDatabase(force = false) {
       'biz_marias_cleaning',
       'marias-cleaning',
       "Maria's Cleaning Service",
-      'Residential cleaning for homes across the El Paso area.',
+      "Maria's Cleaning Service provides reliable residential cleaning for homes across the El Paso metro — from downtown apartments to Westside houses. We handle kitchens, bathrooms, living spaces, dusting, and floor care with eco-friendly products, flexible scheduling, and a team that treats every home with care. Whether you need a routine tidy-up or a deep refresh before guests arrive, we show up on time and leave your space sparkling.",
       'America/Denver',
       'CUSTOMER_LOCATION',
       JSON.stringify(CLEANING_HOURS),
