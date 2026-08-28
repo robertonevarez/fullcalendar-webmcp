@@ -24,7 +24,7 @@ export function BrowserToolbar({
   return (
     <div
       className={cn(
-        'relative flex h-6 select-none items-center justify-between border-b border-black/10 dark:border-white/10 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-xl backdrop-saturate-150 px-2 text-xs text-muted-foreground',
+        'relative flex h-6 select-none items-center justify-between border-b border-black/10 dark:border-white/10 bg-muted px-2 text-xs text-muted-foreground',
         className,
       )}
       role="region"

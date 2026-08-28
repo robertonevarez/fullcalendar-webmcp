@@ -39,7 +39,7 @@ export function BusinessWebsite({
       data-agent-access={isAgentAccess ? 'true' : 'false'}
       data-browser-state={browserState}
       className={cn(
-        'relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-sans text-xs leading-snug text-[#222]',
+        'relative flex h-full min-h-0 flex-col overflow-hidden bg-white font-system text-xs leading-snug text-[#222]',
         className,
       )}
       aria-label={`${config.businessName} website`}

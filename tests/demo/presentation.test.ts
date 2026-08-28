@@ -31,8 +31,7 @@ describe('demo presentation surfaces', () => {
     expect(html).toContain('aria-label="Agent window toolbar"');
     expect(html).toContain('AI Agent');
     expect(html).toContain('aria-label="Chat prompt"');
-    expect(html).toContain('placeholder="Ask your agent anything…"');
-    expect(html).toContain('aria-label="Send"');
+    expect(html).not.toContain('aria-label="Send"');
   });
 
   it('renders initial focused chat panel in unified window with AI Agent toolbar', () => {

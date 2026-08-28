@@ -13,7 +13,7 @@ export function HeroDemoSurface() {
 
   return (
     <section
-      className="mt-2 min-h-0 overflow-hidden sm:mt-4"
+      className="mt-2 min-h-0 overflow-visible sm:mt-4"
       aria-label="Product demo"
     >
       <CustomerConversation

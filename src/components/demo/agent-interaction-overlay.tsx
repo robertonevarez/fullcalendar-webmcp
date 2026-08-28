@@ -49,7 +49,7 @@ export function AgentInteractionOverlay({
       data-demo-target="overlay"
       data-demo-overlay-target={target}
       data-demo-overlay-status={status}
-      className={cn('flex w-full max-w-sm flex-col gap-2 text-xs leading-snug', className)}
+      className={cn('flex w-full max-w-sm flex-col gap-2 text-sm leading-snug', className)}
     >
       {hasSearch && (
         <div className={surfaceCard} style={{ animation: 'fade-up 350ms cubic-bezier(0.23,1,0.32,1) both' }}>

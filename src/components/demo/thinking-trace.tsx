@@ -80,19 +80,6 @@ const VARIANTS: Record<
   },
 };
 
-function Dot({ tone }: { tone: string }) {
-  return (
-    <span className={`flex size-3.5 shrink-0 items-center justify-center rounded-full text-white ${tone}`}>
-      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3.5 12h17M12 3a14 14 0 0 1 0 18M12 3a14 14 0 0 0 0 18" />
-      </svg>
-    </span>
-  );
-}
-
-const TONES = ['bg-indigo-500', 'bg-emerald-500', 'bg-amber-500'];
-
 export function ThinkingTrace({
   variant = 'Steps',
   reducedMotion = false,
@@ -132,7 +119,7 @@ export function ThinkingTrace({
       key={variant}
       role="status"
       aria-label="Agent thinking trace"
-      className={`flex w-full max-w-95 flex-col ${className ?? ''}`}
+      className={`flex w-full max-w-95 flex-col text-sm ${className ?? ''}`}
       style={{
         minHeight: working || expanded ? 96 : undefined,
         transition: reducedMotion ? undefined : 'min-height 400ms cubic-bezier(0.23,1,0.32,1)',
@@ -143,47 +130,28 @@ export function ThinkingTrace({
         type="button"
         aria-expanded={expanded}
         onClick={() => setManualExpanded((current) => !(current ?? autoExpanded))}
-        className="-mx-1 flex w-fit items-center gap-1.5 rounded px-1 py-0.5 text-left transition-colors duration-100 hover:bg-muted/40 cursor-pointer"
+        className="-mx-1 flex w-fit items-center rounded px-1 py-0.5 text-left transition-colors duration-100 hover:bg-muted/40 cursor-pointer"
       >
-        <svg width="15" height="15" viewBox="0 0 24 24" fill={working ? 'var(--ink-2)' : 'var(--ink-3)'}>
-          <path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8z" />
-        </svg>
-        <span className="contents">
-          {working ? (
-            <span
-              className="bg-clip-text text-xs font-medium whitespace-nowrap text-transparent"
-              style={{
-                backgroundImage:
-                  'linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)',
-                backgroundSize: '200% 100%',
-                animation: reducedMotion ? undefined : 'shimmer-text 1.4s linear infinite',
-              }}
-            >
-              {v.active}…
-            </span>
-          ) : (
-            <span
-              className="text-xs font-medium whitespace-nowrap text-ink-2"
-              style={{ animation: reducedMotion ? undefined : 'fade-in 350ms ease-out both' }}
-            >
-              {v.done}
-            </span>
-          )}
-        </span>
-        <svg
-          width="13"
-          height="13"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="var(--ink-3)"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="transition-transform duration-300"
-          style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0)' }}
-        >
-          <path d="M6 9l6 6 6-6" />
-        </svg>
+        {working ? (
+          <span
+            className="bg-clip-text font-medium whitespace-nowrap text-transparent"
+            style={{
+              backgroundImage:
+                'linear-gradient(90deg, var(--ink-3) 35%, var(--ink) 50%, var(--ink-3) 65%)',
+              backgroundSize: '200% 100%',
+              animation: reducedMotion ? undefined : 'shimmer-text 1.4s linear infinite',
+            }}
+          >
+            {v.active}…
+          </span>
+        ) : (
+          <span
+            className="font-medium whitespace-nowrap text-ink-2"
+            style={{ animation: reducedMotion ? undefined : 'fade-in 350ms ease-out both' }}
+          >
+            {v.done}
+          </span>
+        )}
       </button>
 
       {/* expandable trace */}
@@ -209,44 +177,27 @@ export function ThinkingTrace({
             <div ref={traceRef} className="flex flex-col gap-1 py-1">
               {v.query && (
                 <div
-                  className="flex h-5 items-center gap-1.5 px-1"
+                  className="flex h-5 items-center px-1 text-ink-2"
                   style={{
                     animation: expanded && !reducedMotion ? 'fade-up 300ms cubic-bezier(0.23,1,0.32,1) both' : undefined,
                   }}
                 >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2" strokeLinecap="round" className="shrink-0">
-                    <circle cx="11" cy="11" r="7" />
-                    <path d="M21 21l-4.3-4.3" />
-                  </svg>
-                  <span className="text-xs text-ink-2">{v.query}</span>
+                  {v.query}
                 </div>
               )}
               {v.rows.slice(0, visible).map((row, i) => {
                 const content = (
                   <>
-                    {variant === 'Search' && <Dot tone={TONES[i % 3]} />}
-                    {variant === 'Steps' && (
-                      i < visible - 1 || !working ? (
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--ink-3)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-emerald-500">
-                          <path d="M20 6L9 17l-5-5" />
-                        </svg>
-                      ) : (
-                        <span
-                          className="size-3 shrink-0 rounded-full border-[1.5px] border-line-strong border-t-ink-2"
-                          style={{ animation: reducedMotion ? undefined : 'spin 700ms linear infinite' }}
-                        />
-                      )
-                    )}
-                    <span className={`min-w-0 truncate text-xs ${variant === 'Reasoning' ? 'whitespace-normal leading-snug text-ink-2' : 'font-medium text-ink'}`}>
+                    <span className={`min-w-0 truncate ${variant === 'Reasoning' ? 'whitespace-normal leading-snug text-ink-2' : 'font-medium text-ink'}`}>
                       {row.primary}
                     </span>
                     {row.secondary && (
-                      <span className={`shrink-0 text-xs text-ink-3 ${row.mono ? 'font-mono' : ''}`}>
+                      <span className={`shrink-0 text-ink-3 ${row.mono ? 'font-mono' : ''}`}>
                         {row.secondary}
                       </span>
                     )}
                     {row.add !== undefined && (
-                      <span className="shrink-0 font-mono text-xs tabular-nums">
+                      <span className="shrink-0 font-mono tabular-nums">
                         <span className="text-green">+{row.add}</span>{' '}
                         <span className="text-red">−{row.del}</span>
                       </span>

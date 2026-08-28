@@ -72,7 +72,7 @@ function AssistantMessage({
         animation: 'fade-up 400ms cubic-bezier(0.23,1,0.32,1) both',
       }}
     >
-      <p className="text-xs leading-snug text-ink whitespace-pre-wrap">{text}</p>
+      <p className="text-sm leading-normal text-ink whitespace-pre-wrap">{text}</p>
     </div>
   );
 }
@@ -424,15 +424,6 @@ export function CustomerConversation({
     }
   }
 
-  const [restartCount, setRestartCount] = useState(0);
-
-  const handleReset = useCallback(() => {
-    if (abortRef.current) {
-      abortRef.current.abort();
-    }
-    setRestartCount((c) => c + 1);
-  }, []);
-
   useEffect(() => {
     const controller = new AbortController();
     abortRef.current = controller;
@@ -469,16 +460,17 @@ export function CustomerConversation({
       abortRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restartCount]);
+  }, []);
 
-  const isAgentAccess = visualPhase === 'entering' || visualPhase === 'operating';
-  const canSend = draft.trim().length > 0;
+  const isBooked = conversation.phase === 'booked' || Boolean(conversation.lastBooking);
+  const isAgentAccess =
+    visualPhase === 'entering' || visualPhase === 'operating' || isBooked;
 
   return (
     <div
       ref={stageRef}
       className={cn(
-        'relative flex h-full min-h-0 w-full flex-col items-stretch transition-all duration-700 ease-in-out',
+        'relative flex h-full min-h-0 w-full flex-col items-stretch font-system transition-all duration-700 ease-in-out',
         !landing && 'max-w-[76rem] flex-1',
       )}
     >
@@ -492,7 +484,7 @@ export function CustomerConversation({
       {/* SINGLE UNIFIED WINDOW SHELL (Zero Gap!) */}
       <div
         className={cn(
-          'flex w-full flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-2xl transition-all duration-700 ease-in-out',
+          'flex w-full flex-col overflow-hidden rounded-[14px] border border-line bg-surface shadow-demo transition-all duration-700 ease-in-out',
           landing
             ? 'h-full min-h-0 overflow-hidden'
             : 'min-h-0 h-full max-h-full flex-1',
@@ -501,7 +493,7 @@ export function CustomerConversation({
       >
         {/* Top Unified Window Toolbar */}
         <div
-          className="relative flex h-6 shrink-0 select-none items-center border-b border-line/50 bg-background/80 backdrop-blur-md text-xs text-muted-foreground"
+          className="relative flex h-6 shrink-0 select-none items-center border-b border-line/50 bg-muted text-xs text-muted-foreground"
           role="region"
           aria-label="Agent window toolbar"
         >
@@ -551,7 +543,7 @@ export function CustomerConversation({
             data-demo-target="chat"
             data-demo-playback={playbackState}
             className={cn(
-              'flex h-full min-h-0 flex-col bg-surface transition-all duration-700 ease-in-out',
+              'flex h-full min-h-0 flex-col bg-surface text-sm transition-all duration-700 ease-in-out',
               isSplitView ? 'w-[18rem] sm:w-[20rem] md:w-[23.5rem] shrink-0 border-r border-line/50' : 'w-full',
             )}
             role="region"
@@ -564,7 +556,7 @@ export function CustomerConversation({
               viewportRef={messagesScrollerRef}
               onScroll={updateScrollFade}
               viewportClassName={cn(
-                'p-2.5 pb-3 flex flex-col gap-2 transition-[mask-image] duration-200',
+                'flex flex-col gap-2.5 px-3 pt-2.5 pb-1 transition-[mask-image] duration-200',
                 scrollEdge.top && scrollEdge.bottom && 'scroll-fade',
                 scrollEdge.top && !scrollEdge.bottom && 'scroll-fade-t',
                 !scrollEdge.top && scrollEdge.bottom && 'scroll-fade-b',
@@ -573,9 +565,9 @@ export function CustomerConversation({
               {messages.map((msg) => {
                 if (msg.role === 'user') {
                   return (
-                    <div key={msg.id} className="flex justify-end pl-8">
+                    <div key={msg.id} className="flex justify-end pl-14">
                       <div
-                        className="rounded-full bg-[#007AFF] px-2.5 py-1 text-xs leading-snug text-white transition-[opacity,transform] duration-300"
+                        className="rounded-xl bg-field px-3 py-1.5 text-sm leading-snug text-ink transition-[opacity,transform] duration-300"
                         style={{
                           transitionTimingFunction: 'cubic-bezier(0.23, 1, 0.32, 1)',
                         }}
@@ -611,7 +603,7 @@ export function CustomerConversation({
             <div className="mt-auto shrink-0 p-1.5">
               <div
                 role="presentation"
-                className="flex flex-col gap-1 rounded-[10px] border border-line bg-background p-1.5 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
+                className="rounded-[10px] border border-line bg-field p-2.5 shadow-[0_1px_2px_rgba(0,0,0,0.035)]"
               >
                 <input
                   value={draft}
@@ -619,53 +611,8 @@ export function CustomerConversation({
                   tabIndex={-1}
                   placeholder={playbackState === 'completed' ? 'Conversation ended' : 'Ask your agent anything…'}
                   aria-label="Chat prompt"
-                  className="pointer-events-none min-h-4 select-none bg-transparent text-xs leading-snug text-ink outline-none placeholder:text-ink-3"
+                  className="pointer-events-none w-full min-h-4.5 select-none bg-transparent text-sm leading-snug text-ink outline-none placeholder:text-ink-3"
                 />
-                <div className="flex items-center justify-end">
-                  {playbackState === 'completed' ? (
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      aria-label="Reset demo"
-                      className="flex size-6 items-center justify-center rounded-full bg-foreground text-background transition-[background-color,color,transform,opacity] duration-200 hover:opacity-85 active:scale-95 cursor-pointer shadow-xs"
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                        <path d="M3 3v5h5" />
-                      </svg>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      tabIndex={-1}
-                      aria-label="Send"
-                      disabled={!canSend}
-                      className="pointer-events-none flex size-6 select-none items-center justify-center rounded-full bg-muted text-muted-foreground transition-[background-color,color,transform] duration-200"
-                    >
-                      <svg
-                        width="12"
-                        height="12"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.4"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <path d="M12 19V5M5 12l7-7 7 7" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
               </div>
             </div>
           </div>
