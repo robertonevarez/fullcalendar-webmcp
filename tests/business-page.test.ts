@@ -24,7 +24,7 @@ describe('business identity page', () => {
 
   it('wires the inspect shell for a subtle WebMCP affordance', () => {
     expect(page).toContain('BusinessInspectShell');
-    expect(shell).toContain('Inspect WebMCP');
+    expect(shell).toContain('Inspect tooling');
     expect(shell).toContain('Back');
     expect(shell).toContain('WebMCPInspectView');
     expect(inspectView).toContain('WEBMCP_TOOL_NAMES');

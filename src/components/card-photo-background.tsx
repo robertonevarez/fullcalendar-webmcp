@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 
 export interface PhotoConfig {
@@ -69,28 +69,49 @@ function CardPhotoImage({ src, className, priority }: CardPhotoImageProps) {
   );
 }
 
+function resolvePhotoConfigs(
+  images: CardPhotoBackgroundProps['images'],
+  slug: string | undefined,
+): PhotoConfig[] {
+  if (images) {
+    return images.map((item) => (typeof item === 'string' ? { src: item } : item));
+  }
+  if (slug && BUSINESS_PHOTOS[slug]) {
+    return BUSINESS_PHOTOS[slug];
+  }
+  return BUSINESS_PHOTOS['marias-cleaning'] ?? [];
+}
+
 export function CardPhotoBackground({
   images,
   intervalMs = 6500,
   slug,
 }: CardPhotoBackgroundProps) {
-  const photoConfigs: PhotoConfig[] = images
-    ? images.map((item) => (typeof item === 'string' ? { src: item } : item))
-    : (slug && BUSINESS_PHOTOS[slug])
-      ? BUSINESS_PHOTOS[slug]
-      : (BUSINESS_PHOTOS['marias-cleaning'] ?? []);
+  const imageKey =
+    images?.map((item) => (typeof item === 'string' ? item : item.src)).join('|') ?? '';
+
+  const photoConfigs = useMemo(
+    () => resolvePhotoConfigs(images, slug),
+    // Stabilize on slug + src identity so WebMCP/provider re-renders don't reset the interval.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- images covered by imageKey
+    [slug, imageKey],
+  );
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    if (!photoConfigs || photoConfigs.length <= 1) return;
+    setCurrentIndex(0);
+  }, [photoConfigs]);
+
+  useEffect(() => {
+    if (photoConfigs.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % photoConfigs.length);
     }, intervalMs);
     return () => clearInterval(interval);
   }, [photoConfigs, intervalMs]);
 
-  if (!photoConfigs || photoConfigs.length === 0) return null;
+  if (photoConfigs.length === 0) return null;
 
   return (
     <div
