@@ -66,15 +66,16 @@ export async function seedDatabase(force = false) {
       id: string,
       slug: string,
       name: string,
+      description: string,
       timezone: string,
       locationMode: string,
       workingHoursJson: string,
       addressJson: string,
     ) {
       await query(
-        `INSERT INTO businesses (id, slug, name, timezone, location_mode, working_hours_json, address_json)
-         VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7::jsonb)`,
-        [id, slug, name, timezone, locationMode, workingHoursJson, addressJson],
+        `INSERT INTO businesses (id, slug, name, description, timezone, location_mode, working_hours_json, address_json)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)`,
+        [id, slug, name, description, timezone, locationMode, workingHoursJson, addressJson],
       );
     }
 
@@ -208,6 +209,7 @@ export async function seedDatabase(force = false) {
       'biz_marias_cleaning',
       'marias-cleaning',
       "Maria's Cleaning Service",
+      'Residential cleaning for homes across the El Paso area.',
       'America/Denver',
       'CUSTOMER_LOCATION',
       JSON.stringify(CLEANING_HOURS),
@@ -338,6 +340,7 @@ export async function seedDatabase(force = false) {
       'biz_acme_hvac',
       'acme-hvac',
       'Acme Heating & Air',
+      'Heating and cooling service for homes across Austin.',
       'America/Chicago',
       'CUSTOMER_LOCATION',
       JSON.stringify(WEEKDAY_FIELD),
@@ -446,6 +449,7 @@ export async function seedDatabase(force = false) {
       'biz_blue_pipe',
       'blue-pipe-plumbing',
       'Blue Pipe Plumbing',
+      'Residential plumbing service for the Austin area.',
       'America/Chicago',
       'CUSTOMER_LOCATION',
       JSON.stringify(WEEKDAY_FIELD),
@@ -528,6 +532,7 @@ export async function seedDatabase(force = false) {
       'biz_northline_salon',
       'northline-salon',
       'Northline Salon',
+      'Hair and personal-care appointments in North Austin.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(SALON_HOURS),
@@ -634,6 +639,7 @@ export async function seedDatabase(force = false) {
       'biz_harbor_pt',
       'harbor-physical-therapy',
       'Harbor Physical Therapy',
+      'Physical therapy and follow-up care in Austin.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(CLINIC_HOURS),
@@ -737,6 +743,7 @@ export async function seedDatabase(force = false) {
       'biz_mesa_auto',
       'mesa-auto-service',
       'Mesa Auto Service',
+      'Automotive maintenance and repair in South Austin.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(AUTO_HOURS),

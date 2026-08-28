@@ -20,6 +20,7 @@ export interface Business {
   id: string;
   slug: string;
   name: string;
+  description: string;
   timezone: string;
   location_mode: LocationMode;
   working_hours: WorkingHours[];

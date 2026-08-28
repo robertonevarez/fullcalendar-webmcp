@@ -31,6 +31,7 @@ export function toBusiness(row: Record<string, unknown>): Business {
     id: String(row.id),
     slug: String(row.slug),
     name: String(row.name),
+    description: String(row.description),
     timezone: String(row.timezone),
     location_mode: row.location_mode as Business['location_mode'],
     working_hours: asJson<WorkingHours[]>(row.working_hours_json),

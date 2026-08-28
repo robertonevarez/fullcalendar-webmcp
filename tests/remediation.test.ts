@@ -134,6 +134,7 @@ describe('business isolation and domain regressions', () => {
       id: 'biz_overlap_test',
       slug: 'overlap-test',
       name: 'Overlap Test Salon',
+      description: 'A test salon.',
       timezone: 'America/Chicago',
       location_mode: 'BUSINESS_LOCATION',
       working_hours: [{ day: 1, open: '09:00', close: '17:00' }],
