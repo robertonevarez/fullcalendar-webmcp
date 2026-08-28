@@ -19,7 +19,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). The landing page explains the product; each business page at `/businesses/{slug}` registers eight WebMCP tools.
+Open [http://localhost:3000](http://localhost:3000). The landing page explains the product; [`/demo`](http://localhost:3000/demo) is a guided product walkthrough; each business page at `/businesses/{slug}` registers eight WebMCP tools.
 
 ```bash
 npm test

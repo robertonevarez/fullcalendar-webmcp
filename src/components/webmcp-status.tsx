@@ -1,7 +1,7 @@
 'use client';
 
 import { Panel } from '@/components/layout';
-import { useWebMCPRegistrationState } from '@/components/WebMCPBusinessProvider';
+import { useWebMCPRegistrationState } from '@/components/webmcp-business-provider';
 import { spacing } from '@/lib/design-system';
 import { WEBMCP_TOOL_NAMES } from '@/webmcp/tools';
 import { cn } from '@/lib/utils';

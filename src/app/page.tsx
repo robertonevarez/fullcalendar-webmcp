@@ -1,11 +1,5 @@
 import type { Metadata } from 'next';
 import { Hero } from '@/components/hero';
-import {
-  BookingFunnelsSection,
-  BusinessControlSection,
-  ClosingCtaSection,
-  LiveInteractionSection,
-} from '@/components/home-sections';
 
 export const metadata: Metadata = {
   title: 'Protocol Tooling — Make your business bookable by AI agents',
@@ -21,12 +15,8 @@ export const metadata: Metadata = {
 
 export default function HomePage() {
   return (
-    <main>
+    <main className="flex min-h-0 flex-1 flex-col">
       <Hero />
-      <LiveInteractionSection />
-      <BookingFunnelsSection />
-      <BusinessControlSection />
-      <ClosingCtaSection />
     </main>
   );
 }

@@ -2,9 +2,8 @@ import { closePool } from '../src/db/client';
 import { seedDatabase } from '../src/db/seed';
 
 async function main() {
-  const force = process.argv.includes('--force') || process.argv.includes('--force=true');
-  // Default CLI seed is intentional force for demo setup convenience.
-  const result = await seedDatabase(true);
+  const force = !process.argv.includes('--no-force');
+  const result = await seedDatabase(force);
   console.log(result);
   await closePool();
 }

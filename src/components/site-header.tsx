@@ -2,80 +2,88 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Shell } from '@/components/layout';
 import { Button } from '@/components/ui/button';
-import {
-  NavigationMenu,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  navigationMenuTriggerStyle,
-} from '@/components/ui/navigation-menu';
-import { spacing } from '@/lib/design-system';
-import { cn } from '@/lib/utils';
+import { ArrowRightIcon } from 'lucide-react';
 
 const GITHUB_URL = 'https://github.com/robertonevarez/protocoltooling';
-const DEMO_URL = '/businesses/acme-hvac';
+const DEMO_URL = '/demo';
 
 const NAV_ITEMS = [
   { href: '/docs', label: 'Docs' },
   { href: GITHUB_URL, label: 'GitHub', external: true },
 ] as const;
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  /** Renders inside the landing hero shell — no outer container or sticky positioning. */
+  embedded?: boolean;
+  /** Single-line landing nav: brand on the left, links on the right. */
+  landing?: boolean;
+};
+
+export function SiteHeader({ embedded = false, landing = false }: SiteHeaderProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
   }
 
-  return (
-    <header className="sticky top-0 z-50 w-full bg-background">
-      <Shell className={cn('flex items-center', spacing.gap)}>
-        <Button
-          variant="ghost"
-          nativeButton={false}
-          render={<Link href="/" />}
-          className="shrink-0 px-0 hover:bg-transparent"
-        >
-          <span className="text-lg font-semibold tracking-tight">Protocol Tooling</span>
-        </Button>
+  const brand = (
+    <Button variant="ghost" nativeButton={false} render={<Link href="/" />} className="tracking-tight text-lg font-semibold">
+      Protocol Tooling
+    </Button>
+  );
 
-        <div className="flex-1" />
-
-        <div className={cn('flex items-center', spacing.gap)}>
-          <NavigationMenu>
-            <NavigationMenuList>
-              {NAV_ITEMS.map((item) => (
-                <NavigationMenuItem key={item.href}>
-                  {'external' in item ? (
-                    <NavigationMenuLink
-                      href={item.href}
-                      className={navigationMenuTriggerStyle()}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      {item.label}
-                    </NavigationMenuLink>
-                  ) : (
-                    <NavigationMenuLink
-                      active={isActive(item.href)}
-                      className={navigationMenuTriggerStyle()}
-                      render={<Link href={item.href} />}
-                    >
-                      {item.label}
-                    </NavigationMenuLink>
-                  )}
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
-
-          <Button nativeButton={false} render={<Link href={DEMO_URL} />}>
-            Try demo
+  const actions = (
+    <div className="flex items-center gap-4">
+      {NAV_ITEMS.map((item) =>
+        'external' in item ? (
+          <Button
+            key={item.href}
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={
+              <a href={item.href} rel="noopener noreferrer" target="_blank" />
+            }
+          >
+            {item.label}
           </Button>
-        </div>
-      </Shell>
+        ) : (
+          <Button
+            key={item.href}
+            variant="ghost"
+            size="sm"
+            nativeButton={false}
+            render={<Link href={item.href} />}
+            aria-current={isActive(item.href) ? 'page' : undefined}
+          >
+            {item.label}
+          </Button>
+        ),
+      )}
+
+      <Button size="sm" nativeButton={false} render={<Link href={DEMO_URL} />}>
+        Try demo
+        <ArrowRightIcon />
+      </Button>
+    </div>
+  );
+
+  if (landing || embedded) {
+    return (
+      <header className="flex shrink-0 items-center justify-between">
+        {brand}
+        {actions}
+      </header>
+    );
+  }
+
+  return (
+    <header className="sticky top-0 z-50 border-b bg-background">
+      <div className="container flex items-center justify-between px-4">
+        {brand}
+        {actions}
+      </div>
     </header>
   );
 }

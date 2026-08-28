@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Page, Section } from '@/components/layout';
-import { WebMCPBusinessProvider } from '@/components/WebMCPBusinessProvider';
-import { WebMCPStatus } from '@/components/WebMCPStatus';
+import { WebMCPBusinessProvider } from '@/components/webmcp-business-provider';
+import { WebMCPStatus } from '@/components/webmcp-status';
 import { ensureDatabaseSeeded } from '@/db/init';
 import { bookingRepository } from '@/db/repository';
 
