@@ -207,13 +207,26 @@ function combinations<T>(items: T[], size: number): T[][] {
   return results;
 }
 
+const REQUESTED_HOLD_HOURS = 24;
+
+export function isAppointmentActive(appointment: Appointment, now = Date.now()): boolean {
+  if (appointment.status === 'confirmed') return true;
+  if (appointment.status === 'requested') {
+    if (!appointment.created_at) return true;
+    const createdTime = new Date(appointment.created_at).getTime();
+    if (isNaN(createdTime)) return true;
+    return now - createdTime < REQUESTED_HOLD_HOURS * 60 * 60 * 1000;
+  }
+  return false;
+}
+
 function isResourceFree(ctx: SchedulerContext, resource: Resource, start: Date, end: Date): boolean {
   if (!isWithinWorkingHours(start, end, resource.working_hours, ctx.business.timezone)) {
     return false;
   }
 
   for (const appointment of ctx.appointments) {
-    if (appointment.status !== 'confirmed' && appointment.status !== 'requested') continue;
+    if (!isAppointmentActive(appointment)) continue;
     const usesResource = appointment.resource_allocations.some((a) => a.resource_id === resource.id);
     if (!usesResource) continue;
     const apptStart = new Date(appointment.starts_at);

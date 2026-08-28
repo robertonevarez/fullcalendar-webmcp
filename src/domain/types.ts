@@ -108,6 +108,8 @@ export interface Appointment {
   currency: string;
   idempotency_key?: string;
   resource_allocations: SlotResourceAllocation[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface SlotResourceAllocation {

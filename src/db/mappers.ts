@@ -120,5 +120,7 @@ export function toAppointment(
     currency: String(row.currency),
     idempotency_key: row.idempotency_key ? String(row.idempotency_key) : undefined,
     resource_allocations: resources,
+    created_at: row.created_at ? asIso(row.created_at) : undefined,
+    updated_at: row.updated_at ? asIso(row.updated_at) : undefined,
   };
 }

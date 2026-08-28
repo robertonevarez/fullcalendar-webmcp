@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { bookingService } from '@/services/booking-service';
 import { ErrorCodes } from '@/domain/errors';
+import { isAppointmentActive } from '@/domain/scheduler';
+import { Appointment } from '@/domain/types';
 
 describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
   it('executes full agent-first workflow: info → services → eligibility → availability → request → get → reschedule → cancel', async () => {
@@ -25,13 +27,14 @@ describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
     expect(deepClean.duration_minutes).toBe(180);
     expect(deepClean.service_area_required).toBe(true);
 
-    // 3. check_service_eligibility (eligible El Paso ZIP)
+    // 3. check_service_eligibility (eligible El Paso ZIP & standard residential specs)
     const eligibleCheck = await bookingService.checkServiceEligibility('marias-cleaning', {
       service_id: deepClean.id,
       postal_code: '79901',
       property_type: 'house',
       bedrooms: 3,
       bathrooms: 2,
+      square_footage: 2400,
     });
     expect(eligibleCheck.eligible).toBe(true);
     expect(eligibleCheck.requirements.length).toBeGreaterThan(0);
@@ -45,7 +48,16 @@ describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
     expect(outOfAreaCheck.eligible).toBe(false);
     expect(outOfAreaCheck.reason).toMatch(/outside the service area/i);
 
-    // 3c. check_service_eligibility (ineligible exceeding declarative bedroom limit)
+    // 3c. check_service_eligibility (ineligible unsupported property type)
+    const warehouseCheck = await bookingService.checkServiceEligibility('marias-cleaning', {
+      service_id: deepClean.id,
+      postal_code: '79901',
+      property_type: 'industrial_warehouse',
+    });
+    expect(warehouseCheck.eligible).toBe(false);
+    expect(warehouseCheck.reason).toMatch(/not supported/i);
+
+    // 3d. check_service_eligibility (ineligible exceeding declarative bedroom limit)
     const largeEstateCheck = await bookingService.checkServiceEligibility('marias-cleaning', {
       service_id: deepClean.id,
       postal_code: '79901',
@@ -53,6 +65,24 @@ describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
     });
     expect(largeEstateCheck.eligible).toBe(false);
     expect(largeEstateCheck.reason).toMatch(/more than 8 bedrooms/i);
+
+    // 3e. check_service_eligibility (ineligible exceeding declarative bathroom limit on standard clean)
+    const excessBathCheck = await bookingService.checkServiceEligibility('marias-cleaning', {
+      service_id: 'svc_standard_cleaning',
+      postal_code: '79901',
+      bathrooms: 6,
+    });
+    expect(excessBathCheck.eligible).toBe(false);
+    expect(excessBathCheck.reason).toMatch(/more than 4 bathrooms/i);
+
+    // 3f. check_service_eligibility (ineligible exceeding declarative square footage limit on standard clean)
+    const excessSqftCheck = await bookingService.checkServiceEligibility('marias-cleaning', {
+      service_id: 'svc_standard_cleaning',
+      postal_code: '79901',
+      square_footage: 4500,
+    });
+    expect(excessSqftCheck.eligible).toBe(false);
+    expect(excessSqftCheck.reason).toMatch(/3500 sq ft/i);
 
     // 4. check_availability (canonical date_from / date_to)
     const avail = await bookingService.checkAvailability('marias-cleaning', {
@@ -156,5 +186,39 @@ describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
     ).rejects.toMatchObject({
       code: ErrorCodes.OUTSIDE_SERVICE_AREA,
     });
+  });
+
+  it('expires requested appointment capacity reservations past the hold TTL', () => {
+    const now = Date.now();
+    const activeRequest: Appointment = {
+      id: 'appt_recent_req',
+      business_id: 'biz_marias_cleaning',
+      service_id: 'svc_standard_cleaning',
+      status: 'requested',
+      starts_at: new Date(now + 86400000).toISOString(),
+      ends_at: new Date(now + 93600000).toISOString(),
+      customer: { name: 'Recent Client' },
+      price_cents: 12000,
+      currency: 'USD',
+      resource_allocations: [{ resource_id: 'res_cleaner_elena', resource_type: 'cleaner' }],
+      created_at: new Date(now - 2 * 3600000).toISOString(), // 2 hours ago (< 24h)
+    };
+
+    const staleRequest: Appointment = {
+      id: 'appt_stale_req',
+      business_id: 'biz_marias_cleaning',
+      service_id: 'svc_standard_cleaning',
+      status: 'requested',
+      starts_at: new Date(now + 86400000).toISOString(),
+      ends_at: new Date(now + 93600000).toISOString(),
+      customer: { name: 'Stale Client' },
+      price_cents: 12000,
+      currency: 'USD',
+      resource_allocations: [{ resource_id: 'res_cleaner_elena', resource_type: 'cleaner' }],
+      created_at: new Date(now - 30 * 3600000).toISOString(), // 30 hours ago (> 24h)
+    };
+
+    expect(isAppointmentActive(activeRequest, now)).toBe(true);
+    expect(isAppointmentActive(staleRequest, now)).toBe(false);
   });
 });

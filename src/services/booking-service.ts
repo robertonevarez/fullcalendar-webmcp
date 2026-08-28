@@ -4,6 +4,7 @@ import {
   buildSlotId,
   checkServiceArea,
   findAvailability,
+  isAppointmentActive,
   revalidateSlot,
   SchedulerContext,
 } from '@/domain/scheduler';
@@ -220,17 +221,65 @@ export class BookingService implements BusinessCapabilities {
     const rules = service.eligibility_rules;
     const requirements: string[] = rules?.general_requirements ? [...rules.general_requirements] : [];
 
-    if (rules?.max_bedrooms && input.bedrooms && input.bedrooms > rules.max_bedrooms) {
+    if (rules?.requires_water_and_power && !requirements.some((r) => r.toLowerCase().includes('water'))) {
+      requirements.push('Access to property with active water and electricity utilities');
+    }
+
+    // 1. Property type constraint
+    if (rules?.property_types_supported?.length && input.property_type) {
+      const normalizedInputType = input.property_type.trim().toLowerCase();
+      const isSupported = rules.property_types_supported.some(
+        (t) => t.trim().toLowerCase() === normalizedInputType,
+      );
+      if (!isSupported) {
+        return {
+          eligible: false,
+          service_id: service.id,
+          service_name: service.name,
+          requirements,
+          reason: `Property type '${input.property_type}' is not supported for ${service.name}. Supported types: ${rules.property_types_supported.join(', ')}.`,
+          zone_id: null,
+        };
+      }
+    }
+
+    // 2. Bedroom count constraint
+    if (rules?.max_bedrooms != null && input.bedrooms != null && input.bedrooms > rules.max_bedrooms) {
       return {
         eligible: false,
         service_id: service.id,
         service_name: service.name,
         requirements,
-        reason: `Properties with more than ${rules.max_bedrooms} bedrooms require custom commercial team quoting.`,
+        reason: `Properties with more than ${rules.max_bedrooms} bedrooms exceed standard ${service.name} capacity (received ${input.bedrooms} bedrooms). Custom commercial quoting required.`,
         zone_id: null,
       };
     }
 
+    // 3. Bathroom count constraint
+    if (rules?.max_bathrooms != null && input.bathrooms != null && input.bathrooms > rules.max_bathrooms) {
+      return {
+        eligible: false,
+        service_id: service.id,
+        service_name: service.name,
+        requirements,
+        reason: `Properties with more than ${rules.max_bathrooms} bathrooms exceed standard ${service.name} capacity (received ${input.bathrooms} bathrooms). Custom commercial quoting required.`,
+        zone_id: null,
+      };
+    }
+
+    // 4. Square footage constraint
+    if (rules?.max_square_footage != null && input.square_footage != null && input.square_footage > rules.max_square_footage) {
+      return {
+        eligible: false,
+        service_id: service.id,
+        service_name: service.name,
+        requirements,
+        reason: `Properties exceeding ${rules.max_square_footage} sq ft exceed standard ${service.name} capacity (received ${input.square_footage} sq ft). Custom commercial quoting required.`,
+        zone_id: null,
+      };
+    }
+
+    // 5. Service area territory constraint
     if (service.service_area_required) {
       if (!input.postal_code) {
         return {
@@ -729,7 +778,7 @@ export class BookingService implements BusinessCapabilities {
 
     for (const allocation of appointment.resource_allocations) {
       for (const existing of appointments) {
-        if (existing.status !== 'confirmed' && existing.status !== 'requested') continue;
+        if (!isAppointmentActive(existing)) continue;
         const uses = existing.resource_allocations.some((r) => r.resource_id === allocation.resource_id);
         if (!uses) continue;
         if (start < new Date(existing.ends_at) && new Date(existing.starts_at) < end) {

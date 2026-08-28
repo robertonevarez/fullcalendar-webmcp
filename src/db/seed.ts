@@ -238,11 +238,14 @@ export async function seedDatabase(force = false) {
       JSON.stringify({
         fields: ['property_type', 'bedrooms', 'bathrooms', 'entry_instructions'],
         eligibility_rules: {
+          property_types_supported: ['house', 'apartment', 'condo', 'townhouse'],
           max_bedrooms: 6,
+          max_bathrooms: 4,
+          max_square_footage: 3500,
           requires_water_and_power: true,
           general_requirements: [
             'Access to property with active water and electricity',
-            'Standard residential property size (up to 6 bedrooms)',
+            'Standard residential property size (up to 6 bedrooms, 4 bathrooms, 3500 sq ft)',
           ],
         },
       }),
@@ -262,11 +265,14 @@ export async function seedDatabase(force = false) {
       JSON.stringify({
         fields: ['property_type', 'bedrooms', 'bathrooms', 'focus_areas', 'entry_instructions'],
         eligibility_rules: {
+          property_types_supported: ['house', 'apartment', 'condo', 'townhouse'],
           max_bedrooms: 8,
+          max_bathrooms: 6,
+          max_square_footage: 5000,
           requires_water_and_power: true,
           general_requirements: [
             'Access to property with active water and electricity',
-            'Residential properties up to 8 bedrooms (larger estates require custom commercial quoting)',
+            'Residential properties up to 8 bedrooms, 6 bathrooms, 5000 sq ft (larger estates require custom commercial quoting)',
           ],
         },
       }),
@@ -284,9 +290,12 @@ export async function seedDatabase(force = false) {
       true,
       JSON.stringify([{ resource_type: 'cleaner', quantity: 1, capability: 'move_out' }]),
       JSON.stringify({
-        fields: ['empty_home_confirmed', 'utilities_on_confirmed', 'entry_instructions'],
+        fields: ['property_type', 'empty_home_confirmed', 'utilities_on_confirmed', 'entry_instructions'],
         eligibility_rules: {
+          property_types_supported: ['house', 'apartment', 'condo', 'townhouse'],
           max_bedrooms: 8,
+          max_bathrooms: 6,
+          max_square_footage: 6000,
           requires_water_and_power: true,
           general_requirements: [
             'Empty home confirmation (furniture cleared)',
