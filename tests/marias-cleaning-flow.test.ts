@@ -128,6 +128,17 @@ describe("Maria's Cleaning Service — WebMCP Challenge Vertical Flow", () => {
     expect(requestResult.next_steps?.length).toBeGreaterThan(0);
     const appointmentId = requestResult.appointment_id;
 
+    // A live requested appointment is a temporary capacity reservation. The
+    // exact slot must not be offered again while the hold is active.
+    const availabilityWithRequestedHold = await bookingService.checkAvailability('marias-cleaning', {
+      service_id: deepClean.id,
+      date_from: '2026-08-31',
+      date_to: '2026-08-31',
+      postal_code: '79901',
+      time_preference: 'afternoon',
+    });
+    expect(availabilityWithRequestedHold.slots.map((slot) => slot.slot_id)).not.toContain(selectedSlot.slot_id);
+
     // 6. get_appointment
     const getResult = await bookingService.getAppointment('marias-cleaning', appointmentId);
     expect(getResult.appointment_id).toBe(appointmentId);
