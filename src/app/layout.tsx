@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { RootChrome } from '@/components/root-chrome';
-import { gothicA1, lilex } from '@/lib/fonts';
+import { inter, lilex } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 import './globals.css';
 
@@ -23,7 +23,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={cn('min-h-dvh font-sans', gothicA1.variable, lilex.variable)}
+      className={cn('min-h-dvh font-sans', inter.variable, lilex.variable)}
     >
       <body className="flex min-h-dvh flex-col bg-muted text-foreground antialiased selection:bg-muted">
         <RootChrome>{children}</RootChrome>

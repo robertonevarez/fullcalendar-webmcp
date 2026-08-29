@@ -1,9 +1,8 @@
-import { Gothic_A1, Lilex } from 'next/font/google';
+import { Inter, Lilex } from 'next/font/google';
 
 /** Site-wide UI type. */
-export const gothicA1 = Gothic_A1({
+export const inter = Inter({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
   variable: '--font-sans',
   display: 'swap',
 });

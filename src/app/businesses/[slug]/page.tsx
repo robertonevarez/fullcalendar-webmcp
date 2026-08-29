@@ -33,16 +33,11 @@ export default async function BusinessPage({
   if (!business) notFound();
 
   const services = await bookingRepository.listServices(business.id);
-  const serviceZones = await bookingRepository.listServiceAreaZones(business.id);
 
   return (
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
       <main className="min-h-screen">
-        <BusinessProductOverview
-          business={business}
-          services={services}
-          serviceZones={serviceZones}
-        />
+        <BusinessProductOverview business={business} services={services} />
       </main>
     </WebMCPBusinessProvider>
   );
