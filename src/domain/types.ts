@@ -16,6 +16,11 @@ export interface BusinessAddress {
   postal_code: string;
 }
 
+export interface PhotoConfig {
+  src: string;
+  objectPosition?: string;
+}
+
 export interface Business {
   id: string;
   slug: string;
@@ -25,6 +30,7 @@ export interface Business {
   location_mode: LocationMode;
   working_hours: WorkingHours[];
   address: BusinessAddress;
+  photos?: PhotoConfig[];
 }
 
 export interface ResourceRequirement {
@@ -174,6 +180,7 @@ export interface BusinessInfo {
   working_hours: WorkingHours[];
   capabilities: string[];
   service_ids: string[];
+  photos?: PhotoConfig[];
 }
 
 export interface ServiceEligibilityQuery {

@@ -1,5 +1,5 @@
 import { query, runInTransaction } from '@/db/client';
-import { WorkingHours } from '@/domain/types';
+import { PhotoConfig, WorkingHours } from '@/domain/types';
 
 const CLEANING_HOURS: WorkingHours[] = [
   { day: 1, open: '08:00', close: '18:00' },
@@ -43,6 +43,120 @@ const AUTO_HOURS: WorkingHours[] = [
   { day: 6, open: '08:00', close: '14:00' },
 ];
 
+const MARIAS_CLEANING_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/marias-cleaning/1.jpg',
+    objectPosition: 'object-[center_20%] sm:object-[right_25%] lg:object-[80%_25%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/marias-cleaning/2.jpg',
+    objectPosition: 'object-center sm:object-[center_35%] lg:object-[85%_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/marias-cleaning/3.jpg',
+    objectPosition: 'object-[center_20%] sm:object-[right_25%] lg:object-[80%_25%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/marias-cleaning/4.jpg',
+    objectPosition: 'object-center sm:object-[center_35%] lg:object-[75%_40%]',
+  },
+];
+
+const ACME_HVAC_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/acme-hvac/1.jpg',
+    objectPosition: 'object-center sm:object-[center_30%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/acme-hvac/2.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/acme-hvac/3.jpg',
+    objectPosition: 'object-center sm:object-[center_40%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/acme-hvac/4.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+];
+
+const BLUE_PIPE_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/blue-pipe-plumbing/1.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/blue-pipe-plumbing/2.jpg',
+    objectPosition: 'object-center sm:object-[center_30%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/blue-pipe-plumbing/3.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/blue-pipe-plumbing/4.jpg',
+    objectPosition: 'object-center sm:object-[center_40%]',
+  },
+];
+
+const NORTHLINE_SALON_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/northline-salon/1.jpg',
+    objectPosition: 'object-center sm:object-[center_30%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/northline-salon/2.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/northline-salon/3.jpg',
+    objectPosition: 'object-center sm:object-[center_40%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/northline-salon/4.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+];
+
+const HARBOR_PT_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/harbor-physical-therapy/1.jpg',
+    objectPosition: 'object-center sm:object-[center_30%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/harbor-physical-therapy/2.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/harbor-physical-therapy/3.jpg',
+    objectPosition: 'object-center sm:object-[center_40%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/harbor-physical-therapy/4.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+];
+
+const MESA_AUTO_PHOTOS: PhotoConfig[] = [
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/mesa-auto-service/1.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/mesa-auto-service/2.jpg',
+    objectPosition: 'object-center sm:object-[center_30%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/mesa-auto-service/3.jpg',
+    objectPosition: 'object-center sm:object-[center_35%]',
+  },
+  {
+    src: 'https://6r4fc62icbvueady.public.blob.vercel-storage.com/businesses/mesa-auto-service/4.jpg',
+    objectPosition: 'object-center sm:object-[center_40%]',
+  },
+];
+
 export async function seedDatabase(force = false) {
   return runInTransaction(async () => {
     const mariaResult = await query<{ count: string }>(
@@ -71,11 +185,12 @@ export async function seedDatabase(force = false) {
       locationMode: string,
       workingHoursJson: string,
       addressJson: string,
+      photosJson = '[]',
     ) {
       await query(
-        `INSERT INTO businesses (id, slug, name, description, timezone, location_mode, working_hours_json, address_json)
-         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb)`,
-        [id, slug, name, description, timezone, locationMode, workingHoursJson, addressJson],
+        `INSERT INTO businesses (id, slug, name, description, timezone, location_mode, working_hours_json, address_json, photos_json)
+         VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9::jsonb)`,
+        [id, slug, name, description, timezone, locationMode, workingHoursJson, addressJson, photosJson],
       );
     }
 
@@ -219,6 +334,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '79902',
       }),
+      JSON.stringify(MARIAS_CLEANING_PHOTOS),
     );
     await insertZone(
       'zone_el_paso_metro',
@@ -400,7 +516,7 @@ export async function seedDatabase(force = false) {
       'biz_acme_hvac',
       'acme-hvac',
       'Acme Heating & Air',
-      'Heating and cooling service for homes across Austin.',
+      'Premier heating, ventilation, and air conditioning services across Austin. Rapid diagnostic visits, seasonal tune-ups, and certified technicians.',
       'America/Chicago',
       'CUSTOMER_LOCATION',
       JSON.stringify(WEEKDAY_FIELD),
@@ -410,6 +526,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '78701',
       }),
+      JSON.stringify(ACME_HVAC_PHOTOS),
     );
     await insertZone(
       'zone_acme_central',
@@ -509,7 +626,7 @@ export async function seedDatabase(force = false) {
       'biz_blue_pipe',
       'blue-pipe-plumbing',
       'Blue Pipe Plumbing',
-      'Residential plumbing service for the Austin area.',
+      'Residential plumbing and emergency repairs across the Austin metro. Licensed master plumbers, transparent pricing, and dependable workmanship.',
       'America/Chicago',
       'CUSTOMER_LOCATION',
       JSON.stringify(WEEKDAY_FIELD),
@@ -519,6 +636,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '78702',
       }),
+      JSON.stringify(BLUE_PIPE_PHOTOS),
     );
     await insertZone(
       'zone_blue_east',
@@ -576,7 +694,7 @@ export async function seedDatabase(force = false) {
       JSON.stringify(['drain_cleaning', 'leak_diagnosis', 'water_heater_service']),
       JSON.stringify(WEEKDAY_FIELD),
       true,
-    );
+      );
     await insertResource(
       'res_plumber_dev',
       'biz_blue_pipe',
@@ -592,7 +710,7 @@ export async function seedDatabase(force = false) {
       'biz_northline_salon',
       'northline-salon',
       'Northline Salon',
-      'Hair and personal-care appointments in North Austin.',
+      'Contemporary hair styling, artisan color, and therapeutic spa treatments in North Austin. Personalized care tailored to your unique look.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(SALON_HOURS),
@@ -602,6 +720,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '78756',
       }),
+      JSON.stringify(NORTHLINE_SALON_PHOTOS),
     );
     await insertService(
       'svc_haircut',
@@ -699,7 +818,7 @@ export async function seedDatabase(force = false) {
       'biz_harbor_pt',
       'harbor-physical-therapy',
       'Harbor Physical Therapy',
-      'Physical therapy and follow-up care in Austin.',
+      'Evidence-based physical therapy, sports rehabilitation, and wellness consultations in Austin. Helping you regain strength and move without pain.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(CLINIC_HOURS),
@@ -709,6 +828,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '78731',
       }),
+      JSON.stringify(HARBOR_PT_PHOTOS),
     );
     await insertService(
       'svc_pt_eval',
@@ -803,7 +923,7 @@ export async function seedDatabase(force = false) {
       'biz_mesa_auto',
       'mesa-auto-service',
       'Mesa Auto Service',
-      'Automotive maintenance and repair in South Austin.',
+      'Full-service automotive maintenance and precision repairs in South Austin. ASE-certified mechanics, state-of-the-art diagnostic bays, and honest service.',
       'America/Chicago',
       'BUSINESS_LOCATION',
       JSON.stringify(AUTO_HOURS),
@@ -813,6 +933,7 @@ export async function seedDatabase(force = false) {
         region: 'TX',
         postal_code: '78745',
       }),
+      JSON.stringify(MESA_AUTO_PHOTOS),
     );
     await insertService(
       'svc_oil_change',

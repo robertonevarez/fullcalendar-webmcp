@@ -173,6 +173,7 @@ export class BookingService implements BusinessCapabilities {
         'appointment_management',
       ],
       service_ids: services.map((s) => s.id),
+      photos: business.photos,
     };
   }
 

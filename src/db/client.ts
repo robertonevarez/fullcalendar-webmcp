@@ -32,7 +32,8 @@ function requiresSsl(connectionString: string): boolean {
 export function getPool(): Pool {
   if (pool) return pool;
 
-  const connectionString = process.env.DATABASE_URL;
+  const rawUrl = process.env.DATABASE_URL?.trim();
+  const connectionString = rawUrl || (process.env.NODE_ENV !== 'production' ? 'postgresql://localhost:5432/protocoltooling_dev' : '');
   if (!connectionString) {
     throw new Error('DATABASE_URL is required. Use PlanetScale Postgres (port 6432 for app traffic).');
   }

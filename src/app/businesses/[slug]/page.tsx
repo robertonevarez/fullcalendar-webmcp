@@ -42,7 +42,7 @@ export default async function BusinessPage({
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
       <BusinessInspectShell>
         <article className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-[2rem] md:rounded-[2.75rem] smooth-corners isolate p-6 sm:p-8 md:p-9 lg:p-10">
-          <CardPhotoBackground slug={business.slug} />
+          <CardPhotoBackground images={business.photos} slug={business.slug} />
           <div className="relative z-10 flex w-full items-baseline justify-between gap-3 text-base font-medium tracking-tight text-white sm:text-lg md:text-xl [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.85))_drop-shadow(0_2px_10px_rgba(0,0,0,0.55))]">
             <h1 className="min-w-0 truncate">{business.name}</h1>
             <p className="max-w-[45%] shrink-0 truncate text-right">

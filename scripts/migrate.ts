@@ -18,8 +18,8 @@ function migrationConnectionString(): string {
   return url;
 }
 
-async function main() {
-  const connectionString = migrationConnectionString();
+export async function runMigrations(targetConnectionString?: string) {
+  const connectionString = targetConnectionString ?? migrationConnectionString();
   const client = new Client({
     connectionString,
     ssl: connectionString.includes('localhost') || connectionString.includes('127.0.0.1')
@@ -46,12 +46,10 @@ async function main() {
     const id = file;
     const existing = await client.query('SELECT 1 FROM schema_migrations WHERE id = $1', [id]);
     if (existing.rowCount) {
-      console.log(`skip ${id}`);
       continue;
     }
 
     const sql = fs.readFileSync(path.join(dir, file), 'utf8');
-    console.log(`apply ${id}`);
     await client.query('BEGIN');
     try {
       await client.query(sql);
@@ -64,10 +62,15 @@ async function main() {
   }
 
   await client.end();
-  console.log('migrations complete');
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+if (process.argv[1] && process.argv[1].endsWith('migrate.ts')) {
+  runMigrations()
+    .then(() => {
+      console.log('migrations complete');
+    })
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
+}
