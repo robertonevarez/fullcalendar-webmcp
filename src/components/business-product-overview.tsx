@@ -307,24 +307,7 @@ export function BusinessProductOverview({
             <div className="flex flex-col gap-6">
               {/* Header block */}
               <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center">
-                    {[0, 1, 2, 3, 4].map((rating) => (
-                      <StarIcon
-                        key={rating}
-                        className={classNames(
-                          reviewsData.average > rating ? 'text-amber-400' : 'text-muted/40',
-                          'size-4 shrink-0',
-                        )}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">
-                    {reviewsData.average}.0 ({reviewsData.count} reviews)
-                  </span>
-                </div>
-
-                <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+                <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
                   {business.name}
                 </h1>
 
