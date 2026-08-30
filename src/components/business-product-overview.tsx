@@ -3,9 +3,7 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { ArrowUpRightIcon } from 'lucide-react';
 import type { Business, Service, WorkingHours } from '@/domain/types';
-import { Button } from '@/components/ui/button';
 import {
   Accordion,
   AccordionContent,
@@ -13,6 +11,14 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  BusinessAgentActions,
+  type BusinessAgentView,
+} from '@/components/business-agent-actions';
+import { ChatGPTBookingGuide } from '@/components/chatgpt-booking-guide';
+import { AiBookingDemo } from '@/components/ai-booking-demo';
+import { WebMCPInspectPanel } from '@/components/webmcp-inspect-panel';
+import { useWebMCPRegistrationState } from '@/components/webmcp-business-provider';
 import {
   AUTOPLAY_MS,
   DURATION_CROSSFADE_S,
@@ -22,6 +28,8 @@ import {
   mountItem,
   mountList,
 } from '@/lib/motion';
+
+type ActiveView = 'product' | BusinessAgentView;
 
 function classNames(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(' ');
@@ -136,6 +144,8 @@ export function BusinessProductOverview({
   services,
 }: BusinessProductOverviewProps) {
   const reduceMotion = useReducedMotion();
+  const registrationState = useWebMCPRegistrationState();
+  const [activeView, setActiveView] = useState<ActiveView>('product');
   const [photoIndex, setPhotoIndex] = useState(0);
   const [paused, setPaused] = useState(false);
 
@@ -152,12 +162,48 @@ export function BusinessProductOverview({
   const activePhoto = photos[photoIndex] ?? photos[0];
 
   useEffect(() => {
-    if (photos.length < 2 || paused || reduceMotion) return;
+    if (activeView !== 'product' || photos.length < 2 || paused || reduceMotion) {
+      return;
+    }
     const id = window.setInterval(() => {
       setPhotoIndex((current) => (current + 1) % photos.length);
     }, AUTOPLAY_MS);
     return () => window.clearInterval(id);
-  }, [photos.length, paused, photoIndex, reduceMotion]);
+  }, [activeView, photos.length, paused, photoIndex, reduceMotion]);
+
+  const goBack = () => setActiveView('product');
+
+  if (activeView === 'chatgpt') {
+    return (
+      <ChatGPTBookingGuide
+        onBack={goBack}
+        business={business}
+        services={services}
+        registrationState={registrationState}
+      />
+    );
+  }
+
+  if (activeView === 'demo') {
+    return (
+      <AiBookingDemo
+        key="ai-booking-demo"
+        onBack={goBack}
+        business={business}
+        services={services}
+      />
+    );
+  }
+
+  if (activeView === 'inspect') {
+    return (
+      <WebMCPInspectPanel
+        onBack={goBack}
+        registrationState={registrationState}
+        businessName={business.name}
+      />
+    );
+  }
 
   const prices = services.map((s) => s.price_cents).filter((p) => p > 0);
   const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -315,14 +361,7 @@ export function BusinessProductOverview({
               </motion.p>
 
               <motion.div variants={mountItem}>
-                <Button
-                  size="lg"
-                  type="button"
-                  className="h-12 w-full text-base font-medium tracking-tight cursor-pointer"
-                >
-                  Book with ChatGPT
-                  <ArrowUpRightIcon className="size-[1em]" />
-                </Button>
+                <BusinessAgentActions onSelectView={setActiveView} />
               </motion.div>
 
               {services.length > 0 && (

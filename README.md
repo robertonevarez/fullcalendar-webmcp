@@ -4,40 +4,46 @@
 
 This repository is the canonical core implementation of **Protocol Tooling**. It provides the deterministic domain logic, booking service, availability engine, multi-resource constraints, service-area boundaries, PostgreSQL persistence layer, REST API, and WebMCP tool registration lifecycle for personal AI agents.
 
-Looking for the interactive product showcase and visual demo? See [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo).
+Reference business pages at `/businesses/[slug]` are the challenge runtime: real WebMCP Site Tools for ChatGPT, plus a human-only “See how AI booking works” walkthrough for visitors without Site Tools.
+
+Related marketing/showcase work lives in [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo); it is not the agent booking surface.
+
+For the accurate agent flow and tool semantics, see [docs/challenge-architecture.md](docs/challenge-architecture.md).
 
 ---
 
 ## Architecture
 
 ```text
-Browser / Personal Agent (ChatGPT / Chrome WebMCP)
-        ↓  WebMCP document.modelContext.registerTool()
-Vercel-hosted Next.js API Routes (/api/businesses/[slug]/*)
+Browser / Personal Agent (ChatGPT Site Tools / WebMCP)
+        ↓  document.modelContext.registerTool()
+/businesses/[slug] (dual-surface reference pages)
+        ↓
+Next.js API Routes (/api/businesses/[slug]/*)
         ↓
 BookingService (Application Layer)
         ↓
 Domain Scheduler & Multi-Resource Constraints (Pure TS Engine)
         ↓
-PostgreSQL Persistence (PlanetScale PgBouncer / Transaction Isolation)
+PostgreSQL Persistence
 ```
 
 ---
 
 ## Capabilities & WebMCP Tools
 
-Every business endpoint (`/businesses/[slug]`) registers 8 standardized WebMCP tools directly into the browser agent runtime:
+Every business page (`/businesses/[slug]`) registers 8 standardized WebMCP tools into the browser agent runtime:
 
 | Tool Name | Type | Purpose |
 |-----------|------|---------|
-| `search_services` | Read-only | Deterministic keyword and semantic service discovery |
-| `get_service_details` | Read-only | Returns service metadata, duration, price, and location policy |
-| `check_service_area` | Read-only | Validates postal code eligibility against service area rules |
-| `get_availability` | Read-only | Generates conflict-free viable appointment slots |
-| `create_appointment` | Mutation | Atomically books appointment with idempotency & re-validation |
+| `get_business_info` | Read-only | Business profile, hours, timezone, and coverage |
+| `get_services` | Read-only | Service catalog with pricing and constraints |
+| `check_service_eligibility` | Read-only | Postal code / property eligibility against business rules |
+| `check_availability` | Read-only | Viable appointment slots across resources and hours |
+| `request_appointment` | Mutation | Creates a persisted appointment **request** (idempotent; not an auto-confirmed book) |
 | `get_appointment` | Read-only | Retrieves booking details and status by appointment ID |
-| `reschedule_appointment` | Mutation | Atomically moves an appointment to a new slot |
-| `cancel_appointment` | Mutation | Cancels an appointment and releases resource allocations |
+| `reschedule_appointment` | Mutation | Moves an appointment to a new slot |
+| `cancel_appointment` | Mutation | Cancels an appointment and releases resources |
 
 ---
 
@@ -45,6 +51,7 @@ Every business endpoint (`/businesses/[slug]`) registers 8 standardized WebMCP t
 
 The repository includes pre-configured reference businesses representing diverse service scheduling archetypes:
 
+- **Field Service / Cleaning (`marias-cleaning`):** Multi-cleaner residential dispatch with El Paso service-area eligibility (WebMCP challenge reference).
 - **Field Service / HVAC (`acme-hvac`):** Single resource dispatch with geographic postal code validation (Austin TX 78701 eligible, 90210 outside service area).
 - **Field Service / Plumbing (`blue-pipe-plumbing`):** Residential service dispatch with emergency routing.
 - **Salon / Provider (`northline-salon`):** Provider-centric booking with no geographic restriction.
@@ -81,7 +88,7 @@ npm run db:seed
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) for the developer overview and [http://localhost:3000/docs](http://localhost:3000/docs) for the full WebMCP tool specifications.
+Visit [http://localhost:3000](http://localhost:3000) for the developer overview and [http://localhost:3000/businesses](http://localhost:3000/businesses) for seeded reference businesses.
 
 ---
 
@@ -109,41 +116,44 @@ npm test
 src/
 ├── app/
 │   ├── api/businesses/[slug]/    # REST API endpoints for WebMCP tools
-│   ├── businesses/[slug]/        # Minimal reference WebMCP integration page
-│   ├── docs/                     # WebMCP tool specifications
+│   ├── businesses/[slug]/        # Dual-surface reference business pages
 │   ├── layout.tsx
 │   └── page.tsx                  # Core developer overview
 ├── components/
-│   ├── webmcp-business-provider.tsx # React Context provider for WebMCP
-│   ├── webmcp-registrar.tsx         # Page lifecycle registration hook
-│   └── webmcp-status.tsx            # Developer diagnostics panel
+│   ├── business-product-overview.tsx
+│   ├── business-agent-actions.tsx    # Book with ChatGPT + human demo CTAs
+│   ├── chatgpt-booking-guide.tsx
+│   ├── ai-booking-demo.tsx
+│   ├── webmcp-inspect-panel.tsx      # Opt-in technical diagnostics
+│   ├── webmcp-business-provider.tsx
+│   └── webmcp-registrar.tsx
 ├── db/
-│   ├── client.ts                 # PostgreSQL connection pool (pg)
-│   ├── repository.ts             # Atomic queries, advisory locking, transactions
-│   ├── mappers.ts                # Database row to domain type mappers
-│   ├── init.ts                   # Schema initialization
-│   └── seed.ts                   # Seed data loader
+│   ├── client.ts
+│   ├── repository.ts
+│   ├── mappers.ts
+│   ├── init.ts
+│   └── seed.ts
 ├── domain/
-│   ├── scheduler.ts              # Pure scheduling algorithms & slot generation
-│   ├── search.ts                 # Service search and ranking
-│   ├── types.ts                  # Pure domain types (Business, Service, Resource, Slot)
-│   └── errors.ts                 # Structured error codes and AppError class
+│   ├── scheduler.ts
+│   ├── search.ts
+│   ├── types.ts
+│   └── errors.ts
 ├── services/
-│   └── booking-service.ts        # Application service layer
+│   └── booking-service.ts
 └── webmcp/
-    ├── tools.ts                  # WebMCP tool definitions and execution handlers
-    └── lifecycle.ts              # Browser registration and polling lifecycle
+    ├── tools.ts
+    └── lifecycle.ts
 docs/                             # Technical briefs and architecture documentation
-db/migrations/                    # SQL schema migrations
-scripts/                          # Migration and seeding CLI scripts
-tests/                            # Vitest domain, contract, and e2e tests
+db/migrations/
+scripts/
+tests/
 ```
 
 ---
 
 ## Related Repositories
 
-- **Demo & Frontend Showcase:** [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo) — Interactive walkthrough, animated AI agent simulation, visual overlay, and marketing landing page.
+- **Marketing / showcase:** [robertonevarez/protocoltooling-demo](https://github.com/robertonevarez/protocoltooling-demo) — Separate visual/marketing materials. This repository hosts the challenge runtime and dual-surface business pages.
 
 ---
 
