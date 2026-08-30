@@ -27,6 +27,10 @@
   --ring: oklch(0.708 0 0);
   --radius: 0.625rem;
   --spacing-page: 0.75rem;
+  /* Shared motion — keep src/lib/motion.ts in sync */
+  --ease-motion: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 350ms;
   --ink: oklch(0.145 0 0);
   --ink-2: oklch(0.48 0 0);
   --ink-3: oklch(0.65 0 0);
@@ -123,6 +127,9 @@
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) * 1.4);
+  --ease-motion: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 350ms;
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);

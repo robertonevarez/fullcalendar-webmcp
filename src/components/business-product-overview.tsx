@@ -13,6 +13,15 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  AUTOPLAY_MS,
+  DURATION_CROSSFADE_S,
+  DURATION_FAST_S,
+  EASE_IN_OUT,
+  mountContainer,
+  mountItem,
+  mountList,
+} from '@/lib/motion';
 
 function classNames(...classes: (string | boolean | undefined | null)[]) {
   return classes.filter(Boolean).join(' ');
@@ -117,11 +126,6 @@ function buildFaqs(
   ];
 }
 
-/** Strong ease-in-out for on-screen morphs — Emil Kowalski / animations.dev. */
-const EASE_IN_OUT = [0.77, 0, 0.175, 1] as const;
-const AUTOPLAY_MS = 5500;
-const CROSSFADE_S = 1.1;
-
 interface BusinessProductOverviewProps {
   business: Business;
   services: Service[];
@@ -172,7 +176,12 @@ export function BusinessProductOverview({
     <div className="bg-background text-foreground transition-colors max-lg:p-6 lg:h-full lg:min-h-0 lg:overflow-hidden">
       <div className="mx-auto flex h-full w-full max-w-7xl flex-col lg:max-w-none">
         <div className="grid grid-cols-1 gap-6 lg:h-full lg:min-h-0 lg:grid-cols-7 lg:gap-0">
-          <div className="lg:col-span-4 lg:self-start lg:py-6 lg:pl-6 lg:pr-3">
+          <motion.div
+            className="lg:col-span-4 lg:self-start lg:py-6 lg:pl-6 lg:pr-3"
+            initial={reduceMotion ? false : 'hidden'}
+            animate="show"
+            variants={mountItem}
+          >
             <div
               className="overflow-hidden rounded-2xl bg-muted shadow-lg"
               onMouseEnter={() => setPaused(true)}
@@ -206,7 +215,9 @@ export function BusinessProductOverview({
                     }
                     transition={{
                       opacity: {
-                        duration: reduceMotion ? 0.2 : CROSSFADE_S,
+                        duration: reduceMotion
+                          ? DURATION_FAST_S
+                          : DURATION_CROSSFADE_S,
                         ease: EASE_IN_OUT,
                       },
                       transform: {
@@ -246,11 +257,11 @@ export function BusinessProductOverview({
                             aria-selected={selected}
                             aria-label={`Show photo ${index + 1} of ${photos.length}`}
                             onClick={() => goToPhoto(index)}
-                            className="flex size-10 items-center justify-center cursor-pointer active:scale-[0.97] transition-transform duration-150 ease-out"
+                            className="flex size-10 items-center justify-center cursor-pointer active:scale-[0.97] transition-transform duration-fast ease-motion"
                           >
                             <span
                               className={classNames(
-                                'rounded-full shadow-sm transition-[width,background-color] duration-200 ease-out',
+                                'rounded-full shadow-sm transition-[width,background-color] duration-fast ease-motion',
                                 selected
                                   ? 'h-2.5 w-6 bg-white'
                                   : 'size-2.5 bg-white/50 hover:bg-white/75',
@@ -264,14 +275,19 @@ export function BusinessProductOverview({
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           <ScrollArea
             className="min-h-0 lg:col-span-3 lg:h-full"
             viewportClassName="scroll-fade overscroll-contain"
           >
-            <div className="flex flex-col gap-6 lg:py-6 lg:pl-3 lg:pr-6">
-              <div className="flex flex-col gap-0">
+            <motion.div
+              className="flex flex-col gap-6 lg:py-6 lg:pl-3 lg:pr-6"
+              initial={reduceMotion ? false : 'hidden'}
+              animate="show"
+              variants={mountContainer}
+            >
+              <motion.div className="flex flex-col gap-0" variants={mountItem}>
                 <h1 className="text-3xl font-medium tracking-tighter text-foreground sm:text-4xl">
                   {business.name}
                 </h1>
@@ -283,29 +299,37 @@ export function BusinessProductOverview({
                   <span>·</span>
                   <span>{business.timezone}</span>
                 </div>
-              </div>
+              </motion.div>
 
-              <div className="flex items-baseline gap-2">
+              <motion.div className="flex items-baseline gap-2" variants={mountItem}>
                 <span className="text-2xl font-medium tracking-tighter text-foreground sm:text-3xl">
                   {priceDisplay}
                 </span>
-              </div>
+              </motion.div>
 
-              <p className="text-base sm:text-lg tracking-tight text-muted-foreground">
-                {business.description}
-              </p>
-
-              <Button
-                size="lg"
-                type="button"
-                className="h-12 w-full text-base font-medium tracking-tight cursor-pointer"
+              <motion.p
+                className="text-base sm:text-lg tracking-tight text-muted-foreground"
+                variants={mountItem}
               >
-                Book with ChatGPT
-                <ArrowUpRightIcon className="size-[1em]" />
-              </Button>
+                {business.description}
+              </motion.p>
+
+              <motion.div variants={mountItem}>
+                <Button
+                  size="lg"
+                  type="button"
+                  className="h-12 w-full text-base font-medium tracking-tight cursor-pointer"
+                >
+                  Book with ChatGPT
+                  <ArrowUpRightIcon className="size-[1em]" />
+                </Button>
+              </motion.div>
 
               {services.length > 0 && (
-                <section aria-labelledby="services-heading">
+                <motion.section
+                  aria-labelledby="services-heading"
+                  variants={mountItem}
+                >
                   <h2
                     id="services-heading"
                     className="text-xl font-medium tracking-tighter text-foreground sm:text-2xl"
@@ -313,8 +337,13 @@ export function BusinessProductOverview({
                     Services
                   </h2>
 
-                  <ul className="mt-3">
-                    {services.map((service, index) => {
+                  <motion.ul
+                    className="mt-3"
+                    variants={mountList}
+                    initial={reduceMotion ? false : 'hidden'}
+                    animate="show"
+                  >
+                    {services.map((service) => {
                       const servicePrice =
                         service.price_cents > 0
                           ? formatPrice(service.price_cents, service.currency)
@@ -324,15 +353,7 @@ export function BusinessProductOverview({
                         <motion.li
                           key={service.id}
                           className="border-t border-border py-3"
-                          initial={
-                            reduceMotion ? false : { opacity: 0, y: 8 }
-                          }
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{
-                            duration: reduceMotion ? 0 : 0.35,
-                            delay: reduceMotion ? 0 : index * 0.05,
-                            ease: EASE_IN_OUT,
-                          }}
+                          variants={mountItem}
                         >
                           <div className="flex items-baseline justify-between gap-4">
                             <span className="text-base tracking-tight text-foreground sm:text-lg">
@@ -345,12 +366,15 @@ export function BusinessProductOverview({
                         </motion.li>
                       );
                     })}
-                  </ul>
-                </section>
+                  </motion.ul>
+                </motion.section>
               )}
 
               {hoursRows.length > 0 && (
-                <section aria-labelledby="hours-heading">
+                <motion.section
+                  aria-labelledby="hours-heading"
+                  variants={mountItem}
+                >
                   <h2
                     id="hours-heading"
                     className="text-xl font-medium tracking-tighter text-foreground sm:text-2xl"
@@ -358,11 +382,17 @@ export function BusinessProductOverview({
                     Hours
                   </h2>
 
-                  <ul className="mt-3">
+                  <motion.ul
+                    className="mt-3"
+                    variants={mountList}
+                    initial={reduceMotion ? false : 'hidden'}
+                    animate="show"
+                  >
                     {hoursRows.map((row) => (
-                      <li
+                      <motion.li
                         key={row.day}
                         className="flex items-baseline justify-between gap-4 border-t border-border py-3"
+                        variants={mountItem}
                       >
                         <span className="text-base tracking-tight text-foreground sm:text-lg">
                           {row.day}
@@ -370,13 +400,13 @@ export function BusinessProductOverview({
                         <span className="shrink-0 text-base tracking-tight text-muted-foreground sm:text-lg">
                           {row.time}
                         </span>
-                      </li>
+                      </motion.li>
                     ))}
-                  </ul>
-                </section>
+                  </motion.ul>
+                </motion.section>
               )}
 
-              <section aria-labelledby="faq-heading">
+              <motion.section aria-labelledby="faq-heading" variants={mountItem}>
                 <h2
                   id="faq-heading"
                   className="text-xl font-medium tracking-tighter text-foreground sm:text-2xl"
@@ -385,15 +415,23 @@ export function BusinessProductOverview({
                 </h2>
 
                 <Accordion className="mt-3">
-                  {faqs.map((faq) => (
-                    <AccordionItem key={faq.id} value={faq.id}>
-                      <AccordionTrigger>{faq.question}</AccordionTrigger>
-                      <AccordionContent>{faq.answer}</AccordionContent>
-                    </AccordionItem>
-                  ))}
+                  <motion.div
+                    variants={mountList}
+                    initial={reduceMotion ? false : 'hidden'}
+                    animate="show"
+                  >
+                    {faqs.map((faq) => (
+                      <motion.div key={faq.id} variants={mountItem}>
+                        <AccordionItem value={faq.id}>
+                          <AccordionTrigger>{faq.question}</AccordionTrigger>
+                          <AccordionContent>{faq.answer}</AccordionContent>
+                        </AccordionItem>
+                      </motion.div>
+                    ))}
+                  </motion.div>
                 </Accordion>
-              </section>
-            </div>
+              </motion.section>
+            </motion.div>
           </ScrollArea>
         </div>
       </div>
