@@ -1,8 +1,30 @@
-import { Inter, Lilex } from 'next/font/google';
+import localFont from 'next/font/local';
+import { Lilex } from 'next/font/google';
 
-/** Site-wide UI type. */
-export const inter = Inter({
-  subsets: ['latin'],
+/** Site-wide UI type — Open Runde vendored from https://github.com/lauridskern/open-runde */
+export const openRunde = localFont({
+  src: [
+    {
+      path: '../fonts/open-runde/OpenRunde-Regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/open-runde/OpenRunde-Medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/open-runde/OpenRunde-Semibold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+    {
+      path: '../fonts/open-runde/OpenRunde-Bold.woff2',
+      weight: '700',
+      style: 'normal',
+    },
+  ],
   variable: '--font-sans',
   display: 'swap',
 });

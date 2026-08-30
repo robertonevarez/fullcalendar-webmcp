@@ -176,49 +176,6 @@
   }
 }
 
-@utility scroll-fade {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 16px,
-    black calc(100% - 16px),
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 16px,
-    black calc(100% - 16px),
-    transparent 100%
-  );
-}
-
-@utility scroll-fade-t {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 16px
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 16px
-  );
-}
-
-@utility scroll-fade-b {
-  mask-image: linear-gradient(
-    to top,
-    transparent 0%,
-    black 16px
-  );
-  -webkit-mask-image: linear-gradient(
-    to top,
-    transparent 0%,
-    black 16px
-  );
-}
-
 @utility smooth-corners {
   corner-shape: squircle;
   backface-visibility: hidden;

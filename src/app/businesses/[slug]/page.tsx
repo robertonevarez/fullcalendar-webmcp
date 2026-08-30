@@ -36,7 +36,7 @@ export default async function BusinessPage({
 
   return (
     <WebMCPBusinessProvider businessSlug={business.slug} businessName={business.name}>
-      <main className="min-h-screen">
+      <main className="min-h-dvh lg:h-dvh lg:overflow-hidden">
         <BusinessProductOverview business={business} services={services} />
       </main>
     </WebMCPBusinessProvider>
