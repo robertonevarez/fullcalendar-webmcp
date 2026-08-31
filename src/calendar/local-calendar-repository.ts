@@ -143,7 +143,11 @@ export class LocalCalendarEventRepository implements CalendarEventRepository {
     try {
       const stored = this.storage.getItem(this.storageKey);
       if (stored) return JSON.parse(stored) as CalendarEvent[];
-      this.write(this.seedEvents);
+      try {
+        this.write(this.seedEvents);
+      } catch {
+        this.memoryFallback = clone(this.seedEvents);
+      }
       return clone(this.seedEvents);
     } catch {
       this.memoryFallback = clone(this.seedEvents);
@@ -153,11 +157,7 @@ export class LocalCalendarEventRepository implements CalendarEventRepository {
 
   private write(events: CalendarEvent[]) {
     const value = clone(events);
-    try {
-      this.storage.setItem(this.storageKey, JSON.stringify(value));
-      this.memoryFallback = null;
-    } catch {
-      this.memoryFallback = value;
-    }
+    this.storage.setItem(this.storageKey, JSON.stringify(value));
+    this.memoryFallback = null;
   }
 }

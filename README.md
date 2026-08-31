@@ -33,7 +33,21 @@ useFullCalendarWebMCP({ calendarRef, events: repository, onEventsChanged: reload
 <FullCalendar ref={calendarRef} {...existingOptions} />
 ```
 
-That is one import, three integration statements, one existing repository object, and one existing refresh callback. No FullCalendar mutation callback changes and no persistence changes are required.
+The hook wiring is four executable lines: one import, two setup statements, and one `ref` addition. That measurement starts **after a host adapter implementing `CalendarEventRepository` exists**.
+
+If an application's persistence API exposes separate functions, the adapter is additional glue and should be counted separately:
+
+```ts
+const events: CalendarEventRepository = {
+  list: (query, options) => api.events.list(query, options),
+  get: (id, options) => api.events.get(id, options),
+  create: (input, options) => api.events.create(input, options),
+  update: (id, input, options) => api.events.update(id, input, options),
+  delete: (id, options) => api.events.delete(id, options),
+};
+```
+
+That representative adapter is seven executable lines. Hosts whose existing repository already matches the five-operation contract need no glue; other applications may need more mapping. The demo's local persistence implementation is deliberately kept separate from the hook integration cost.
 
 ## Checks
 

@@ -39,6 +39,8 @@ Rejected alternatives:
 
 The host repository owns persistence and assigns IDs on create. Every later get, update, and delete uses that stable ID. The demo repository uses a versioned `localStorage` key and `crypto.randomUUID()`, which is lightweight proof—not a proposed production database. Reconstructing the repository or reloading the page reads the same records.
 
+The demo may fall back to seed data in memory when storage cannot be read, but mutations never degrade to memory: a failed durable write rejects the repository call and therefore rejects the WebMCP tool call without claiming success.
+
 Agent and human mutations converge before the UI: both call `LocalCalendarEventRepository`, then reload controlled FullCalendar events. A failed human drag/resize calls FullCalendar's `revert()` callback.
 
 ## WebMCP lifecycle
@@ -57,7 +59,7 @@ The demo displays FullCalendar in `local` time. `calendar_get_context` returns U
 
 ## Actual integration cost
 
-Measured against the ordinary example that already has `repository`, `reloadEvents`, and `<FullCalendar>`:
+There are two separate costs. The hook wiring below is measured only after the host has an `events` object implementing `CalendarEventRepository`:
 
 | Item | Cost |
 | --- | ---: |
@@ -70,7 +72,17 @@ Measured against the ordinary example that already has `repository`, `reloadEven
 | Runtime dependencies added for adapter | 1 (`webmcp-types`, types only) |
 | Framework assumptions | React 17–19 and FullCalendar React 7 |
 
-The integration is four executable lines including the import. The repository interface has five operations because durable CRUD cannot be inferred safely from FullCalendar's transient API.
+The hook wiring is four executable lines including the import. The repository interface has five operations because durable CRUD cannot be inferred safely from FullCalendar's transient API.
+
+The persistence adapter is additional and must be measured separately:
+
+| Host persistence shape | Adapter cost |
+| --- | ---: |
+| Existing object already implements the five operations | 0 glue lines |
+| Separate API methods mapped directly to the interface | 7 executable lines in the README example |
+| Phase 0 `localStorage` repository | 163 physical source lines before tests |
+
+The demo repository count includes storage durability, validation, stable ID creation, UTC normalization, and range filtering; it is not hook integration. A second integration into an independently structured FullCalendar application is required before treating the repository contract as the final public API.
 
 ## Known limitations
 

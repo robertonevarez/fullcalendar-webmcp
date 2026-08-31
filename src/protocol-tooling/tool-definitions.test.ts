@@ -87,4 +87,36 @@ describe("calendar WebMCP tools", () => {
     await listTool.execute({}, { signal });
     expect(list).toHaveBeenCalledWith({}, { signal });
   });
+
+  it("fails a WebMCP mutation when durable storage rejects the write", async () => {
+    const storage = {
+      getItem: vi.fn(() => "[]"),
+      setItem: vi.fn(() => {
+        throw new DOMException("Storage quota exceeded", "QuotaExceededError");
+      }),
+    };
+    const repository = new LocalCalendarEventRepository({
+      storage,
+      createId: () => "not-persisted",
+    });
+    const onEventsChanged = vi.fn();
+    const context = new FakeModelContext();
+    const tools = createCalendarTools(() => ({
+      calendarRef: fakeCalendarRef(),
+      events: repository,
+      onEventsChanged,
+    }));
+    await Promise.all(tools.map((tool) => context.registerTool(tool)));
+
+    await expect(
+      context.execute("calendar_create_event", {
+        title: "Design Review",
+        start: "2026-09-02T14:00:00-06:00",
+        end: "2026-09-02T15:00:00-06:00",
+      }),
+    ).rejects.toThrow("Storage quota exceeded");
+
+    expect(onEventsChanged).not.toHaveBeenCalled();
+    expect(await repository.list()).toEqual([]);
+  });
 });
