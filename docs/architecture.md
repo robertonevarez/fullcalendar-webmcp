@@ -104,3 +104,48 @@ The demo repository count includes storage durability, validation, stable ID cre
 - [FullCalendar Event Object](https://fullcalendar.io/docs/event-object)
 - [FullCalendar event sources](https://fullcalendar.io/docs/event-source)
 - [FullCalendar event model and lifecycle callbacks](https://fullcalendar.io/docs/event-model)
+
+---
+
+# Phase 1: React Framework & Persistence Portability Validation
+
+## Independent Target
+
+- **Application:** Next.js enterprise driving school booking platform (`registerdriver`).
+- **React Framework:** Next.js 16+ App Router with React 19 (`^19.2.8`) and Server Actions (`next-safe-action`).
+- **FullCalendar Configuration:** FullCalendar React v6 (`@fullcalendar/react` `^6.1.17`, `@fullcalendar/daygrid`, `@fullcalendar/timegrid`, `@fullcalendar/interaction`).
+- **Persistence Architecture:** Asynchronous Supabase / PostgreSQL database backend with server actions (`createSessionAction`, `updateSessionAction`, `deleteSessionAction`).
+- **State-Management & Event Loading:** Realtime Postgres subscription (`supabase.channel`), optimistic state updates, explicit revalidation (`refetchSessions`), and custom modal CRUD workflows.
+
+## Validation Findings
+
+1. **Framework Portability (Next.js vs Vite vs Remix vs React Router vs TanStack Start):**
+   - **SSR Safety:** `useFullCalendarWebMCP` isolates all browser globals (`document.modelContext`, `window`) inside `useEffect`. Server rendering (`renderToString`) completes without throwing or attempting browser global access.
+   - **FullCalendar React Version Neutrality:** In Phase 0, `calendarRef` was typed against FullCalendar v7's `CalendarRef`. In FullCalendar v6 (widely used in production apps), refs are typed as `FullCalendar` class instances. Introducing the structural `FullCalendarHandle` interface (`{ getApi(): { getOption(name: string): unknown; view: { type: string; activeStart: Date; activeEnd: Date; }; }; }`) enables seamless type compatibility across both v6 and v7 without version pinning.
+   - **Strict Mode & Cleanup:** AbortController-driven lifecycle registration cleans up cleanly on unmount and effect replay with zero orphaned tool registrations.
+
+2. **Persistence Agnosticism:**
+   - The five-operation `CalendarEventRepository` contract (`list`, `get`, `create`, `update`, `delete`) maps directly onto remote asynchronous server actions and databases.
+   - When remote persistence fails (e.g. database timeout or constraint violation), the WebMCP tool execution rejects cleanly, and `onEventsChanged` is skipped, preventing UI drift.
+   - `AbortSignal` cancellation from WebMCP propagates through the repository methods directly into async server requests.
+
+3. **State Management Neutrality:**
+   - Updating `onEventsChanged` to return `unknown | Promise<unknown>` allows host callbacks returning data (e.g. SWR `mutate()`, React Query `refetch()`, or async handlers returning refreshed records) to be passed directly without wrapper friction.
+
+4. **Shared-State Model:**
+   - 15-step end-to-end automated verification proves that human UI interactions (e.g. modal editing) and agent WebMCP interactions converge on the single authoritative backend database.
+   - Protocol Tooling maintains no secondary ledger.
+
+## Integration Measurements
+
+| Layer | Cost |
+| --- | ---: |
+| Hook wiring LOC | 4 lines (1 import, 2 setup lines, 1 ref prop) |
+| Host adapter LOC | ~25–35 executable lines (mapping domain model to `CalendarEventRepository`) |
+| Host architectural changes | **0** (no DB schema changes, no server action rewrites, no route changes) |
+| Framework-specific packages required | **0** (`useFullCalendarWebMCP` works identically in Vite, Next.js, and other React environments) |
+
+## Decision
+
+> **Current API validated. Freeze for package extraction.**
+

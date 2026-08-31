@@ -1,4 +1,5 @@
-import type { CalendarRef } from "@fullcalendar/react";
+/// <reference types="webmcp-types" />
+
 import type { RefObject } from "react";
 import type {
   CalendarEventRepository,
@@ -7,10 +8,22 @@ import type {
 } from "../calendar/types";
 
 export interface FullCalendarWebMCPOptions {
-  calendarRef: RefObject<CalendarRef | null>;
+  calendarRef: RefObject<FullCalendarHandle | null>;
   events: CalendarEventRepository;
-  onEventsChanged: () => void | Promise<void>;
+  onEventsChanged: () => unknown | Promise<unknown>;
   onRegistrationError?: (error: unknown) => void;
+}
+
+/** The stable FullCalendar React surface used by both v6 and v7 refs. */
+export interface FullCalendarHandle {
+  getApi(): {
+    getOption(name: string): unknown;
+    view: {
+      type: string;
+      activeStart: Date;
+      activeEnd: Date;
+    };
+  };
 }
 
 type OptionsReader = () => FullCalendarWebMCPOptions;

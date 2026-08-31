@@ -1,8 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import type { RefObject } from "react";
+import { describe, expect, expectTypeOf, it, vi } from "vitest";
 import { LocalCalendarEventRepository } from "../calendar/local-calendar-repository";
 import { FakeModelContext } from "../test/fake-model-context";
 import { MapStorage } from "../test/map-storage";
-import { createCalendarTools } from "./tool-definitions";
+import {
+  createCalendarTools,
+  type FullCalendarHandle,
+  type FullCalendarWebMCPOptions,
+} from "./tool-definitions";
 
 function fakeCalendarRef() {
   return {
@@ -20,6 +25,30 @@ function fakeCalendarRef() {
 }
 
 describe("calendar WebMCP tools", () => {
+  it("accepts the structural ref surface shared by FullCalendar React v6 and v7", () => {
+    const calendarRef: RefObject<FullCalendarHandle | null> = fakeCalendarRef();
+    const options: FullCalendarWebMCPOptions = {
+      calendarRef,
+      events: {} as never,
+      onEventsChanged: vi.fn(),
+    };
+
+    expectTypeOf(options.calendarRef).toMatchTypeOf<
+      RefObject<FullCalendarHandle | null>
+    >();
+  });
+
+  it("accepts host refresh callbacks that return refreshed data", () => {
+    const onEventsChanged = async () => [{ id: "refreshed-event" }];
+    const options: FullCalendarWebMCPOptions = {
+      calendarRef: fakeCalendarRef(),
+      events: {} as never,
+      onEventsChanged,
+    };
+
+    expect(options.onEventsChanged).toBe(onEventsChanged);
+  });
+
   it("completes persisted agent CRUD and sees a later human change", async () => {
     const storage = new MapStorage();
     const repository = new LocalCalendarEventRepository({
