@@ -42,6 +42,40 @@ export default defineConfig({
     root: "docs",
     exclude: ["**/DX-AUDIT.md", "**/_*", "**/.*"],
   },
+  // Docs shell is already "FullCalendar WebMCP · Protocol Tooling", so don't
+  // nest the same product name again under Integrations in the sidebar.
+  navigation: {
+    sidebar: [
+      "/integrations/fullcalendar",
+      "/integrations/fullcalendar/quickstart",
+      "/integrations/fullcalendar/troubleshooting",
+      {
+        label: "Concepts",
+        items: [
+          "/integrations/fullcalendar/concepts/repository",
+          "/integrations/fullcalendar/concepts/persistence",
+          "/integrations/fullcalendar/concepts/webmcp",
+        ],
+      },
+      {
+        label: "Guides",
+        items: [
+          "/integrations/fullcalendar/guides/existing-app",
+          "/integrations/fullcalendar/guides/nextjs",
+          "/integrations/fullcalendar/guides/custom-event-model",
+          "/integrations/fullcalendar/guides/testing",
+        ],
+      },
+      {
+        label: "Reference",
+        items: [
+          "/integrations/fullcalendar/reference/use-fullcalendar-webmcp",
+          "/integrations/fullcalendar/reference/calendar-event-repository",
+          "/integrations/fullcalendar/reference/types",
+        ],
+      },
+    ],
+  },
   search: {
     popular: [
       { label: "Overview", href: "/integrations/fullcalendar" },
