@@ -237,35 +237,56 @@ try {
   }
 
   // One-arg shim against every registered callback (0.1.0 crash shape).
-  for (const [name, tool] of context.tools) {
-    try {
-      if (name === "calendar_create_event") {
-        await tool.execute({
-          title: "Packed Create",
-          start: "2026-09-02T14:00:00-06:00",
-          end: "2026-09-02T15:00:00-06:00",
-        });
-      } else if (name === "calendar_update_event") {
-        await tool.execute({
-          id: "packed-smoke-event",
-          title: "Packed Updated",
-        });
-      } else if (name === "calendar_delete_event") {
-        if (events.has("packed-smoke-event")) {
-          await tool.execute({ id: "packed-smoke-event" });
-        }
-      } else if (name === "calendar_get_event") {
-        await tool.execute({ id: "missing" });
-      } else {
-        await tool.execute({});
-      }
-    } catch (error) {
-      if (String(error?.message || error).includes("Cannot destructure")) {
-        throw new Error(`${name} failed one-arg execute: ${error.message}`, {
-          cause: error,
-        });
-      }
-    }
+  // Arrange deterministic state and assert success — any throw fails the smoke.
+  events.clear();
+
+  const oneArgContext = await context.tools.get("calendar_get_context").execute({});
+  if (oneArgContext.view !== "dayGridMonth") {
+    throw new Error(
+      `one-arg calendar_get_context unexpected view: ${oneArgContext.view}`,
+    );
+  }
+
+  const oneArgList = await context.tools.get("calendar_list_events").execute({});
+  if (!Array.isArray(oneArgList.events) || oneArgList.events.length !== 0) {
+    throw new Error("one-arg calendar_list_events expected empty events");
+  }
+
+  const oneArgMissing = await context.tools
+    .get("calendar_get_event")
+    .execute({ id: "missing" });
+  if (oneArgMissing.event !== null) {
+    throw new Error("one-arg calendar_get_event expected null for missing id");
+  }
+
+  const oneArgCreated = await context.tools.get("calendar_create_event").execute({
+    title: "Packed OneArg Create",
+    start: "2026-09-02T14:00:00-06:00",
+    end: "2026-09-02T15:00:00-06:00",
+  });
+  if (oneArgCreated.event?.id !== "packed-smoke-event") {
+    throw new Error(
+      `one-arg calendar_create_event unexpected id: ${oneArgCreated.event?.id}`,
+    );
+  }
+
+  const oneArgUpdated = await context.tools.get("calendar_update_event").execute({
+    id: "packed-smoke-event",
+    title: "Packed OneArg Updated",
+  });
+  if (oneArgUpdated.event?.title !== "Packed OneArg Updated") {
+    throw new Error("one-arg calendar_update_event did not update title");
+  }
+
+  const oneArgDeleted = await context.tools.get("calendar_delete_event").execute({
+    id: "packed-smoke-event",
+  });
+  if (
+    oneArgDeleted.deleted !== true ||
+    oneArgDeleted.id !== "packed-smoke-event" ||
+    events.size !== 0
+  ) {
+    throw new Error("one-arg calendar_delete_event did not delete the event");
   }
 
   events.clear();
