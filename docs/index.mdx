@@ -1,0 +1,64 @@
+---
+title: Protocol Tooling
+description: Protocol Tooling adds standard WebMCP calendar tools to React FullCalendar applications while leaving your existing backend, database, and state in control.
+---
+
+Protocol Tooling makes **FullCalendar** agent-ready with **WebMCP**.
+
+It adds standard WebMCP calendar tools to your existing React application while leaving your existing persistence, backend, database, and state management in control.
+
+## What is it?
+
+Protocol Tooling is a lightweight React integration package (`protocoltooling`) that registers WebMCP calendar tools on the browser's model context. AI agents running in WebMCP-capable browsers can query views, list events, and perform calendar mutations through your existing application.
+
+## What does it change?
+
+You add one React hook—[`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp)—and connect it to your existing event operations via a [`CalendarEventRepository`](/reference/calendar-event-repository) adapter object.
+
+```tsx
+import { useRef } from "react";
+import FullCalendar from "@fullcalendar/react";
+import { useFullCalendarWebMCP } from "protocoltooling";
+
+export function CalendarView() {
+  const calendarRef = useRef<FullCalendar>(null);
+
+  useFullCalendarWebMCP({
+    calendarRef,
+    events: eventRepository,
+    onEventsChanged: refetchEvents,
+  });
+
+  return (
+    <FullCalendar
+      ref={calendarRef}
+      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+    />
+  );
+}
+```
+
+## What does it not change?
+
+Protocol Tooling does not replace your backend or database:
+
+- **Keep your FullCalendar setup:** Use your existing plugins, custom views, themes, and event renderers.
+- **Keep your backend & database:** Protocol Tooling does not store events. Your API or database remains the single source of truth. See the [Persistence Model](/concepts/persistence).
+- **Keep your state management:** Human interactions and AI agent actions converge on the same persistence layer and trigger your existing data refresh logic.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" href="/quickstart" icon="rocket">
+    Add WebMCP tools to your FullCalendar React app in minutes.
+  </Card>
+  <Card title="Concepts" href="/concepts/repository" icon="book-open">
+    Understand the repository contract and persistence model.
+  </Card>
+  <Card title="Existing App Guide" href="/guides/existing-app" icon="layers">
+    Step-by-step instructions for integrating into an existing codebase.
+  </Card>
+  <Card title="API Reference" href="/reference/use-fullcalendar-webmcp" icon="code">
+    Detailed reference for hooks, interfaces, and TypeScript types.
+  </Card>
+</CardGroup>

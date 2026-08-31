@@ -1,0 +1,85 @@
+---
+title: useFullCalendarWebMCP
+description: Complete API reference for the useFullCalendarWebMCP hook, including parameter options, TypeScript signature, and runtime lifecycle behavior.
+---
+
+Primary React hook connecting a FullCalendar instance to the browser's WebMCP model context.
+
+## Signature
+
+```ts
+import { useFullCalendarWebMCP } from "protocoltooling";
+
+function useFullCalendarWebMCP(options: FullCalendarWebMCPOptions): void;
+```
+
+## Options
+
+<TypeTable
+  type={{
+    calendarRef: {
+      type: "RefObject<FullCalendarHandle | null>",
+      required: true,
+      description: "React ref attached to the <FullCalendar /> component.",
+    },
+    events: {
+      type: "CalendarEventRepository",
+      required: true,
+      description: "Authoritative host repository implementing event persistence.",
+    },
+    onEventsChanged: {
+      type: "() => unknown | Promise<unknown>",
+      required: true,
+      description: "Callback invoked after any WebMCP tool mutation (create, update, delete) to refresh host UI state.",
+    },
+    onRegistrationError: {
+      type: "(error: unknown) => void",
+      required: false,
+      description: "Optional callback invoked if tool registration fails (e.g. duplicate tool name conflicts).",
+    },
+  }}
+/>
+
+## Example
+
+```tsx
+import FullCalendar from "@fullcalendar/react";
+import { useCallback, useRef, useState } from "react";
+import { useFullCalendarWebMCP, type CalendarEvent } from "protocoltooling";
+import { eventRepository } from "./events-service";
+
+export function Calendar() {
+  const calendarRef = useRef<FullCalendar>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  const reload = useCallback(async () => {
+    const data = await eventRepository.list();
+    setEvents(data);
+  }, []);
+
+  useFullCalendarWebMCP({
+    calendarRef,
+    events: eventRepository,
+    onEventsChanged: reload,
+    onRegistrationError: (err) => console.error("WebMCP registration error:", err),
+  });
+
+  return <FullCalendar ref={calendarRef} events={events} />;
+}
+```
+
+## Lifecycle & behavior
+
+### Automatic registration & cleanup
+The hook registers all six [WebMCP calendar tools](/concepts/webmcp) inside a `useEffect` hook. When the component unmounts, an internal `AbortController` cleanly unregisters all tools.
+
+### React Strict Mode safe
+The hook is idempotent. During React Strict Mode double-invocations in development, the initial registration is cleanly aborted and re-established with zero duplicate tool errors or memory leaks.
+
+### Delayed WebMCP runtime polling
+If `document.modelContext` is not available at mount time (e.g. late extension or runtime injection), the hook automatically polls every 250 ms until the runtime is available, and aborts polling if the component unmounts.
+
+### Fresh closure binding
+The hook maintains an internal reference to your latest `options` and `events` object on every render. Tool executions always invoke the latest callbacks without requiring tools to be unregistered and re-registered across renders.
+
+For details on the repository contract, see [`CalendarEventRepository`](/reference/calendar-event-repository) and the [Public Types Reference](/reference/types). If you experience issues, see [Troubleshooting](/troubleshooting).

@@ -1,0 +1,156 @@
+---
+title: CalendarEventRepository
+description: API reference for the CalendarEventRepository interface, detailing list, get, create, update, and delete method signatures and return types.
+---
+
+Authoritative persistence contract required by Protocol Tooling to perform calendar reads and mutations.
+
+## Interface definition
+
+```ts
+import type {
+  CalendarEvent,
+  CalendarEventQuery,
+  CreateCalendarEventInput,
+  UpdateCalendarEventInput,
+} from "protocoltooling";
+
+export interface CalendarEventRepository {
+  list(
+    query?: CalendarEventQuery,
+    options?: { signal?: AbortSignal },
+  ): Promise<CalendarEvent[]>;
+
+  get(
+    id: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<CalendarEvent | null>;
+
+  create(
+    input: CreateCalendarEventInput,
+    options?: { signal?: AbortSignal },
+  ): Promise<CalendarEvent>;
+
+  update(
+    id: string,
+    input: UpdateCalendarEventInput,
+    options?: { signal?: AbortSignal },
+  ): Promise<CalendarEvent>;
+
+  delete(
+    id: string,
+    options?: { signal?: AbortSignal },
+  ): Promise<void>;
+}
+```
+
+---
+
+## Methods
+
+### `list(query?, options?)`
+
+Reads a list of persisted calendar events matching optional criteria.
+
+- **Parameters:**
+  - `query` ([`CalendarEventQuery`](/reference/types#calendareventquery), optional): Filter options (`start`, `end`, `text`).
+  - `options.signal` (`AbortSignal`, optional): Cancellation signal from the WebMCP caller.
+- **Returns:** `Promise<CalendarEvent[]>`
+- **Behavior:** Should return all matching events. If no filters are provided, returns all events or default view range events.
+
+```ts
+async list(query, { signal } = {}) {
+  const params = new URLSearchParams(query as Record<string, string>);
+  const res = await fetch(`/api/events?${params}`, { signal });
+  return res.json();
+}
+```
+
+---
+
+### `get(id, options?)`
+
+Fetches a single calendar event by its unique, stable ID.
+
+- **Parameters:**
+  - `id` (`string`): The stable event identifier.
+  - `options.signal` (`AbortSignal`, optional): Cancellation signal.
+- **Returns:** `Promise<CalendarEvent | null>`
+- **Behavior:** Returns the event object if found, or `null` if no event exists with that ID.
+
+```ts
+async get(id, { signal } = {}) {
+  const res = await fetch(`/api/events/${id}`, { signal });
+  if (res.status === 404) return null;
+  return res.json();
+}
+```
+
+---
+
+### `create(input, options?)`
+
+Persists a new calendar event.
+
+- **Parameters:**
+  - `input` ([`CreateCalendarEventInput`](/reference/types#createcalendareventinput)): Payload containing `title`, `start`, optional `end`, and optional `allDay`.
+  - `options.signal` (`AbortSignal`, optional): Cancellation signal.
+- **Returns:** `Promise<CalendarEvent>`
+- **Behavior:** Assigns a new unique stable ID, persists the event to storage, and returns the complete saved `CalendarEvent`.
+
+```ts
+async create(input, { signal } = {}) {
+  const res = await fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+    signal,
+  });
+  return res.json();
+}
+```
+
+---
+
+### `update(id, input, options?)`
+
+Updates an existing calendar event.
+
+- **Parameters:**
+  - `id` (`string`): The ID of the event to modify.
+  - `input` ([`UpdateCalendarEventInput`](/reference/types#updatecalendareventinput)): Sparse payload containing fields to update (`title`, `start`, `end`, `allDay`).
+  - `options.signal` (`AbortSignal`, optional): Cancellation signal.
+- **Returns:** `Promise<CalendarEvent>`
+- **Behavior:** Applies updates to the matching record and returns the updated `CalendarEvent`. Throws or rejects if the event does not exist.
+
+```ts
+async update(id, input, { signal } = {}) {
+  const res = await fetch(`/api/events/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+    signal,
+  });
+  return res.json();
+}
+```
+
+---
+
+### `delete(id, options?)`
+
+Permanently removes a calendar event.
+
+- **Parameters:**
+  - `id` (`string`): The ID of the event to delete.
+  - `options.signal` (`AbortSignal`, optional): Cancellation signal.
+- **Returns:** `Promise<void>`
+- **Behavior:** Deletes the record from storage. If the event does not exist or was already deleted, the method should resolve without error.
+
+```ts
+async delete(id, { signal } = {}) {
+  await fetch(`/api/events/${id}`, { method: "DELETE", signal });
+}
+```
+
+For domain entity translations, see the [Custom Event Models Guide](/guides/custom-event-model). To see the full conceptual architecture, see the [Repository Contract](/concepts/repository).

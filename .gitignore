@@ -10,4 +10,5 @@ dist-example
 *.tgz
 .next
 **/.next
+.blume/
 .blume-verify/

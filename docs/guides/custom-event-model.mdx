@@ -1,0 +1,139 @@
+---
+title: Custom Event Models & Context
+description: Learn how to map custom domain models like bookings and sessions to CalendarEvent and inject application context into repository operations.
+---
+
+Most real-world applications do not store simple calendar events. Instead, they store domain entities such as **Appointments**, **Sessions**, **Bookings**, or **Shifts**.
+
+The [`CalendarEventRepository`](/reference/calendar-event-repository) acts as the translation layer between your application domain and the standard WebMCP calendar tools.
+
+## Translating domain models
+
+Suppose your backend database stores `Appointment` objects:
+
+```ts types/domain.ts
+export interface Appointment {
+  appointmentId: string;
+  patientName: string;
+  doctorNotes?: string;
+  startTime: string;
+  endTime: string;
+  clinicRoom: string;
+}
+```
+
+### 1. Model translation helper
+
+Create pure transformation functions to convert between your domain model and [`CalendarEvent`](/reference/types#calendarevent):
+
+```ts adapters/transformers.ts
+import type { CalendarEvent, CreateCalendarEventInput } from "protocoltooling";
+import type { Appointment } from "../types/domain";
+
+export function appointmentToCalendarEvent(app: Appointment): CalendarEvent {
+  return {
+    id: app.appointmentId,
+    title: app.patientName,
+    start: app.startTime,
+    end: app.endTime,
+    allDay: false,
+  };
+}
+
+export function calendarInputToAppointmentPayload(
+  input: CreateCalendarEventInput,
+  clinicRoom: string,
+) {
+  return {
+    patientName: input.title,
+    startTime: input.start,
+    endTime: input.end ?? input.start,
+    clinicRoom,
+  };
+}
+```
+
+### 2. Repository implementation
+
+Use these functions in your repository adapter:
+
+```ts adapters/appointment-repository.ts
+import type { CalendarEventRepository } from "protocoltooling";
+import { appointmentApi } from "../api/appointments";
+import {
+  appointmentToCalendarEvent,
+  calendarInputToAppointmentPayload,
+} from "./transformers";
+
+export function createAppointmentRepository(clinicRoom: string): CalendarEventRepository {
+  return {
+    async list(query) {
+      const appointments = await appointmentApi.list(query);
+      return appointments.map(appointmentToCalendarEvent);
+    },
+
+    async get(id) {
+      const appointment = await appointmentApi.get(id);
+      return appointment ? appointmentToCalendarEvent(appointment) : null;
+    },
+
+    async create(input) {
+      const payload = calendarInputToAppointmentPayload(input, clinicRoom);
+      const created = await appointmentApi.create(payload);
+      return appointmentToCalendarEvent(created);
+    },
+
+    async update(id, input) {
+      const updated = await appointmentApi.update(id, {
+        patientName: input.title,
+        startTime: input.start,
+        endTime: input.end ?? undefined,
+      });
+      return appointmentToCalendarEvent(updated);
+    },
+
+    async delete(id) {
+      await appointmentApi.delete(id);
+    },
+  };
+}
+```
+
+---
+
+## Context injection
+
+Many applications require context parameters that are not part of the standard calendar event schema:
+
+- `userId` / `patientId`
+- `locationId` / `clinicRoom`
+- `organizationId` / `tenantId`
+- `calendarId`
+
+Because the repository is created within your application code, you can capture these values directly in the repository closure or factory function.
+
+```tsx
+import { useMemo, useRef } from "react";
+import FullCalendar from "@fullcalendar/react";
+import { useFullCalendarWebMCP } from "protocoltooling";
+
+export function RoomCalendar({ clinicRoom, doctorId }: Props) {
+  const calendarRef = useRef<FullCalendar>(null);
+
+  // Repository captures room and doctor context
+  const repository = useMemo(
+    () => createAppointmentRepository(clinicRoom, doctorId),
+    [clinicRoom, doctorId],
+  );
+
+  useFullCalendarWebMCP({
+    calendarRef,
+    events: repository,
+    onEventsChanged: refetchAppointments,
+  });
+
+  return <FullCalendar ref={calendarRef} ... />;
+}
+```
+
+For general setup steps, see the [Existing App Guide](/guides/existing-app) and [Types Reference](/reference/types).
