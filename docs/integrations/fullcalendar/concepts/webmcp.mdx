@@ -1,11 +1,11 @@
 ---
 title: WebMCP Tools & Runtime
-description: Detailed overview of the six standard calendar tools registered by Protocol Tooling on the browser model context and their runtime lifecycle.
+description: Detailed overview of the six standard calendar tools registered by FullCalendar WebMCP on the browser model context and their lifecycle.
 ---
 
 WebMCP (Web Model Context Protocol) enables browser-based web applications to expose structured tools directly to AI agents.
 
-Protocol Tooling automatically registers six calendar tools on `document.modelContext`.
+The FullCalendar WebMCP integration automatically registers six calendar tools on `document.modelContext`.
 
 ## The 6 calendar tools
 
@@ -66,9 +66,9 @@ Protocol Tooling automatically registers six calendar tools on `document.modelCo
 
 ## Browser runtime lifecycle
 
-1. **Mount:** When your calendar component mounts, [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp) checks for `document.modelContext`. If the WebMCP runtime is injected slightly later by the browser, the hook automatically polls until it is available.
+1. **Mount:** When your calendar component mounts, [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) checks for `document.modelContext`. If the WebMCP runtime is injected slightly later by the browser, the hook automatically polls until it is available.
 2. **Registration:** Tools are registered with an internal `AbortController`.
 3. **Execution:** When a tool executes, latest options and repository references are invoked without triggering unnecessary component re-renders or tool re-registrations.
 4. **Unmount & Cleanup:** When the calendar component unmounts, the abort controller unregisters all tools cleanly with zero orphaned browser state.
 
-For testing these tools in action, see the [Testing Guide](/guides/testing) and the [Persistence Model](/concepts/persistence).
+For testing these tools in action, see the [Testing Guide](/integrations/fullcalendar/guides/testing) and the [Persistence Model](/integrations/fullcalendar/concepts/persistence).

@@ -64,14 +64,19 @@ export function Calendar() {
     onRegistrationError: (err) => console.error("WebMCP registration error:", err),
   });
 
-  return <FullCalendar ref={calendarRef} events={events} />;
+  return (
+    <FullCalendar
+      ref={calendarRef}
+      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+    />
+  );
 }
 ```
 
 ## Lifecycle & behavior
 
 ### Automatic registration & cleanup
-The hook registers all six [WebMCP calendar tools](/concepts/webmcp) inside a `useEffect` hook. When the component unmounts, an internal `AbortController` cleanly unregisters all tools.
+The hook registers all six [WebMCP calendar tools](/integrations/fullcalendar/concepts/webmcp) inside a `useEffect` hook. When the component unmounts, an internal `AbortController` cleanly unregisters all tools.
 
 ### React Strict Mode safe
 The hook is idempotent. During React Strict Mode double-invocations in development, the initial registration is cleanly aborted and re-established with zero duplicate tool errors or memory leaks.
@@ -82,4 +87,4 @@ If `document.modelContext` is not available at mount time (e.g. late extension o
 ### Fresh closure binding
 The hook maintains an internal reference to your latest `options` and `events` object on every render. Tool executions always invoke the latest callbacks without requiring tools to be unregistered and re-registered across renders.
 
-For details on the repository contract, see [`CalendarEventRepository`](/reference/calendar-event-repository) and the [Public Types Reference](/reference/types). If you experience issues, see [Troubleshooting](/troubleshooting).
+For details on the repository contract, see [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) and the [Public Types Reference](/integrations/fullcalendar/reference/types). If you experience issues, see [Troubleshooting](/integrations/fullcalendar/troubleshooting).

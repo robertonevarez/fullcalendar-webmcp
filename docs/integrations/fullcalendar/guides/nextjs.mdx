@@ -1,15 +1,15 @@
 ---
 title: Next.js Guide
-description: Learn how to use Protocol Tooling with Next.js App Router and Pages Router with client components, server actions, and full SSR safety.
+description: Learn how to use FullCalendar WebMCP with Next.js App Router and Pages Router with client components, server actions, and full SSR safety.
 ---
 
-Protocol Tooling works seamlessly in Next.js applications, including the Next.js App Router and Pages Router.
+The FullCalendar WebMCP integration works seamlessly in Next.js applications, including the Next.js App Router and Pages Router.
 
 ## Supported characteristics
 
-- **Client Component:** The [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp) hook runs in client components. The package entry bundle automatically includes the `'use client';` directive.
-- **SSR Safe:** Protocol Tooling does not access browser globals (`window`, `document`) at module evaluation time. Next.js server-side rendering (SSR) and static generation (prerendering) execute without throwing errors.
-- **Server Actions & API Routes:** Your [`CalendarEventRepository`](/reference/calendar-event-repository) implementation can call Next.js Server Actions, Route Handlers (`app/api/...`), or ORM-backed services directly.
+- **Client Component:** The [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) hook runs in client components. The package entry bundle automatically includes the `'use client';` directive.
+- **SSR Safe:** The integration does not access browser globals (`window`, `document`) at module evaluation time. Next.js server-side rendering (SSR) and static generation (prerendering) execute without throwing errors.
+- **Server Actions & API Routes:** Your [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) implementation can call Next.js Server Actions, Route Handlers (`app/api/...`), or ORM-backed services directly.
 
 ## App Router example
 
@@ -100,4 +100,4 @@ export default async function CalendarPage() {
 }
 ```
 
-For general integration steps, see the [Existing App Guide](/guides/existing-app) and [Repository Contract](/concepts/repository).
+For general integration steps, see the [Existing App Guide](/integrations/fullcalendar/guides/existing-app) and [Repository Contract](/integrations/fullcalendar/concepts/repository).

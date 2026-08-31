@@ -1,11 +1,11 @@
 ---
 title: Repository Contract
-description: Understand the CalendarEventRepository interface contract and learn how Protocol Tooling connects WebMCP tools to your existing event persistence.
+description: Understand the CalendarEventRepository contract and learn how FullCalendar WebMCP connects tools to your existing event persistence.
 ---
 
-The repository contract connects WebMCP tools to your application's data layer.
+The repository contract connects WebMCP calendar tools to your application's data layer.
 
-Instead of writing to FullCalendar's internal memory or requiring a specific database, Protocol Tooling talks to an object implementing the [`CalendarEventRepository`](/reference/calendar-event-repository) interface.
+Instead of writing to FullCalendar's internal memory or requiring a specific database, the FullCalendar WebMCP integration talks to an object implementing the [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) interface.
 
 ## The interface
 
@@ -51,7 +51,7 @@ export interface CalendarEventRepository {
 
 ### Query filtering in `list`
 
-The `list` method receives an optional [`CalendarEventQuery`](/reference/types#calendareventquery):
+The `list` method receives an optional [`CalendarEventQuery`](/integrations/fullcalendar/reference/types#calendareventquery):
 
 ```ts
 export interface CalendarEventQuery {
@@ -61,13 +61,13 @@ export interface CalendarEventQuery {
 }
 ```
 
-When an agent requests events for a specific week or searches for a meeting title, Protocol Tooling passes those criteria directly to your `list` implementation.
+When an agent requests events for a specific week or searches for a meeting title, the integration passes those criteria directly to your `list` implementation.
 
 ### Cancellation with `AbortSignal`
 
 Every repository method accepts an optional `{ signal?: AbortSignal }` parameter.
 
-When a WebMCP request is aborted by the client browser or agent runtime, Protocol Tooling signals cancellation. If your backend uses `fetch`, you can forward the signal directly:
+When a WebMCP request is aborted by the client browser or agent runtime, the integration signals cancellation. If your backend uses `fetch`, you can forward the signal directly:
 
 ```ts
 async list(query, { signal } = {}) {
@@ -79,13 +79,13 @@ async list(query, { signal } = {}) {
 
 ## Backend agnostic
 
-Protocol Tooling works with any data source:
+The FullCalendar WebMCP integration works with any data source:
 
 - REST APIs (`fetch`, Axios)
-- Next.js Server Actions (see the [Next.js Guide](/guides/nextjs))
+- Next.js Server Actions (see the [Next.js Guide](/integrations/fullcalendar/guides/nextjs))
 - Supabase / PostgreSQL
 - Prisma / Drizzle ORM
 - GraphQL queries & mutations
 - Browser `localStorage` (for prototypes)
 
-For mapping custom domain entities to events, see the [Custom Event Models Guide](/guides/custom-event-model). To learn how changes converge durably, see the [Persistence Model](/concepts/persistence).
+For mapping custom domain entities to events, see the [Custom Event Models Guide](/integrations/fullcalendar/guides/custom-event-model). To learn how changes converge durably, see the [Persistence Model](/integrations/fullcalendar/concepts/persistence).

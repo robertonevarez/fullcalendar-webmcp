@@ -5,7 +5,7 @@ description: Learn how to map custom domain models like bookings and sessions to
 
 Most real-world applications do not store simple calendar events. Instead, they store domain entities such as **Appointments**, **Sessions**, **Bookings**, or **Shifts**.
 
-The [`CalendarEventRepository`](/reference/calendar-event-repository) acts as the translation layer between your application domain and the standard WebMCP calendar tools.
+The [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) acts as the translation layer between your application domain and the standard WebMCP calendar tools.
 
 ## Translating domain models
 
@@ -24,7 +24,7 @@ export interface Appointment {
 
 ### 1. Model translation helper
 
-Create pure transformation functions to convert between your domain model and [`CalendarEvent`](/reference/types#calendarevent):
+Create pure transformation functions to convert between your domain model and [`CalendarEvent`](/integrations/fullcalendar/reference/types#calendarevent):
 
 ```ts adapters/transformers.ts
 import type { CalendarEvent, CreateCalendarEventInput } from "protocoltooling";
@@ -136,4 +136,4 @@ export function RoomCalendar({ clinicRoom, doctorId }: Props) {
 }
 ```
 
-For general setup steps, see the [Existing App Guide](/guides/existing-app) and [Types Reference](/reference/types).
+For general setup steps, see the [Existing App Guide](/integrations/fullcalendar/guides/existing-app) and [Types Reference](/integrations/fullcalendar/reference/types).

@@ -1,11 +1,15 @@
 ---
 title: Quickstart
-description: Step-by-step guide to installing Protocol Tooling and making your existing FullCalendar React application agent-ready with WebMCP in minutes.
+description: Step-by-step guide to installing the FullCalendar WebMCP integration from Protocol Tooling and connecting your React application in minutes.
 sidebar:
   order: 1
 ---
 
-Follow this guide to connect Protocol Tooling to an existing FullCalendar React application.
+Follow this guide to add the FullCalendar WebMCP integration to an existing FullCalendar React application.
+
+:::note
+FullCalendar WebMCP is currently distributed through the `protocoltooling` npm package.
+:::
 
 <Steps>
   <Step title="Install package">
@@ -21,7 +25,7 @@ Follow this guide to connect Protocol Tooling to an existing FullCalendar React 
   </Step>
 
   <Step title="Implement CalendarEventRepository">
-    Create an adapter object that implements [`CalendarEventRepository`](/reference/calendar-event-repository). These methods should call whatever persistence your application already uses (REST API, GraphQL, Server Actions, Supabase, or ORM).
+    Create an adapter object that implements [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository). These methods should call whatever persistence your application already uses (REST API, GraphQL, Server Actions, Supabase, or ORM).
 
     ```ts api-adapter.ts
     import type { CalendarEventRepository } from "protocoltooling";
@@ -48,7 +52,7 @@ Follow this guide to connect Protocol Tooling to an existing FullCalendar React 
   </Step>
 
   <Step title="Add useFullCalendarWebMCP to your calendar component">
-    In your calendar component, create a ref for FullCalendar and pass it to [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp) alongside your repository and a refresh callback.
+    In your calendar component, create a ref for FullCalendar and pass it to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) alongside your repository and a refresh callback.
 
     ```tsx Calendar.tsx
     import FullCalendar from "@fullcalendar/react";
@@ -91,7 +95,7 @@ Follow this guide to connect Protocol Tooling to an existing FullCalendar React 
   </Step>
 
   <Step title="Run and verify in a WebMCP environment">
-    Open your application in a WebMCP-capable browser. AI agents will automatically discover the six [WebMCP tools](/concepts/webmcp):
+    Open your application in a WebMCP-capable browser. AI agents will automatically discover the six [WebMCP tools](/integrations/fullcalendar/concepts/webmcp):
     - `calendar_get_context`
     - `calendar_list_events`
     - `calendar_get_event`
@@ -99,7 +103,7 @@ Follow this guide to connect Protocol Tooling to an existing FullCalendar React 
     - `calendar_update_event`
     - `calendar_delete_event`
 
-    When an agent calls a tool (such as `calendar_create_event`), Protocol Tooling routes the call through your `eventRepository.create` method and automatically triggers `onEventsChanged` to reload your UI.
+    When an agent calls a tool (such as `calendar_create_event`), the FullCalendar WebMCP integration routes the call through your `eventRepository.create` method and automatically triggers `onEventsChanged` to reload your UI.
   </Step>
 </Steps>
 
@@ -188,6 +192,6 @@ export function QuickstartCalendar() {
 
 ## Where to go next
 
-- **[Persistence Concept](/concepts/persistence):** Learn how human and agent mutations converge on your database.
-- **[Testing Guide](/guides/testing):** Follow our 9-step verification checklist to test your integration.
-- **[Troubleshooting](/troubleshooting):** Check common solutions if tools do not appear or ref errors occur.
+- **[Persistence Model](/integrations/fullcalendar/concepts/persistence):** Learn how human and agent mutations converge on your database.
+- **[Testing Guide](/integrations/fullcalendar/guides/testing):** Follow our 9-step verification checklist to test your integration.
+- **[Troubleshooting](/integrations/fullcalendar/troubleshooting):** Check common solutions if tools do not appear or ref errors occur.

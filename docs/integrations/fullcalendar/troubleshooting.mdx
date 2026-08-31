@@ -1,11 +1,11 @@
 ---
 title: Troubleshooting
-description: Solutions and diagnosis steps for common integration questions, missing WebMCP tools, state refresh issues, and TypeScript ref version mismatches.
+description: Solutions and diagnosis steps for common FullCalendar WebMCP questions, missing tools, state refresh issues, and TypeScript ref mismatches.
 sidebar:
   order: 5
 ---
 
-Solutions to common questions and edge cases.
+Solutions to common questions and edge cases when integrating FullCalendar WebMCP.
 
 ## Tools do not appear in the browser
 
@@ -15,7 +15,7 @@ The current browser environment does not support WebMCP or has not initialized `
 ### Solution
 - Ensure you are running in a browser that supports WebMCP (or has WebMCP extension/runtime enabled).
 - Check `window.document.modelContext` in your browser DevTools console.
-- [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp) automatically retries registration every 250 ms if the runtime is injected after page load. If registration fails due to duplicate tool names, provide `onRegistrationError` to log the underlying error:
+- [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) automatically retries registration every 250 ms if the runtime is injected after page load. If registration fails due to duplicate tool names, provide `onRegistrationError` to log the underlying error:
 
 ```tsx
 useFullCalendarWebMCP({
@@ -57,7 +57,7 @@ useFullCalendarWebMCP({
 Your `CalendarEventRepository` implementation did not persist the event durably to a backend or database.
 
 ### Solution
-Protocol Tooling does not store events itself. Ensure `events.create`, `events.update`, and `events.delete` write to your persistent database or API, not just in-memory component state. See the [Persistence Model](/concepts/persistence).
+FullCalendar WebMCP does not store events itself. Ensure `events.create`, `events.update`, and `events.delete` write to your persistent database or API, not just in-memory component state. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
 
 ---
 
@@ -80,14 +80,14 @@ import FullCalendar, { type CalendarRef } from "@fullcalendar/react";
 const calendarRef = useRef<CalendarRef>(null);
 ```
 
-Protocol Tooling's [`FullCalendarHandle`](/reference/types#fullcalendarhandle) interface is structurally compatible with both versions.
+The [`FullCalendarHandle`](/integrations/fullcalendar/reference/types#fullcalendarhandle) interface is structurally compatible with both versions.
 
 ---
 
 ## Event `end: null` vs `end: undefined`
 
 ### Cause
-Protocol Tooling standardizes `end` as `string | null` for events without an end time, while FullCalendar props accept `string | undefined`.
+`CalendarEvent` standardizes `end` as `string | null` for events without an end time, while FullCalendar props accept `string | undefined`.
 
 ### Solution
 When passing events directly to FullCalendar's `events` prop in strict TypeScript mode:
@@ -99,4 +99,4 @@ When passing events directly to FullCalendar's `events` prop in strict TypeScrip
 />
 ```
 
-For complete step-by-step verification, see the [Testing Guide](/guides/testing).
+For complete step-by-step verification, see the [Testing Guide](/integrations/fullcalendar/guides/testing).

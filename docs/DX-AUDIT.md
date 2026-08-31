@@ -9,7 +9,7 @@ This document records friction points, awkward explanations, and ergonomic hurdl
 - **What is awkward:**
   FullCalendar React v6 exports `FullCalendar` as a class component (where `useRef<FullCalendar>(null)` works directly), whereas FullCalendar React v7 exports `FullCalendar` as a functional component with a dedicated `CalendarRef` type (requiring `import { type CalendarRef } from "@fullcalendar/react"` and `useRef<CalendarRef>(null)`). In documentation snippets, providing a single universal snippet requires either explaining the version difference or defaulting to v6 syntax with a troubleshooting note for v7.
 - **Where it appears:**
-  `docs/quickstart.mdx`, `docs/guides/existing-app.mdx`, `docs/troubleshooting.mdx`, `docs/reference/types.mdx`.
+  `docs/integrations/fullcalendar/quickstart.mdx`, `docs/integrations/fullcalendar/guides/existing-app.mdx`, `docs/integrations/fullcalendar/troubleshooting.mdx`, `docs/integrations/fullcalendar/reference/types.mdx`.
 - **Classification:**
   Documentation & ecosystem friction.
 - **Future API improvement suggestion:**
@@ -20,9 +20,9 @@ This document records friction points, awkward explanations, and ergonomic hurdl
 ## Friction Point 2: Event `end: null` vs FullCalendar `end: undefined`
 
 - **What is awkward:**
-  `CalendarEvent.end` is typed as `string | null` in Protocol Tooling to explicitly represent the absence of an end time in JSON payloads and database models. However, FullCalendar's `EventInput` expects `string | undefined` in strict TypeScript environments. Passing `CalendarEvent[]` directly to FullCalendar's `events` prop in TypeScript can require `events.map(e => ({ ...e, end: e.end ?? undefined }))` if strict null checks are active.
+  `CalendarEvent.end` is typed as `string | null` in Protocol Tooling to explicitly represent the absence of an end time in JSON payloads and database models. However, FullCalendar's `EventInput` expects `string | undefined` in strict TypeScript environments. Passing `CalendarEvent[]` directly to FullCalendar's `events` prop in TypeScript requires `events.map(e => ({ ...e, end: e.end ?? undefined }))` when strict null checks are active.
 - **Where it appears:**
-  `docs/guides/existing-app.mdx`, `docs/troubleshooting.mdx`.
+  `docs/integrations/fullcalendar/guides/existing-app.mdx`, `docs/integrations/fullcalendar/troubleshooting.mdx`.
 - **Classification:**
   Type impedance mismatch between JSON standards and FullCalendar prop types.
 - **Future API improvement suggestion:**
@@ -35,7 +35,7 @@ This document records friction points, awkward explanations, and ergonomic hurdl
 - **What is awkward:**
   AI tools expect ISO 8601 timestamps with explicit offsets (e.g. `2026-09-02T10:00:00-06:00` or `Z`) to prevent timezone drift. Explaining why `calendar_get_context` should be called before interpreting relative dates ("tomorrow at 2pm") is essential for agent accuracy, but adds conceptual weight to the tool explanation.
 - **Where it appears:**
-  `docs/concepts/webmcp.mdx`, `docs/reference/types.mdx`.
+  `docs/integrations/fullcalendar/concepts/webmcp.mdx`, `docs/integrations/fullcalendar/reference/types.mdx`.
 - **Classification:**
   Documentation-only friction (AI runtime best practice).
 - **Future API improvement suggestion:**
@@ -48,8 +48,28 @@ This document records friction points, awkward explanations, and ergonomic hurdl
 - **What is awkward:**
   Because WebMCP browser extensions or polyfills may inject `window.document.modelContext` after initial React hydration, `useFullCalendarWebMCP` includes a 250 ms retry polling mechanism. While transparent to users, developers testing in environments without WebMCP wonder why no error is thrown immediately.
 - **Where it appears:**
-  `docs/troubleshooting.mdx`, `docs/reference/use-fullcalendar-webmcp.mdx`.
+  `docs/integrations/fullcalendar/troubleshooting.mdx`, `docs/integrations/fullcalendar/reference/use-fullcalendar-webmcp.mdx`.
 - **Classification:**
   Runtime environment lifecycle friction.
 - **Future API improvement suggestion:**
   Consider exposing an optional status state (e.g. `isWebMCPAvailable`, `registrationStatus`) from an optional hook return value in a future version for developer debugging dashboards.
+
+---
+
+## Friction Point 5: Organization vs Integration Identity
+
+- **Problem:**
+  The initial documentation treated Protocol Tooling as the name of the FullCalendar WebMCP integration.
+- **Why this matters:**
+  It creates ambiguity between:
+  1. Organization / Publisher (`Protocol Tooling`)
+  2. Integration / Product (`FullCalendar WebMCP`)
+  3. npm Distribution Package (`protocoltooling@0.1.0`)
+  and would make future integrations difficult to document consistently.
+- **Resolution:**
+  Adopted the clear two-tier model:
+  ```text
+  Protocol Tooling (Organization)
+  └── FullCalendar WebMCP (Integration)
+  ```
+  with the integration currently distributed through `protocoltooling@0.1.0`. This is a documentation taxonomy fix that does not require changing the current public API.

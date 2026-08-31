@@ -1,9 +1,9 @@
 ---
 title: Public Types & Interfaces
-description: Comprehensive TypeScript type and interface definitions exported by protocoltooling, including models, query inputs, and FullCalendar handles.
+description: Comprehensive TypeScript type and interface definitions exported by protocoltooling for the FullCalendar WebMCP integration.
 ---
 
-Protocol Tooling exports the following TypeScript interfaces and types from its package entry point.
+The `protocoltooling` package exports the following TypeScript interfaces and types for the FullCalendar WebMCP integration.
 
 ```ts
 import type {
@@ -181,7 +181,7 @@ export interface CalendarEventQuery {
 
 ## `FullCalendarHandle`
 
-Minimal structural surface required by Protocol Tooling from a FullCalendar React instance. Compatible with FullCalendar React v6 class instances and v7 `CalendarRef` handles.
+Minimal structural surface required by FullCalendar WebMCP from a FullCalendar React instance. Compatible with FullCalendar React v6 class instances and v7 `CalendarRef` handles.
 
 ```ts
 export interface FullCalendarHandle {
@@ -200,7 +200,7 @@ export interface FullCalendarHandle {
 
 ## `FullCalendarWebMCPOptions`
 
-Configuration options passed to [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp).
+Configuration options passed to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp).
 
 ```ts
 import type { RefObject } from "react";
@@ -213,4 +213,4 @@ export interface FullCalendarWebMCPOptions {
 }
 ```
 
-For more details on implementing these interfaces, see [`CalendarEventRepository`](/reference/calendar-event-repository) and the [Repository Contract](/concepts/repository).
+For more details on implementing these interfaces, see [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) and the [Repository Contract](/integrations/fullcalendar/concepts/repository).

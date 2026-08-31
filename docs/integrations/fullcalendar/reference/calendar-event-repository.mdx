@@ -3,7 +3,7 @@ title: CalendarEventRepository
 description: API reference for the CalendarEventRepository interface, detailing list, get, create, update, and delete method signatures and return types.
 ---
 
-Authoritative persistence contract required by Protocol Tooling to perform calendar reads and mutations.
+Authoritative persistence contract required by FullCalendar WebMCP to perform calendar reads and mutations.
 
 ## Interface definition
 
@@ -53,7 +53,7 @@ export interface CalendarEventRepository {
 Reads a list of persisted calendar events matching optional criteria.
 
 - **Parameters:**
-  - `query` ([`CalendarEventQuery`](/reference/types#calendareventquery), optional): Filter options (`start`, `end`, `text`).
+  - `query` ([`CalendarEventQuery`](/integrations/fullcalendar/reference/types#calendareventquery), optional): Filter options (`start`, `end`, `text`).
   - `options.signal` (`AbortSignal`, optional): Cancellation signal from the WebMCP caller.
 - **Returns:** `Promise<CalendarEvent[]>`
 - **Behavior:** Should return all matching events. If no filters are provided, returns all events or default view range events.
@@ -93,7 +93,7 @@ async get(id, { signal } = {}) {
 Persists a new calendar event.
 
 - **Parameters:**
-  - `input` ([`CreateCalendarEventInput`](/reference/types#createcalendareventinput)): Payload containing `title`, `start`, optional `end`, and optional `allDay`.
+  - `input` ([`CreateCalendarEventInput`](/integrations/fullcalendar/reference/types#createcalendareventinput)): Payload containing `title`, `start`, optional `end`, and optional `allDay`.
   - `options.signal` (`AbortSignal`, optional): Cancellation signal.
 - **Returns:** `Promise<CalendarEvent>`
 - **Behavior:** Assigns a new unique stable ID, persists the event to storage, and returns the complete saved `CalendarEvent`.
@@ -118,7 +118,7 @@ Updates an existing calendar event.
 
 - **Parameters:**
   - `id` (`string`): The ID of the event to modify.
-  - `input` ([`UpdateCalendarEventInput`](/reference/types#updatecalendareventinput)): Sparse payload containing fields to update (`title`, `start`, `end`, `allDay`).
+  - `input` ([`UpdateCalendarEventInput`](/integrations/fullcalendar/reference/types#updatecalendareventinput)): Sparse payload containing fields to update (`title`, `start`, `end`, `allDay`).
   - `options.signal` (`AbortSignal`, optional): Cancellation signal.
 - **Returns:** `Promise<CalendarEvent>`
 - **Behavior:** Applies updates to the matching record and returns the updated `CalendarEvent`. Throws or rejects if the event does not exist.
@@ -153,4 +153,4 @@ async delete(id, { signal } = {}) {
 }
 ```
 
-For domain entity translations, see the [Custom Event Models Guide](/guides/custom-event-model). To see the full conceptual architecture, see the [Repository Contract](/concepts/repository).
+For domain entity translations, see the [Custom Event Models Guide](/integrations/fullcalendar/guides/custom-event-model). To see the full conceptual architecture, see the [Repository Contract](/integrations/fullcalendar/concepts/repository).

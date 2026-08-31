@@ -1,8 +1,8 @@
-# protocoltooling
+# Protocol Tooling — FullCalendar WebMCP
 
-WebMCP integration for FullCalendar in React applications.
+The `protocoltooling` npm package distributes the **FullCalendar WebMCP** integration from **Protocol Tooling**.
 
-`protocoltooling` exposes standard WebMCP tools (`calendar_get_context`, `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`) over existing FullCalendar React instances and host persistence without altering the application's UI, mutation workflows, or database architecture.
+It exposes standard WebMCP calendar tools (`calendar_get_context`, `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`) over existing FullCalendar React instances and host persistence without altering the application's UI, mutation workflows, or database architecture.
 
 ## Installation
 

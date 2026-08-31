@@ -1,16 +1,16 @@
 ---
 title: Integrating with an Existing App
-description: Step-by-step guide for integrating Protocol Tooling into an existing FullCalendar React setup without modifying your UI or backend architecture.
+description: Step-by-step guide for adding FullCalendar WebMCP to an existing FullCalendar React setup without modifying your UI or backend architecture.
 ---
 
-If you already have a working React application with FullCalendar, adding Protocol Tooling takes only a few minutes.
+If you already have a working React application with FullCalendar, adding FullCalendar WebMCP takes only a few minutes.
 
-Protocol Tooling is designed to adapt to your application—not the other way around.
+The integration is designed to adapt to your application—not the other way around.
 
 ## What to keep unchanged
 
 - **Your FullCalendar options:** Plugins (dayGrid, timeGrid, list, interaction), header toolbars, custom date click handlers, and event content renderers remain exactly as they are.
-- **Your backend and database:** Keep your existing API endpoints, database tables, and authentication checks. See the [Persistence Model](/concepts/persistence).
+- **Your backend and database:** Keep your existing API endpoints, database tables, and authentication checks. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
 - **Your state management:** Keep your React state, React Query / SWR hooks, or Redux store.
 
 ## Step-by-step integration
@@ -53,7 +53,7 @@ export const calendarRepository: CalendarEventRepository = {
 In your calendar component:
 1. Create a `calendarRef` with `useRef`.
 2. Pass `calendarRef` to `<FullCalendar ref={calendarRef} ... />`.
-3. Call [`useFullCalendarWebMCP`](/reference/use-fullcalendar-webmcp) with your repository and your existing data refetch function.
+3. Call [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) with your repository and your existing data refetch function.
 
 ```tsx components/CalendarView.tsx
 import FullCalendar from "@fullcalendar/react";
@@ -101,6 +101,6 @@ export function CalendarView() {
 
 ## Related reading
 
-- **[Custom Event Models](/guides/custom-event-model):** Map custom domain models (e.g. sessions, bookings) to calendar events.
-- **[Testing Guide](/guides/testing):** Verify that tools and UI mutations work as expected.
-- **[Troubleshooting](/troubleshooting):** Review common integration pitfalls and ref type solutions.
+- **[Custom Event Models](/integrations/fullcalendar/guides/custom-event-model):** Map custom domain models (e.g. sessions, bookings) to calendar events.
+- **[Testing Guide](/integrations/fullcalendar/guides/testing):** Verify that tools and UI mutations work as expected.
+- **[Troubleshooting](/integrations/fullcalendar/troubleshooting):** Review common integration pitfalls and ref type solutions.
