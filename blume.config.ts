@@ -12,8 +12,30 @@ export default defineConfig({
   },
   theme: {
     fonts: {
-      display: { name: "Scoutie Sans" },
-      body: "inter",
+      display: {
+        name: "Inter",
+        fallback: "sans",
+        variants: [
+          { src: "./fonts/inter/InterVariable.woff2", weight: "100..900", style: "normal" },
+          { src: "./fonts/inter/InterVariable-Italic.woff2", weight: "100..900", style: "italic" },
+        ],
+      },
+      body: {
+        name: "Inter",
+        fallback: "sans",
+        variants: [
+          { src: "./fonts/inter/InterVariable.woff2", weight: "100..900", style: "normal" },
+          { src: "./fonts/inter/InterVariable-Italic.woff2", weight: "100..900", style: "italic" },
+        ],
+      },
+      mono: {
+        name: "Lilex",
+        fallback: "mono",
+        variants: [
+          { src: "./fonts/lilex/Lilex-Variable.woff2", weight: "100..700", style: "normal" },
+          { src: "./fonts/lilex/Lilex-Italic-Variable.woff2", weight: "100..700", style: "italic" },
+        ],
+      },
     },
   },
   content: {
