@@ -32,13 +32,13 @@ The FullCalendar WebMCP integration automatically registers six calendar tools o
   - `start` (string, optional): Inclusive ISO 8601 lower bound.
   - `end` (string, optional): Exclusive ISO 8601 upper bound.
   - `text` (string, optional): Case-insensitive title substring.
-- **Returns:** `{ "events": CalendarEvent[] }`
+- **Returns:** `{ "events": CalendarEvent[] }` (may include optional host-selected `metadata`)
 
 ### 3. `calendar_get_event`
 - **Purpose:** Retrieve a single persisted calendar event by its stable ID.
 - **Inputs:**
   - `id` (string, required): The stable event ID.
-- **Returns:** `{ "event": CalendarEvent | null }`
+- **Returns:** `{ "event": CalendarEvent | null }` (may include optional host-selected `metadata`)
 
 ### 4. `calendar_create_event`
 - **Purpose:** Create and persist a new calendar event.
@@ -48,6 +48,7 @@ The FullCalendar WebMCP integration automatically registers six calendar tools o
   - `end` (string | null, optional): End date-time in ISO 8601 with timezone offset.
   - `allDay` (boolean, optional): Whether the event is all-day.
 - **Returns:** `{ "event": CalendarEvent }`
+- **Note:** Write schemas reject `metadata` (`additionalProperties: false`).
 
 ### 5. `calendar_update_event`
 - **Purpose:** Update selected fields on an existing calendar event.
@@ -55,6 +56,7 @@ The FullCalendar WebMCP integration automatically registers six calendar tools o
   - `id` (string, required): The stable event ID.
   - `title`, `start`, `end`, `allDay` (optional): Fields to update. At least one field must be provided.
 - **Returns:** `{ "event": CalendarEvent }`
+- **Note:** Write schemas reject `metadata`; host-owned metadata is preserved by the repository across core updates.
 
 ### 6. `calendar_delete_event`
 - **Purpose:** Delete a persisted calendar event by its ID.

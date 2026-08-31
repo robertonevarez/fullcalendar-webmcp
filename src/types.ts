@@ -25,8 +25,7 @@ export type JsonObject = { [key: string]: JsonValue };
  * `metadata` is an optional, host-selected, JSON-safe projection for agents.
  * It is read-only at the WebMCP write boundary: create/update inputs never
  * accept metadata. Omission means nothing agent-visible beyond core fields.
- *
- * EXPERIMENTAL (unreleased): not part of published 0.1.1 behavior.
+ * Protocol Tooling does not automatically expose FullCalendar `extendedProps`.
  */
 export interface CalendarEvent {
   id: string;

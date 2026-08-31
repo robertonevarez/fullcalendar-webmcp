@@ -140,9 +140,7 @@ For general setup steps, see the [Existing App Guide](/integrations/fullcalendar
 
 ---
 
-## Experimental: agent-visible metadata projection
-
-> **Unreleased experiment.** Published `@protocoltooling/fullcalendar@0.1.1` does not include metadata. The pattern below is proposed for review before any package release.
+## Agent-visible metadata projection
 
 Hosts may attach an optional JSON-safe `metadata` object when mapping domain entities to [`CalendarEvent`](/integrations/fullcalendar/reference/types#calendarevent). Protocol Tooling does **not** automatically expose FullCalendar `extendedProps`. Metadata is **read-only** for agents (create/update tool schemas reject it).
 

@@ -10,7 +10,7 @@ import type {
 import { createCalendarTools } from "../../src/tool-definitions";
 
 /**
- * P0.3 experiment: host-selected, JSON-safe, read-only metadata projection.
+ * P0.3: host-selected, JSON-safe, read-only metadata projection.
  * Metadata originates at the repository boundary — never FullCalendar Event Objects.
  */
 
