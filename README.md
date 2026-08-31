@@ -14,7 +14,7 @@ npm install @protocoltooling/fullcalendar
 
 ```bash
 npm pack
-npm install /path/to/protocoltooling-fullcalendar-0.1.0.tgz
+npm install /path/to/protocoltooling-fullcalendar-0.1.1.tgz
 ```
 
 ### Peer Dependencies

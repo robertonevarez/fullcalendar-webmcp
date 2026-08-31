@@ -13,7 +13,7 @@
     "@fullcalendar/react": "^6.1.17",
     "@fullcalendar/timegrid": "^6.1.17",
     "next": "15.2.0",
-    "@protocoltooling/fullcalendar": "file:../../../protocoltooling-fullcalendar-0.1.0.tgz",
+    "@protocoltooling/fullcalendar": "file:../../../protocoltooling-fullcalendar-0.1.1.tgz",
     "react": "19.0.0",
     "react-dom": "19.0.0"
   },

@@ -19,8 +19,22 @@ run("npm run build:lib");
 // 2. Pack tarball
 run("npm pack");
 
-const tarballName = "protocoltooling-fullcalendar-0.1.0.tgz";
+const packageJson = JSON.parse(
+  fs.readFileSync(path.join(rootDir, "package.json"), "utf8"),
+);
+const tarballName = `protocoltooling-fullcalendar-${packageJson.version}.tgz`;
 const tarballPath = path.join(rootDir, tarballName);
+
+for (const fixture of [
+  "tests/fixtures/vite-consumer/package.json",
+  "tests/fixtures/nextjs-consumer/package.json",
+]) {
+  const fixturePath = path.join(rootDir, fixture);
+  const fixturePkg = JSON.parse(fs.readFileSync(fixturePath, "utf8"));
+  fixturePkg.dependencies["@protocoltooling/fullcalendar"] =
+    `file:../../../${tarballName}`;
+  fs.writeFileSync(fixturePath, `${JSON.stringify(fixturePkg, null, 2)}\n`);
+}
 
 if (!fs.existsSync(tarballPath)) {
   console.error(`Error: Tarball ${tarballName} was not found at ${tarballPath}`);

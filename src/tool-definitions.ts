@@ -44,6 +44,17 @@ function writeAnnotations(): WebMCP.ToolAnnotations {
   return { readOnlyHint: false, untrustedContentHint: true };
 }
 
+/**
+ * WebMCP imperative execute steps always pass ToolExecuteCallbackOptions with a
+ * fresh AbortSignal. Some agent shims still call execute(input) with one argument.
+ * Never require-destructure options; forward signal when present.
+ */
+function executionSignal(
+  executeOptions: WebMCP.ToolExecuteCallbackOptions | undefined,
+): AbortSignal | undefined {
+  return executeOptions?.signal;
+}
+
 export function createCalendarTools(
   readOptions: OptionsReader,
 ): WebMCP.ModelContextTool[] {
@@ -97,11 +108,12 @@ export function createCalendarTools(
         additionalProperties: false,
       },
       annotations: readAnnotations(),
-      async execute(
-        query: { start?: string; end?: string; text?: string },
-        { signal },
-      ) {
-        const events = await readOptions().events.list(query, { signal });
+      async execute(query, executeOptions) {
+        const signal = executionSignal(executeOptions);
+        const events = await readOptions().events.list(
+          query as { start?: string; end?: string; text?: string },
+          { signal },
+        );
         return { events };
       },
     },
@@ -118,8 +130,9 @@ export function createCalendarTools(
         additionalProperties: false,
       },
       annotations: readAnnotations(),
-      async execute(input, { signal }) {
+      async execute(input, executeOptions) {
         const { id } = input as { id: string };
+        const signal = executionSignal(executeOptions);
         const event = await readOptions().events.get(id, { signal });
         return { event };
       },
@@ -136,8 +149,9 @@ export function createCalendarTools(
         additionalProperties: false,
       },
       annotations: writeAnnotations(),
-      async execute(rawInput, { signal }) {
+      async execute(rawInput, executeOptions) {
         const input = rawInput as unknown as CreateCalendarEventInput;
+        const signal = executionSignal(executeOptions);
         const options = readOptions();
         const event = await options.events.create(input, { signal });
         await options.onEventsChanged();
@@ -160,10 +174,11 @@ export function createCalendarTools(
         additionalProperties: false,
       },
       annotations: writeAnnotations(),
-      async execute(rawInput, { signal }) {
+      async execute(rawInput, executeOptions) {
         const { id, ...input } = rawInput as unknown as UpdateCalendarEventInput & {
           id: string;
         };
+        const signal = executionSignal(executeOptions);
         const options = readOptions();
         const event = await options.events.update(id, input, { signal });
         await options.onEventsChanged();
@@ -183,8 +198,9 @@ export function createCalendarTools(
         additionalProperties: false,
       },
       annotations: writeAnnotations(),
-      async execute(input, { signal }) {
+      async execute(input, executeOptions) {
         const { id } = input as { id: string };
+        const signal = executionSignal(executeOptions);
         const options = readOptions();
         await options.events.delete(id, { signal });
         await options.onEventsChanged();
