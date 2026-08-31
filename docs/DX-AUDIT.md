@@ -73,3 +73,18 @@ This document records friction points, awkward explanations, and ergonomic hurdl
   └── FullCalendar WebMCP (Integration)
   ```
   with the integration currently distributed through `protocoltooling@0.1.0`. This is a documentation taxonomy fix that does not require changing the current public API.
+
+---
+
+## Friction Point 6: Organization Shell vs Integration Docs Shell
+
+- **Problem:**
+  The initial reorganization moved FullCalendar content under `/integrations/fullcalendar`, but the root Protocol Tooling page still inherited the FullCalendar documentation navigation and visual context.
+- **Effect:**
+  The organization homepage still felt like the FullCalendar product documentation.
+- **Resolution:**
+  Separated the site using Blume's native capabilities:
+  - **Organization Homepage (`/`):** Implemented via `pages/index.astro` using Blume's built-in `PageLayout`. It renders a clean organization introduction and integration directory with zero documentation sidebars or FullCalendar tree leakage.
+  - **FullCalendar WebMCP Documentation (`/integrations/fullcalendar`):** Scoped via `navigation.tabs` in `blume.config.ts`. Navigating to the integration activates the dedicated FullCalendar WebMCP sidebar and documentation shell.
+- **Search Limitation Note:**
+  Blume's default Orama search indexes all built pages globally. Section-level search scoping is not a built-in toggle in Blume v1.5.3's client Orama search; global search is retained across the shared domain without custom forks.

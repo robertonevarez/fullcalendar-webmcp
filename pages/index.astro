@@ -1,0 +1,62 @@
+---
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import Card from "blume/components/content/Card.astro";
+import CardGroup from "blume/components/content/CardGroup.astro";
+import data from "blume:data";
+
+const { config } = data;
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  page={{
+    title: "Protocol Tooling",
+    description: "Protocol Tooling builds integrations that make existing web software available to AI agents through open standards such as WebMCP.",
+    route: "/",
+  }}
+>
+  <div class="mx-auto max-w-4xl px-6 py-16 md:py-24">
+    <div class="mb-12">
+      <h1 class="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        Protocol Tooling
+      </h1>
+      <p class="mt-4 text-xl text-muted-foreground">
+        Agent interfaces for the existing web.
+      </p>
+      <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
+        Protocol Tooling builds integrations that make existing web software available to AI agents through standards such as WebMCP.
+      </p>
+    </div>
+
+    <div class="border-t border-border pt-10">
+      <h2 class="text-xl font-semibold text-foreground">
+        Integrations
+      </h2>
+      <p class="mt-1 text-sm text-muted-foreground">
+        Available integrations ready for production deployment.
+      </p>
+
+      <CardGroup cols={1}>
+        <Card
+          title="FullCalendar WebMCP"
+          href="/integrations/fullcalendar"
+          icon="calendar"
+          cta="View documentation"
+          arrow={true}
+        >
+          Add standard WebMCP calendar tools to an existing FullCalendar React application while leaving your database, backend, and state in control.
+        </Card>
+      </CardGroup>
+    </div>
+  </div>
+</PageLayout>
