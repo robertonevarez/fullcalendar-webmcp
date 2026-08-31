@@ -13,10 +13,10 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "noEmit": true,
+    "declaration": true,
     "jsx": "react-jsx",
     "ignoreDeprecations": "6.0",
-    "types": ["vite/client", "vitest/globals", "webmcp-types"]
+    "types": ["webmcp-types"]
   },
-  "include": ["src", "tests", "example", "scripts"]
+  "include": ["src"]
 }

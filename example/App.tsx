@@ -4,14 +4,13 @@ import FullCalendar, {
   type EventDropInfo,
   type EventResizeDoneInfo,
 } from "@fullcalendar/react";
+import breezyTheme from "@fullcalendar/react/themes/breezy";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
-import breezyTheme from "@fullcalendar/react/themes/breezy";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useFullCalendarWebMCP, type CalendarEvent } from "../src";
 import { LocalCalendarEventRepository } from "./calendar/local-calendar-repository";
 import { createSeedEvents } from "./calendar/seed-events";
-import type { CalendarEvent } from "./calendar/types";
-import { useFullCalendarWebMCP } from "./protocol-tooling";
 
 const repository = new LocalCalendarEventRepository({
   seedEvents: createSeedEvents(),

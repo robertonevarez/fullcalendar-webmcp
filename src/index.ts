@@ -1,12 +1,10 @@
 export { useFullCalendarWebMCP } from "./use-fullcalendar-webmcp";
 export type {
-  FullCalendarHandle,
-  FullCalendarWebMCPOptions,
-} from "./tool-definitions";
-export type {
   CalendarEvent,
   CalendarEventQuery,
   CalendarEventRepository,
   CreateCalendarEventInput,
+  FullCalendarHandle,
+  FullCalendarWebMCPOptions,
   UpdateCalendarEventInput,
-} from "../calendar/types";
+} from "./types";

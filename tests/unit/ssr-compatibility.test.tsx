@@ -2,8 +2,7 @@
 
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { FullCalendarWebMCPOptions } from "./tool-definitions";
-import { useFullCalendarWebMCP } from "./use-fullcalendar-webmcp";
+import { useFullCalendarWebMCP, type FullCalendarWebMCPOptions } from "../../src";
 
 const options = {
   calendarRef: { current: null },

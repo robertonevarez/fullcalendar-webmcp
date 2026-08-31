@@ -1,16 +1,16 @@
 import { act, render, screen } from "@testing-library/react";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type {
-  CalendarEvent,
-  CalendarEventQuery,
-  CalendarEventRepository,
-  CreateCalendarEventInput,
-  FullCalendarHandle,
-  UpdateCalendarEventInput,
-} from "./index";
-import { useFullCalendarWebMCP } from "./index";
-import { FakeModelContext, setModelContext } from "../test/fake-model-context";
+import {
+  useFullCalendarWebMCP,
+  type CalendarEvent,
+  type CalendarEventQuery,
+  type CalendarEventRepository,
+  type CreateCalendarEventInput,
+  type FullCalendarHandle,
+  type UpdateCalendarEventInput,
+} from "../../src";
+import { FakeModelContext, setModelContext } from "../fake-model-context";
 
 // ---------------------------------------------------------------------------
 // Independent Host Application Model (e.g. Next.js + Supabase / PostgreSQL)
@@ -314,7 +314,6 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
   });
 
   it("validates the complete 15-step shared-state model against server-backed persistence", async () => {
-    // 1. Load application normally with existing database records
     const db = new IndependentHostDatabase([
       {
         id: "session-seed-1",
@@ -351,21 +350,21 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
       <HostCalendarPage repository={repository} calendarRef={fakeRef} />,
     );
 
-    // Confirm initial render reflects existing database record
+    // Initial render reflects database record
     await act(async () => {});
     expect(screen.getByTestId("event-count").textContent).toBe("1");
     expect(screen.getByTestId("event-title-session-seed-1").textContent).toBe(
       "Behind-the-Wheel Driving Lesson",
     );
 
-    // 2. Query events through WebMCP
+    // Query events through WebMCP
     const listedInitial = (await context.execute("calendar_list_events", {
       text: "Behind-the-Wheel",
     })) as { events: CalendarEvent[] };
     expect(listedInitial.events).toHaveLength(1);
     expect(listedInitial.events[0].id).toBe("session-seed-1");
 
-    // 3. Create an event through WebMCP
+    // Create an event through WebMCP
     const createResult = (await context.execute("calendar_create_event", {
       title: "Highway Maneuvers Evaluation",
       start: "2026-09-03T14:00:00-06:00",
@@ -374,22 +373,20 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
     const createdId = createResult.event.id;
     expect(createdId).toMatch(/^session-/);
 
-    // 4. Confirm FullCalendar UI reflects it (via onEventsChanged -> refetchSessions)
+    // FullCalendar UI reflects it
     await act(async () => {});
     expect(screen.getByTestId("event-count").textContent).toBe("2");
     expect(screen.getByTestId(`event-title-${createdId}`).textContent).toBe(
       "Highway Maneuvers Evaluation",
     );
 
-    // 5. Reload (simulate reading raw authoritative database state directly)
+    // Reload (simulate reading database directly)
     const freshDbState = await db.selectByLocation("loc-downtown");
     const persistedInDb = freshDbState.find((r) => r.id === createdId);
-
-    // 6. Confirm it remains persisted in DB
     expect(persistedInDb).toBeDefined();
     expect(persistedInDb?.title).toBe("Highway Maneuvers Evaluation");
 
-    // 7. Update it through WebMCP
+    // Update it through WebMCP
     const updateResult = (await context.execute("calendar_update_event", {
       id: createdId,
       title: "Highway Maneuvers Evaluation (Rescheduled)",
@@ -400,34 +397,32 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
       "Highway Maneuvers Evaluation (Rescheduled)",
     );
 
-    // 8. Confirm the UI reflects the persisted change
+    // UI reflects the persisted change
     await act(async () => {});
     expect(screen.getByTestId(`event-title-${createdId}`).textContent).toBe(
       "Highway Maneuvers Evaluation (Rescheduled)",
     );
 
-    // 9. Modify it through the application's existing human interaction (e.g. instructor updates in UI modal)
+    // Modify it through human interaction
     await serverActions.updateSessionAction(createdId, {
       title: "Highway Maneuvers Evaluation (Staff Confirmed)",
     });
 
-    // 10. Persist through the application's normal path (DB updated directly)
+    // Confirm DB updated directly
     const dbRecordAfterHuman = await db.selectById(createdId);
     expect(dbRecordAfterHuman?.title).toBe(
       "Highway Maneuvers Evaluation (Staff Confirmed)",
     );
 
-    // 11. Query it again through WebMCP
+    // Query it again through WebMCP
     const queryAfterHuman = (await context.execute("calendar_get_event", {
       id: createdId,
     })) as { event: CalendarEvent };
-
-    // 12. Confirm the agent sees the human's latest state
     expect(queryAfterHuman.event.title).toBe(
       "Highway Maneuvers Evaluation (Staff Confirmed)",
     );
 
-    // 13. Delete it through WebMCP
+    // Delete it through WebMCP
     const deleteResult = (await context.execute("calendar_delete_event", {
       id: createdId,
     })) as { deleted: boolean; id: string };
@@ -438,10 +433,8 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
     expect(screen.getByTestId("event-count").textContent).toBe("1");
     expect(screen.queryByTestId(`event-title-${createdId}`)).toBeNull();
 
-    // 14. Reload / check database directly
+    // Confirm deletion in database
     const dbRecordAfterDelete = await db.selectById(createdId);
-
-    // 15. Confirm deletion remains deleted in database
     expect(dbRecordAfterDelete).toBeNull();
 
     unmount();
@@ -455,7 +448,6 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
       "loc-downtown",
     );
 
-    // Simulate a database network/permission error on update
     vi.spyOn(serverActions, "updateSessionAction").mockRejectedValue(
       new Error("PostgreSQL connection timeout: 5432"),
     );
@@ -493,7 +485,6 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
       }),
     ).rejects.toThrow("PostgreSQL connection timeout: 5432");
 
-    // onEventsChanged was NOT invoked
     expect(onRefreshed).not.toHaveBeenCalled();
   });
 

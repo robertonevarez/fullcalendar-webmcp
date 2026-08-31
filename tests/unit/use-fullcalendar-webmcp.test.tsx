@@ -1,9 +1,8 @@
 import { StrictMode } from "react";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FakeModelContext, setModelContext } from "../test/fake-model-context";
-import type { FullCalendarWebMCPOptions } from "./tool-definitions";
-import { useFullCalendarWebMCP } from "./use-fullcalendar-webmcp";
+import { useFullCalendarWebMCP, type FullCalendarWebMCPOptions } from "../../src";
+import { FakeModelContext, setModelContext } from "../fake-model-context";
 
 const options = {
   calendarRef: { current: null },
@@ -25,10 +24,10 @@ describe("useFullCalendarWebMCP", () => {
     const { unmount } = renderHook(() => useFullCalendarWebMCP(options), {
       wrapper: StrictMode,
     });
-    await waitFor(() => expect(context.tools).toHaveLength(6));
+    await waitFor(() => expect(context.tools.size).toBe(6));
 
     unmount();
-    expect(context.tools).toHaveLength(0);
+    expect(context.tools.size).toBe(0);
   });
 
   it("waits for a WebMCP runtime injected after mount", async () => {
@@ -36,13 +35,13 @@ describe("useFullCalendarWebMCP", () => {
     const context = new FakeModelContext();
     const { unmount } = renderHook(() => useFullCalendarWebMCP(options));
 
-    expect(context.tools).toHaveLength(0);
+    expect(context.tools.size).toBe(0);
     setModelContext(context);
     await act(async () => vi.advanceTimersByTimeAsync(250));
-    expect(context.tools).toHaveLength(6);
+    expect(context.tools.size).toBe(6);
 
     unmount();
-    expect(context.tools).toHaveLength(0);
+    expect(context.tools.size).toBe(0);
   });
 
   it("reports duplicate registration without removing the existing tools", async () => {
@@ -64,7 +63,7 @@ describe("useFullCalendarWebMCP", () => {
     );
     await waitFor(() => expect(onRegistrationError).toHaveBeenCalledOnce());
 
-    expect(context.tools).toHaveLength(1);
+    expect(context.tools.size).toBe(1);
     expect(context.tools.get("calendar_get_context")?.description).toBe("existing");
     existing.abort();
   });

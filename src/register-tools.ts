@@ -1,5 +1,5 @@
 import { createCalendarTools } from "./tool-definitions";
-import type { FullCalendarWebMCPOptions } from "./tool-definitions";
+import type { FullCalendarWebMCPOptions } from "./types";
 
 const RUNTIME_POLL_INTERVAL_MS = 250;
 

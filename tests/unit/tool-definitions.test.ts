@@ -1,13 +1,14 @@
 import type { RefObject } from "react";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
-import { LocalCalendarEventRepository } from "../calendar/local-calendar-repository";
-import { FakeModelContext } from "../test/fake-model-context";
-import { MapStorage } from "../test/map-storage";
+import { LocalCalendarEventRepository } from "../../example/calendar/local-calendar-repository";
 import {
-  createCalendarTools,
+  type CalendarEventRepository,
   type FullCalendarHandle,
   type FullCalendarWebMCPOptions,
-} from "./tool-definitions";
+} from "../../src";
+import { createCalendarTools } from "../../src/tool-definitions";
+import { FakeModelContext } from "../fake-model-context";
+import { MapStorage } from "../map-storage";
 
 function fakeCalendarRef() {
   return {
@@ -29,7 +30,7 @@ describe("calendar WebMCP tools", () => {
     const calendarRef: RefObject<FullCalendarHandle | null> = fakeCalendarRef();
     const options: FullCalendarWebMCPOptions = {
       calendarRef,
-      events: {} as never,
+      events: {} as CalendarEventRepository,
       onEventsChanged: vi.fn(),
     };
 
@@ -42,7 +43,7 @@ describe("calendar WebMCP tools", () => {
     const onEventsChanged = async () => [{ id: "refreshed-event" }];
     const options: FullCalendarWebMCPOptions = {
       calendarRef: fakeCalendarRef(),
-      events: {} as never,
+      events: {} as CalendarEventRepository,
       onEventsChanged,
     };
 
@@ -108,7 +109,7 @@ describe("calendar WebMCP tools", () => {
     const list = vi.fn().mockResolvedValue([]);
     const tools = createCalendarTools(() => ({
       calendarRef: fakeCalendarRef(),
-      events: { list } as never,
+      events: { list } as unknown as CalendarEventRepository,
       onEventsChanged: vi.fn(),
     }));
     const listTool = tools.find((tool) => tool.name === "calendar_list_events")!;

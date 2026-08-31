@@ -1,30 +1,10 @@
 /// <reference types="webmcp-types" />
 
-import type { RefObject } from "react";
 import type {
-  CalendarEventRepository,
   CreateCalendarEventInput,
+  FullCalendarWebMCPOptions,
   UpdateCalendarEventInput,
-} from "../calendar/types";
-
-export interface FullCalendarWebMCPOptions {
-  calendarRef: RefObject<FullCalendarHandle | null>;
-  events: CalendarEventRepository;
-  onEventsChanged: () => unknown | Promise<unknown>;
-  onRegistrationError?: (error: unknown) => void;
-}
-
-/** The stable FullCalendar React surface used by both v6 and v7 refs. */
-export interface FullCalendarHandle {
-  getApi(): {
-    getOption(name: string): unknown;
-    view: {
-      type: string;
-      activeStart: Date;
-      activeEnd: Date;
-    };
-  };
-}
+} from "./types";
 
 type OptionsReader = () => FullCalendarWebMCPOptions;
 

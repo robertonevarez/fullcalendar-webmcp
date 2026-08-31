@@ -1,4 +1,4 @@
-import type { CalendarEvent } from "./types";
+import type { CalendarEvent } from "../../src";
 
 function nextWeekday(day: number, hour: number, minute = 0) {
   const date = new Date();

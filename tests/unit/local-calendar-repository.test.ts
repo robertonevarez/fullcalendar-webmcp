@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { LocalCalendarEventRepository } from "./local-calendar-repository";
-import { MapStorage } from "../test/map-storage";
+import { LocalCalendarEventRepository } from "../../example/calendar/local-calendar-repository";
+import { MapStorage } from "../map-storage";
 
 describe("LocalCalendarEventRepository", () => {
   it("persists stable event identity across repository instances", async () => {

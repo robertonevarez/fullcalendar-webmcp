@@ -1,60 +1,149 @@
-# Protocol Tooling
+# protocoltooling
 
-Protocol Tooling makes existing web software agent-ready. This Phase 0 proof adds six [WebMCP](https://github.com/webmachinelearning/webmcp) tools to an ordinary persisted [FullCalendar React](https://fullcalendar.io/docs/react) application without replacing its UI, persistence, or mutation callbacks.
+WebMCP integration for FullCalendar in React applications.
 
-## Run the proof
+`protocoltooling` exposes standard WebMCP tools (`calendar_get_context`, `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`) over existing FullCalendar React instances and host persistence without altering the application's UI, mutation workflows, or database architecture.
 
+## Installation
+
+### Once Published to npm
 ```bash
-npm install
-npm run dev
+npm install protocoltooling
 ```
 
-Open the local URL in ChatGPT's in-app browser, where site tools are supported. The seeded calendar persists in `localStorage`; dragging or resizing an event uses the application's normal persistence callback.
+### Local / Tarball Installation (Development)
+```bash
+npm pack
+npm install /path/to/protocoltooling-0.1.0.tgz
+```
 
-Try the golden path:
+### Peer Dependencies
+Ensure host peer dependencies are installed:
+- `react`: `>=17 <20`
+- `@fullcalendar/react`: `^6.0.0 || ^7.0.0`
 
-1. “What do I have Wednesday?”
-2. “Schedule Design Review Wednesday at 2 PM for one hour.”
-3. “Move Design Review to Thursday morning.”
-4. Reload, then ask “When is Design Review?”
-5. Drag the event, then ask “When is Design Review now?”
-6. Delete it through the agent, reload, and ask again.
+---
 
-## Integration
-
-The existing app supplies the repository it already uses and its existing refresh function:
+## Minimal Integration
 
 ```tsx
-import { useFullCalendarWebMCP } from "./protocol-tooling";
+import FullCalendar from "@fullcalendar/react"; // v6 or v7
+import { useCallback, useRef, useState } from "react";
+import {
+  useFullCalendarWebMCP,
+  type CalendarEvent,
+  type CalendarEventRepository,
+} from "protocoltooling";
 
-const calendarRef = useRef<CalendarRef>(null);
-useFullCalendarWebMCP({ calendarRef, events: repository, onEventsChanged: reloadEvents });
+export function MyCalendar() {
+  const calendarRef = useRef<FullCalendar>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
 
-<FullCalendar ref={calendarRef} {...existingOptions} />
+  const reloadEvents = useCallback(async () => {
+    const data = await eventRepository.list();
+    setEvents(data);
+    return data;
+  }, []);
+
+  useFullCalendarWebMCP({
+    calendarRef,
+    events: eventRepository,
+    onEventsChanged: reloadEvents,
+  });
+
+  return (
+    <FullCalendar
+      ref={calendarRef}
+      events={events}
+      /* ... other FullCalendar options */
+    />
+  );
+}
 ```
 
-The hook wiring is four executable lines: one import, two setup statements, and one `ref` addition. That measurement starts **after a host adapter implementing `CalendarEventRepository` exists**.
+---
 
-If an application's persistence API exposes separate functions, the adapter is additional glue and should be counted separately:
+## Repository Contract
+
+The host provides an object implementing `CalendarEventRepository` mapped to its existing database or API:
 
 ```ts
-const events: CalendarEventRepository = {
-  list: (query, options) => api.events.list(query, options),
-  get: (id, options) => api.events.get(id, options),
-  create: (input, options) => api.events.create(input, options),
-  update: (id, input, options) => api.events.update(id, input, options),
-  delete: (id, options) => api.events.delete(id, options),
+import type {
+  CalendarEvent,
+  CalendarEventQuery,
+  CalendarEventRepository,
+  CreateCalendarEventInput,
+  UpdateCalendarEventInput,
+} from "protocoltooling";
+
+export const eventRepository: CalendarEventRepository = {
+  async list(query?: CalendarEventQuery, options?: { signal?: AbortSignal }): Promise<CalendarEvent[]> {
+    return api.events.list(query, options);
+  },
+  async get(id: string, options?: { signal?: AbortSignal }): Promise<CalendarEvent | null> {
+    return api.events.get(id, options);
+  },
+  async create(input: CreateCalendarEventInput, options?: { signal?: AbortSignal }): Promise<CalendarEvent> {
+    return api.events.create(input, options);
+  },
+  async update(id: string, input: UpdateCalendarEventInput, options?: { signal?: AbortSignal }): Promise<CalendarEvent> {
+    return api.events.update(id, input, options);
+  },
+  async delete(id: string, options?: { signal?: AbortSignal }): Promise<void> {
+    return api.events.delete(id, options);
+  },
 };
 ```
 
-That representative adapter is seven executable lines. Hosts whose existing repository already matches the five-operation contract need no glue; other applications may need more mapping. The demo's local persistence implementation is deliberately kept separate from the hook integration cost.
+---
 
-## Checks
+## Persistence Model
+
+> **Protocol Tooling does not persist calendar events itself. The host application's persistence remains authoritative.**
+
+Agent mutations and human interactions (e.g. dragging, resizing, modal editing) converge on the host application's authoritative persistence. Protocol Tooling maintains no secondary event ledger.
+
+---
+
+## Supported Architecture
+
+- **React:** React 17, 18, and 19.
+- **FullCalendar React:** FullCalendar React v6 class instances (`RefObject<FullCalendar | null>`) and FullCalendar React v7 handles (`RefObject<CalendarRef | null>`).
+- **Runtime:** WebMCP runtime required for tool registration (`document.modelContext.registerTool`).
+- **Framework Agnostic:** Compatible with Next.js (App Router & Pages Router), Vite, Remix / React Router, TanStack Start, or pure client SPAs.
+- **Backend Agnostic:** Works with Server Actions, REST, GraphQL, Supabase / PostgreSQL, ORMs, or custom APIs.
+
+---
+
+## Server-Side Rendering (SSR) & Lifecycle
+
+- **SSR-Safe:** The package contains no top-level browser global (`window`, `document`) access. Server rendering completes without error.
+- **Client Lifecycle:** Tool registration occurs inside `useEffect` via an `AbortController`. React Strict Mode replay and unmount cleanup properly unregister tools with zero orphaned state.
+- **Delayed Runtime:** Automatically waits for late-injected WebMCP runtime if not immediately present at mount time.
+- **React Server Components (RSC):** The package entry includes the `'use client';` directive for seamless import into Next.js App Router client components.
+
+---
+
+## Development & Verification
 
 ```bash
+# Build library package (dist/index.js, dist/index.d.ts)
+npm run build:lib
+
+# Run unit, integration, public type, and SSR tests
 npm test
+
+# Run typecheck & linter
+npm run typecheck
 npm run lint
-npm run build
+
+# Build package tarball and test in external Vite and Next.js consumers
+npm run test:pack
+
+# Run Phase 0 interactive dev harness
+npm run dev
 ```
 
-The implementation is intentionally stopped at the vertical slice. See [docs/architecture.md](docs/architecture.md) for the decision record, lifecycle behavior, actual integration cost, and limitations.
+## License
+
+MIT

@@ -4,7 +4,7 @@ import type {
   CalendarEventRepository,
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
-} from "./types";
+} from "../../src";
 
 const STORAGE_KEY = "protocol-tooling:calendar-events:v1";
 
