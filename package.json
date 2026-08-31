@@ -1,36 +1,87 @@
 {
-  "name": "protocol-tooling-phase-0",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@protocoltooling/fullcalendar",
+  "version": "0.1.0",
+  "description": "Add WebMCP tools to FullCalendar React applications.",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "webmcp",
+    "fullcalendar",
+    "react",
+    "mcp",
+    "model-context-protocol",
+    "calendar",
+    "ai-agents"
+  ],
   "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertonevarez/protocoltooling.git"
+  },
+  "homepage": "https://github.com/robertonevarez/protocoltooling#readme",
+  "bugs": {
+    "url": "https://github.com/robertonevarez/protocoltooling/issues"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "npm run build:lib && vite build",
+    "build:lib": "tsup",
+    "prepublishOnly": "npm run build:lib",
+    "docs:dev": "blume dev",
+    "docs:build": "blume build",
+    "docs:check": "blume check",
+    "docs:validate": "blume validate",
+    "docs:audit": "blume audit",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "test:types": "tsc --noEmit -p tsconfig.json",
+    "test:pack": "node ./scripts/test-pack.js"
   },
-  "dependencies": {
-    "@fullcalendar/react": "7.0.2",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "temporal-polyfill": "1.0.1",
-    "webmcp-types": "0.1.5"
+  "peerDependencies": {
+    "@fullcalendar/react": "^6.0.0 || ^7.0.0",
+    "react": ">=17 <20"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@fullcalendar/react": "7.0.2",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/node": "24.10.13",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.1.1",
+    "blume": "^1.5.3",
     "eslint": "10.0.1",
     "globals": "17.11.0",
     "jsdom": "30.0.1",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "temporal-polyfill": "1.0.1",
+    "tsup": "8.5.1",
     "typescript": "6.0.3",
     "typescript-eslint": "8.68.0",
     "vite": "8.2.2",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "webmcp-types": "0.1.5"
   }
 }

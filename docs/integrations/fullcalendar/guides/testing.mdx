@@ -1,0 +1,64 @@
+---
+title: Testing
+description: Step-by-step 9-point verification checklist to test WebMCP calendar tool discovery, querying, mutation, durable persistence, and UI updates.
+---
+
+Follow this checklist to verify that your FullCalendar WebMCP integration is functioning properly.
+
+## Integration verification checklist
+
+<Steps>
+  <Step title="1. Open in a WebMCP environment">
+    Open your application in a browser or runtime that supports WebMCP (e.g. Chrome with WebMCP flags enabled or an agentic browser).
+  </Step>
+
+  <Step title="2. Confirm tool registration">
+    Verify that the six [WebMCP calendar tools](/integrations/fullcalendar/concepts/webmcp) appear in your browser's model context:
+    - `calendar_get_context`
+    - `calendar_list_events`
+    - `calendar_get_event`
+    - `calendar_create_event`
+    - `calendar_update_event`
+    - `calendar_delete_event`
+  </Step>
+
+  <Step title="3. Test calendar_get_context">
+    Invoke `calendar_get_context`. Verify that the returned `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the currently displayed FullCalendar view.
+  </Step>
+
+  <Step title="4. Test calendar_list_events">
+    Invoke `calendar_list_events`. Confirm that the returned list matches the events currently displayed on your calendar.
+  </Step>
+
+  <Step title="5. Create a test event via tool">
+    Invoke `calendar_create_event` with a test title and timestamp:
+    ```json
+    {
+      "title": "Agent Test Meeting",
+      "start": "2026-09-05T14:00:00Z",
+      "end": "2026-09-05T15:00:00Z"
+    }
+    ```
+    Confirm that the tool returns a valid `event` with a non-empty `id`.
+  </Step>
+
+  <Step title="6. Verify UI update">
+    Confirm that the new event immediately appears on the FullCalendar UI without requiring a manual page refresh. This verifies that `onEventsChanged` was called and refreshed your React state.
+  </Step>
+
+  <Step title="7. Verify durable persistence">
+    Hard-reload the browser page. Confirm that the test event remains visible on the calendar. This proves that your repository persisted the event to your database.
+  </Step>
+
+  <Step title="8. Test human-to-agent synchronization">
+    Move or edit the test event directly in the FullCalendar UI (e.g. drag to a new time). Then call `calendar_get_event` with the event's ID. Confirm that the tool returns the updated timestamp.
+  </Step>
+
+  <Step title="9. Test calendar_delete_event">
+    Invoke `calendar_delete_event` with the event's ID. Confirm that the tool returns `{ "deleted": true }` and that the event is immediately removed from the FullCalendar UI.
+  </Step>
+</Steps>
+
+:::tip
+If any step fails, consult our [Troubleshooting Guide](/integrations/fullcalendar/troubleshooting) for diagnosis and solutions.
+:::

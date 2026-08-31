@@ -1,0 +1,23 @@
+header a[href="/"]:empty {
+  display: none;
+}
+
+/*
+ * Inter OpenType features (https://rsms.me/inter/#features).
+ * liga + calt: Chrome fix / recommended defaults.
+ * ss01: alternate (open) digits.
+ * ss03: round quotes & commas.
+ * cv11: single-story a.
+ */
+:root {
+  font-optical-sizing: auto;
+  font-feature-settings: "liga" 1, "calt" 1, "ss01" 1, "ss03" 1, "cv11" 1;
+}
+
+code,
+kbd,
+samp,
+pre,
+.font-mono {
+  font-feature-settings: "liga" 1, "calt" 1;
+}

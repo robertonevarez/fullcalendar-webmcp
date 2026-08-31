@@ -1,0 +1,102 @@
+---
+title: Troubleshooting
+description: Solutions and diagnosis steps for common FullCalendar WebMCP questions, missing tools, state refresh issues, and TypeScript ref mismatches.
+sidebar:
+  order: 5
+---
+
+Solutions to common questions and edge cases when integrating FullCalendar WebMCP.
+
+## Tools do not appear in the browser
+
+### Cause
+The current browser environment does not support WebMCP or has not initialized `document.modelContext`.
+
+### Solution
+- Ensure you are running in a browser that supports WebMCP (or has WebMCP extension/runtime enabled).
+- Check `window.document.modelContext` in your browser DevTools console.
+- [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) automatically retries registration every 250 ms if the runtime is injected after page load. If registration fails due to duplicate tool names, provide `onRegistrationError` to log the underlying error:
+
+```tsx
+useFullCalendarWebMCP({
+  calendarRef,
+  events,
+  onEventsChanged: refetch,
+  onRegistrationError: (err) => console.error("WebMCP registration failed:", err),
+});
+```
+
+---
+
+## Agent mutations succeed, but calendar does not refresh
+
+### Cause
+`onEventsChanged` was not passed, or it does not trigger a React state update in your calendar component.
+
+### Solution
+Ensure `onEventsChanged` refetches data from your backend and updates the `events` state passed to FullCalendar:
+
+```tsx
+const reloadEvents = useCallback(async () => {
+  const latestEvents = await eventRepository.list();
+  setEvents(latestEvents);
+}, []);
+
+useFullCalendarWebMCP({
+  calendarRef,
+  events: eventRepository,
+  onEventsChanged: reloadEvents, // [!code highlight]
+});
+```
+
+---
+
+## Event disappears after page reload
+
+### Cause
+Your `CalendarEventRepository` implementation did not persist the event durably to a backend or database.
+
+### Solution
+FullCalendar WebMCP does not store events itself. Ensure `events.create`, `events.update`, and `events.delete` write to your persistent database or API, not just in-memory component state. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
+
+---
+
+## FullCalendar ref TypeScript error
+
+### Cause
+FullCalendar React v6 uses a class instance (`RefObject<FullCalendar | null>`), whereas FullCalendar React v7 uses a functional component handle (`RefObject<CalendarRef | null>`).
+
+### Solution
+
+**In FullCalendar React v6:**
+```tsx
+import FullCalendar from "@fullcalendar/react";
+const calendarRef = useRef<FullCalendar>(null);
+```
+
+**In FullCalendar React v7:**
+```tsx
+import FullCalendar, { type CalendarRef } from "@fullcalendar/react";
+const calendarRef = useRef<CalendarRef>(null);
+```
+
+The [`FullCalendarHandle`](/integrations/fullcalendar/reference/types#fullcalendarhandle) interface is structurally compatible with both versions.
+
+---
+
+## Event `end: null` vs `end: undefined`
+
+### Cause
+`CalendarEvent` standardizes `end` as `string | null` for events without an end time, while FullCalendar props accept `string | undefined`.
+
+### Solution
+When passing events directly to FullCalendar's `events` prop in strict TypeScript mode:
+
+```tsx
+<FullCalendar
+  ref={calendarRef}
+  events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+/>
+```
+
+For complete step-by-step verification, see the [Testing Guide](/integrations/fullcalendar/guides/testing).

@@ -1,0 +1,216 @@
+---
+title: Public Types
+description: Comprehensive TypeScript type and interface definitions exported by `@protocoltooling/fullcalendar` for the FullCalendar WebMCP integration.
+---
+
+The `@protocoltooling/fullcalendar` package exports the following TypeScript interfaces and types for the FullCalendar WebMCP integration.
+
+```ts
+import type {
+  CalendarEvent,
+  CreateCalendarEventInput,
+  UpdateCalendarEventInput,
+  CalendarEventQuery,
+  CalendarEventRepository,
+  FullCalendarHandle,
+  FullCalendarWebMCPOptions,
+} from "@protocoltooling/fullcalendar";
+```
+
+---
+
+## `CalendarEvent`
+
+Normalized calendar event model.
+
+```ts
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  start: string;
+  end: string | null;
+  allDay: boolean;
+}
+```
+
+<TypeTable
+  type={{
+    id: {
+      type: "string",
+      required: true,
+      description: "Unique, stable identifier assigned by the host application.",
+    },
+    title: {
+      type: "string",
+      required: true,
+      description: "Human-readable event title.",
+    },
+    start: {
+      type: "string",
+      required: true,
+      description: "Event start date-time as an ISO 8601 string with an explicit timezone offset.",
+    },
+    end: {
+      type: "string | null",
+      required: true,
+      description: "Exclusive event end date-time as an ISO 8601 string with offset, or null.",
+    },
+    allDay: {
+      type: "boolean",
+      required: true,
+      description: "Whether the event is an all-day event.",
+    },
+  }}
+/>
+
+---
+
+## `CreateCalendarEventInput`
+
+Input payload passed to `CalendarEventRepository.create`.
+
+```ts
+export interface CreateCalendarEventInput {
+  title: string;
+  start: string;
+  end?: string | null;
+  allDay?: boolean;
+}
+```
+
+<TypeTable
+  type={{
+    title: {
+      type: "string",
+      required: true,
+      description: "Human-readable title for the new event.",
+    },
+    start: {
+      type: "string",
+      required: true,
+      description: "Start date-time in ISO 8601 format with offset.",
+    },
+    end: {
+      type: "string | null",
+      required: false,
+      description: "Optional exclusive end date-time in ISO 8601 format.",
+    },
+    allDay: {
+      type: "boolean",
+      required: false,
+      description: "Optional flag indicating if the event spans the entire day.",
+    },
+  }}
+/>
+
+---
+
+## `UpdateCalendarEventInput`
+
+Input payload passed to `CalendarEventRepository.update`.
+
+```ts
+export interface UpdateCalendarEventInput {
+  title?: string;
+  start?: string;
+  end?: string | null;
+  allDay?: boolean;
+}
+```
+
+<TypeTable
+  type={{
+    title: {
+      type: "string",
+      required: false,
+      description: "Updated title.",
+    },
+    start: {
+      type: "string",
+      required: false,
+      description: "Updated start date-time.",
+    },
+    end: {
+      type: "string | null",
+      required: false,
+      description: "Updated end date-time.",
+    },
+    allDay: {
+      type: "boolean",
+      required: false,
+      description: "Updated all-day flag.",
+    },
+  }}
+/>
+
+---
+
+## `CalendarEventQuery`
+
+Filter criteria passed to `CalendarEventRepository.list`.
+
+```ts
+export interface CalendarEventQuery {
+  start?: string;
+  end?: string;
+  text?: string;
+}
+```
+
+<TypeTable
+  type={{
+    start: {
+      type: "string",
+      required: false,
+      description: "Inclusive ISO 8601 lower bound for filtering events.",
+    },
+    end: {
+      type: "string",
+      required: false,
+      description: "Exclusive ISO 8601 upper bound for filtering events.",
+    },
+    text: {
+      type: "string",
+      required: false,
+      description: "Optional case-insensitive substring to filter by event title.",
+    },
+  }}
+/>
+
+---
+
+## `FullCalendarHandle`
+
+Minimal structural surface required by FullCalendar WebMCP from a FullCalendar React instance. Compatible with FullCalendar React v6 class instances and v7 `CalendarRef` handles.
+
+```ts
+export interface FullCalendarHandle {
+  getApi(): {
+    getOption(name: string): unknown;
+    view: {
+      type: string;
+      activeStart: Date;
+      activeEnd: Date;
+    };
+  };
+}
+```
+
+---
+
+## `FullCalendarWebMCPOptions`
+
+Configuration options passed to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp).
+
+```ts
+import type { RefObject } from "react";
+
+export interface FullCalendarWebMCPOptions {
+  calendarRef: RefObject<FullCalendarHandle | null>;
+  events: CalendarEventRepository;
+  onEventsChanged: () => unknown | Promise<unknown>;
+  onRegistrationError?: (error: unknown) => void;
+}
+```
+
+For more details on implementing these interfaces, see [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) and the [Repository Contract](/integrations/fullcalendar/concepts/repository).

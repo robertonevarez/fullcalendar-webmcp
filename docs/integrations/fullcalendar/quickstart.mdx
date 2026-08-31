@@ -1,0 +1,197 @@
+---
+title: Quickstart
+description: Step-by-step guide to installing the FullCalendar WebMCP integration from Protocol Tooling and connecting your React application in minutes.
+sidebar:
+  order: 1
+---
+
+Follow this guide to add the FullCalendar WebMCP integration to an existing FullCalendar React application.
+
+:::note
+FullCalendar WebMCP is published as `@protocoltooling/fullcalendar`.
+:::
+
+<Steps>
+  <Step title="Install package">
+    Install `@protocoltooling/fullcalendar` from npm.
+
+    ```package-install
+    npm install @protocoltooling/fullcalendar
+    ```
+
+    Ensure your project includes the required peer dependencies:
+    - `react`: `>=17 <20`
+    - `@fullcalendar/react`: `^6.0.0 || ^7.0.0`
+  </Step>
+
+  <Step title="Implement CalendarEventRepository">
+    Create an adapter object that implements [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository). These methods should call whatever persistence your application already uses (REST API, GraphQL, Server Actions, Supabase, or ORM).
+
+    ```ts api-adapter.ts
+    import type { CalendarEventRepository } from "@protocoltooling/fullcalendar";
+    import { api } from "./my-api-client";
+
+    export const eventRepository: CalendarEventRepository = {
+      async list(query) {
+        return api.events.list(query);
+      },
+      async get(id) {
+        return api.events.get(id);
+      },
+      async create(input) {
+        return api.events.create(input);
+      },
+      async update(id, input) {
+        return api.events.update(id, input);
+      },
+      async delete(id) {
+        await api.events.delete(id);
+      },
+    };
+    ```
+  </Step>
+
+  <Step title="Add useFullCalendarWebMCP to your calendar component">
+    In your calendar component, create a ref for FullCalendar and pass it to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) alongside your repository and a refresh callback.
+
+    ```tsx Calendar.tsx
+    import FullCalendar from "@fullcalendar/react";
+    import dayGridPlugin from "@fullcalendar/daygrid";
+    import { useCallback, useRef, useState } from "react";
+    import {
+      useFullCalendarWebMCP,
+      type CalendarEvent,
+    } from "@protocoltooling/fullcalendar";
+    import { eventRepository } from "./api-adapter";
+
+    export function MyCalendar() {
+      const calendarRef = useRef<FullCalendar>(null);
+      const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+      // Function to refresh calendar data from your authoritative storage
+      const reloadEvents = useCallback(async () => {
+        const data = await eventRepository.list();
+        setEvents(data);
+        return data;
+      }, []);
+
+      // Register WebMCP tools linked to your calendar and persistence
+      useFullCalendarWebMCP({
+        calendarRef,
+        events: eventRepository,
+        onEventsChanged: reloadEvents,
+      });
+
+      return (
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+        />
+      );
+    }
+    ```
+  </Step>
+
+  <Step title="Run and verify in a WebMCP environment">
+    Open your application in a WebMCP-capable browser. AI agents will automatically discover the six [WebMCP tools](/integrations/fullcalendar/concepts/webmcp):
+    - `calendar_get_context`
+    - `calendar_list_events`
+    - `calendar_get_event`
+    - `calendar_create_event`
+    - `calendar_update_event`
+    - `calendar_delete_event`
+
+    When an agent calls a tool (such as `calendar_create_event`), the FullCalendar WebMCP integration routes the call through your `eventRepository.create` method and automatically triggers `onEventsChanged` to reload your UI.
+  </Step>
+</Steps>
+
+## Complete minimal example
+
+Here is everything put together in a single self-contained component:
+
+```tsx
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import { useCallback, useRef, useState } from "react";
+import {
+  useFullCalendarWebMCP,
+  type CalendarEvent,
+  type CalendarEventRepository,
+} from "@protocoltooling/fullcalendar";
+
+const memoryEvents: CalendarEvent[] = [
+  {
+    id: "1",
+    title: "Sprint Planning",
+    start: "2026-09-01T09:00:00Z",
+    end: "2026-09-01T10:00:00Z",
+    allDay: false,
+  },
+];
+
+const repository: CalendarEventRepository = {
+  async list() {
+    return [...memoryEvents];
+  },
+  async get(id) {
+    return memoryEvents.find((e) => e.id === id) ?? null;
+  },
+  async create(input) {
+    const newEvent: CalendarEvent = {
+      id: String(Date.now()),
+      title: input.title,
+      start: input.start,
+      end: input.end ?? null,
+      allDay: input.allDay ?? false,
+    };
+    memoryEvents.push(newEvent);
+    return newEvent;
+  },
+  async update(id, input) {
+    const event = memoryEvents.find((e) => e.id === id);
+    if (!event) throw new Error("Event not found");
+    if (input.title !== undefined) event.title = input.title;
+    if (input.start !== undefined) event.start = input.start;
+    if (input.end !== undefined) event.end = input.end;
+    if (input.allDay !== undefined) event.allDay = input.allDay;
+    return { ...event };
+  },
+  async delete(id) {
+    const index = memoryEvents.findIndex((e) => e.id === id);
+    if (index !== -1) memoryEvents.splice(index, 1);
+  },
+};
+
+export function QuickstartCalendar() {
+  const calendarRef = useRef<FullCalendar>(null);
+  const [events, setEvents] = useState<CalendarEvent[]>(memoryEvents);
+
+  const refetch = useCallback(async () => {
+    const updated = await repository.list();
+    setEvents(updated);
+  }, []);
+
+  useFullCalendarWebMCP({
+    calendarRef,
+    events: repository,
+    onEventsChanged: refetch,
+  });
+
+  return (
+    <FullCalendar
+      ref={calendarRef}
+      plugins={[dayGridPlugin]}
+      initialView="dayGridMonth"
+      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+    />
+  );
+}
+```
+
+## Where to go next
+
+- **[Persistence Model](/integrations/fullcalendar/concepts/persistence):** Learn how human and agent mutations converge on your database.
+- **[Testing Guide](/integrations/fullcalendar/guides/testing):** Follow our 9-step verification checklist to test your integration.
+- **[Troubleshooting](/integrations/fullcalendar/troubleshooting):** Check common solutions if tools do not appear or ref errors occur.
