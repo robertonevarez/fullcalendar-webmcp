@@ -1,7 +1,7 @@
 import { defineMeta } from "blume";
 
 export default defineMeta({
-  title: "FullCalendar WebMCP",
+  title: "Overview",
   pages: [
     "index",
     "quickstart",
