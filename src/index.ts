@@ -6,5 +6,8 @@ export type {
   CreateCalendarEventInput,
   FullCalendarHandle,
   FullCalendarWebMCPOptions,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
   UpdateCalendarEventInput,
 } from "./types";

@@ -3,6 +3,7 @@ import type {
   CalendarEventQuery,
   CalendarEventRepository,
   CreateCalendarEventInput,
+  JsonObject,
   UpdateCalendarEventInput,
 } from "../../src";
 
@@ -26,6 +27,7 @@ function assertActive(signal?: AbortSignal) {
 function normalizeEvent(
   id: string,
   input: CreateCalendarEventInput,
+  existingMetadata?: CalendarEvent["metadata"],
 ): CalendarEvent {
   if (!input.title.trim()) {
     throw new Error("Event title cannot be empty.");
@@ -40,13 +42,21 @@ function normalizeEvent(
     throw new Error("Event end must be after its start.");
   }
 
-  return {
+  const event: CalendarEvent = {
     id,
     title: input.title.trim(),
     start: start.toISOString(),
     end: end?.toISOString() ?? null,
     allDay: input.allDay ?? false,
   };
+
+  // Preserve repository-owned metadata across core-field updates.
+  // Create/update inputs never carry metadata (read-only projection).
+  if (existingMetadata !== undefined) {
+    event.metadata = clone(existingMetadata) as JsonObject;
+  }
+
+  return event;
 }
 
 export class LocalCalendarEventRepository implements CalendarEventRepository {
@@ -118,7 +128,16 @@ export class LocalCalendarEventRepository implements CalendarEventRepository {
       throw new Error(`Event ${id} was not found.`);
     }
 
-    const updated = normalizeEvent(id, { ...events[index], ...input });
+    const updated = normalizeEvent(
+      id,
+      {
+        title: input.title ?? events[index]!.title,
+        start: input.start ?? events[index]!.start,
+        end: input.end === undefined ? events[index]!.end : input.end,
+        allDay: input.allDay ?? events[index]!.allDay,
+      },
+      events[index]!.metadata,
+    );
     events[index] = updated;
     this.write(events);
     return clone(updated);

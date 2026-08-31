@@ -86,7 +86,7 @@ export function createCalendarTools(
       name: "calendar_list_events",
       title: "List calendar events",
       description:
-        "List persisted calendar events, optionally filtered by an inclusive start, exclusive end, or case-insensitive title text. Use an end boundary one day after the requested day.",
+        "List persisted calendar events, optionally filtered by an inclusive start, exclusive end, or case-insensitive title text. Use an end boundary one day after the requested day. Events may include optional host-selected metadata (JSON object) for agent context; Protocol Tooling does not automatically expose FullCalendar extendedProps.",
       inputSchema: {
         type: "object",
         properties: {
@@ -120,7 +120,8 @@ export function createCalendarTools(
     {
       name: "calendar_get_event",
       title: "Get calendar event",
-      description: "Get one persisted calendar event by its stable event ID.",
+      description:
+        "Get one persisted calendar event by its stable event ID. The event may include optional host-selected metadata (JSON object) for agent context; metadata is read-only and is never inferred from FullCalendar extendedProps.",
       inputSchema: {
         type: "object",
         properties: {
@@ -141,7 +142,7 @@ export function createCalendarTools(
       name: "calendar_create_event",
       title: "Create calendar event",
       description:
-        "Create and persist a generic calendar event. Times must be ISO 8601 values with explicit offsets. Returns the host-assigned stable event ID.",
+        "Create and persist a generic calendar event. Times must be ISO 8601 values with explicit offsets. Returns the host-assigned stable event ID. Metadata cannot be supplied on create; only title, start, end, and allDay are accepted.",
       inputSchema: {
         type: "object",
         properties: eventProperties,
@@ -162,7 +163,7 @@ export function createCalendarTools(
       name: "calendar_update_event",
       title: "Update calendar event",
       description:
-        "Update selected fields on one persisted calendar event using its stable event ID. Omitted fields remain unchanged.",
+        "Update selected fields on one persisted calendar event using its stable event ID. Omitted fields remain unchanged. Metadata cannot be supplied on update; only title, start, end, and allDay may be changed. Host-owned metadata is preserved by the repository.",
       inputSchema: {
         type: "object",
         properties: {

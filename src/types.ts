@@ -1,7 +1,32 @@
 import type { RefObject } from "react";
 
 /**
+ * JSON-safe primitive values for WebMCP tool boundaries.
+ */
+export type JsonPrimitive = string | number | boolean | null;
+
+/**
+ * Recursive JSON-safe value. Intentionally excludes Date, Map, Set, BigInt,
+ * functions, undefined, and class instances that are not plain JSON.
+ */
+export type JsonValue =
+  | JsonPrimitive
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+/**
+ * JSON-safe object used for host-selected, agent-visible event metadata.
+ */
+export type JsonObject = { [key: string]: JsonValue };
+
+/**
  * Normalized calendar event model.
+ *
+ * `metadata` is an optional, host-selected, JSON-safe projection for agents.
+ * It is read-only at the WebMCP write boundary: create/update inputs never
+ * accept metadata. Omission means nothing agent-visible beyond core fields.
+ *
+ * EXPERIMENTAL (unreleased): not part of published 0.1.1 behavior.
  */
 export interface CalendarEvent {
   id: string;
@@ -9,10 +34,12 @@ export interface CalendarEvent {
   start: string;
   end: string | null;
   allDay: boolean;
+  metadata?: JsonObject;
 }
 
 /**
  * Input payload for creating a new calendar event.
+ * Metadata is intentionally absent — writes remain core fields only.
  */
 export interface CreateCalendarEventInput {
   title: string;
@@ -23,6 +50,7 @@ export interface CreateCalendarEventInput {
 
 /**
  * Input payload for updating an existing calendar event.
+ * Metadata is intentionally absent — writes remain core fields only.
  */
 export interface UpdateCalendarEventInput {
   title?: string;

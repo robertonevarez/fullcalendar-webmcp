@@ -14,6 +14,9 @@ import type {
   CalendarEventRepository,
   FullCalendarHandle,
   FullCalendarWebMCPOptions,
+  JsonObject,
+  JsonPrimitive,
+  JsonValue,
 } from "@protocoltooling/fullcalendar";
 ```
 
@@ -30,8 +33,12 @@ export interface CalendarEvent {
   start: string;
   end: string | null;
   allDay: boolean;
+  /** Experimental (unreleased): optional host-selected, JSON-safe, agent-visible projection. */
+  metadata?: JsonObject;
 }
 ```
+
+> **Experiment note:** `metadata` is proposed on an unreleased branch. Published `@protocoltooling/fullcalendar@0.1.1` does **not** include this field. Metadata is explicitly selected by the host repository — Protocol Tooling does **not** automatically expose FullCalendar `extendedProps`. Metadata is **read-only** at the WebMCP write boundary.
 
 <TypeTable
   type={{
@@ -60,8 +67,28 @@ export interface CalendarEvent {
       required: true,
       description: "Whether the event is an all-day event.",
     },
+    metadata: {
+      type: "JsonObject",
+      required: false,
+      description: "Experimental host-selected JSON-safe projection for agents. Omit to expose nothing beyond core fields.",
+    },
   }}
 />
+
+---
+
+## `JsonObject` / `JsonValue` / `JsonPrimitive`
+
+Experimental JSON-safe types for agent-visible metadata.
+
+```ts
+export type JsonPrimitive = string | number | boolean | null;
+export type JsonValue =
+  | JsonPrimitive
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+export type JsonObject = { [key: string]: JsonValue };
+```
 
 ---
 

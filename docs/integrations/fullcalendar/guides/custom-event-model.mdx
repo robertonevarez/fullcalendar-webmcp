@@ -137,3 +137,34 @@ export function RoomCalendar({ clinicRoom, doctorId }: Props) {
 ```
 
 For general setup steps, see the [Existing App Guide](/integrations/fullcalendar/guides/existing-app) and [Types Reference](/integrations/fullcalendar/reference/types).
+
+---
+
+## Experimental: agent-visible metadata projection
+
+> **Unreleased experiment.** Published `@protocoltooling/fullcalendar@0.1.1` does not include metadata. The pattern below is proposed for review before any package release.
+
+Hosts may attach an optional JSON-safe `metadata` object when mapping domain entities to [`CalendarEvent`](/integrations/fullcalendar/reference/types#calendarevent). Protocol Tooling does **not** automatically expose FullCalendar `extendedProps`. Metadata is **read-only** for agents (create/update tool schemas reject it).
+
+```ts adapters/transformers.ts
+import type { CalendarEvent, JsonObject } from "@protocoltooling/fullcalendar";
+import type { Appointment } from "../types/domain";
+
+export function appointmentToCalendarEvent(app: Appointment): CalendarEvent {
+  const metadata: JsonObject = {
+    location: app.clinicRoom,
+  };
+
+  return {
+    id: app.appointmentId,
+    title: app.patientName,
+    start: app.startTime,
+    end: app.endTime,
+    allDay: false,
+    metadata,
+    // Intentionally omit doctorNotes, tenantId, billing codes, etc.
+  };
+}
+```
+
+Private host fields remain on the domain entity and never cross the WebMCP boundary unless the host projects them.
