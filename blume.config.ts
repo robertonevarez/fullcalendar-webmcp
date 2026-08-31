@@ -1,7 +1,7 @@
 import { defineConfig } from "blume";
 
 export default defineConfig({
-  title: "FullCalendar WebMCP • Protocol Tooling",
+  title: "FullCalendar WebMCP · Protocol Tooling",
   description: "Protocol Tooling builds integrations that make existing web software available to AI agents through open standards such as WebMCP.",
   deployment: {
     site: "https://protocoltooling.com",
@@ -20,16 +20,8 @@ export default defineConfig({
       { label: "Quickstart", href: "/integrations/fullcalendar/quickstart" },
       { label: "Repository Contract", href: "/integrations/fullcalendar/concepts/repository" },
       { label: "Persistence Model", href: "/integrations/fullcalendar/concepts/persistence" },
-      { label: "WebMCP Tools & Runtime", href: "/integrations/fullcalendar/concepts/webmcp" },
+      { label: "WebMCP Tools", href: "/integrations/fullcalendar/concepts/webmcp" },
       { label: "API Reference: useFullCalendarWebMCP", href: "/integrations/fullcalendar/reference/use-fullcalendar-webmcp" },
-    ],
-  },
-  navigation: {
-    tabs: [
-      {
-        label: "FullCalendar WebMCP",
-        path: "/integrations/fullcalendar",
-      },
     ],
   },
   redirects: [

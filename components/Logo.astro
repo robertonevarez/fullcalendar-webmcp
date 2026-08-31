@@ -1,0 +1,35 @@
+---
+interface Props {
+  site: { title: string };
+  logo?: {
+    svg?: string;
+    light?: string;
+    dark?: string;
+    alt?: string;
+    href?: string;
+    text?: string;
+  } | null;
+}
+
+const { site, logo } = Astro.props;
+const brandHref = logo?.href ?? "/";
+const brandText = logo?.text ?? site.title;
+const isOrgRoot = brandText === "Protocol Tooling";
+---
+
+<a
+  class="inline-flex min-w-0 items-center gap-1.5 font-medium text-base no-underline text-foreground transition-opacity hover:opacity-90"
+  href={brandHref}
+>
+  {
+    isOrgRoot ? (
+      <span class="font-medium text-foreground">Protocol Tooling</span>
+    ) : (
+      <>
+        <span class="font-medium text-foreground">FullCalendar WebMCP</span>
+        <span class="text-muted-foreground select-none">·</span>
+        <span class="font-medium text-muted-foreground">Protocol Tooling</span>
+      </>
+    )
+  }
+</a>
