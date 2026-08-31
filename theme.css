@@ -1,8 +1,3 @@
-header a[href="/"] {
-  font-weight: 500;
-}
-
-header a[href="/"] span.truncate {
-  font-weight: 500;
-  color: var(--color-muted-foreground);
+header a[href="/"]:empty {
+  display: none;
 }

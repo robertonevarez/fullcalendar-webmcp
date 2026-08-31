@@ -14,22 +14,18 @@ interface Props {
 const { site, logo } = Astro.props;
 const brandHref = logo?.href ?? "/";
 const brandText = logo?.text ?? site.title;
-const isOrgRoot = brandText === "Protocol Tooling";
+const isHome = Astro.url.pathname === "/" || Astro.url.pathname === "" || brandText === "Protocol Tooling";
 ---
 
-<a
-  class="inline-flex min-w-0 items-center gap-1.5 font-medium text-base no-underline text-foreground transition-opacity hover:opacity-90"
-  href={brandHref}
->
-  {
-    isOrgRoot ? (
+{
+  !isHome && (
+    <a
+      class="inline-flex min-w-0 items-center gap-1.5 font-medium text-base no-underline text-foreground transition-opacity hover:opacity-90"
+      href={brandHref}
+    >
+      <span class="font-medium text-foreground">FullCalendar WebMCP</span>
+      <span class="text-muted-foreground select-none">·</span>
       <span class="font-medium text-muted-foreground">Protocol Tooling</span>
-    ) : (
-      <>
-        <span class="font-medium text-foreground">FullCalendar WebMCP</span>
-        <span class="text-muted-foreground select-none">·</span>
-        <span class="font-medium text-muted-foreground">Protocol Tooling</span>
-      </>
-    )
-  }
-</a>
+    </a>
+  )
+}

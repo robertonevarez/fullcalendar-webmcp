@@ -10,6 +10,12 @@ export default defineConfig({
     llmsTxt: true,
     webmcp: true,
   },
+  theme: {
+    fonts: {
+      display: { name: "Scoutie Sans" },
+      body: "inter",
+    },
+  },
   content: {
     root: "docs",
     exclude: ["**/DX-AUDIT.md", "**/_*", "**/.*"],
