@@ -55,7 +55,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:types": "tsc --noEmit -p tsconfig.json",
-    "test:pack": "node ./scripts/test-pack.js"
+    "test:pack": "node ./scripts/test-pack.js",
+    "test:pack:smoke": "npm run build:lib && npm pack && node ./scripts/smoke-packed-tools.mjs protocoltooling-fullcalendar-$npm_package_version.tgz"
   },
   "peerDependencies": {
     "@fullcalendar/react": "^6.0.0 || ^7.0.0",
