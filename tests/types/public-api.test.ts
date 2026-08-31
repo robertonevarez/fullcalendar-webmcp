@@ -185,4 +185,26 @@ describe("Public API Type Contracts", () => {
 
     expectTypeOf(useFullCalendarWebMCP).toBeCallableWith(options);
   });
+
+  it("accepts optional JSON-safe metadata on CalendarEvent without requiring it", () => {
+    const withMeta: CalendarEvent = {
+      id: "m1",
+      title: "With meta",
+      start: "2026-09-15T16:00:00.000Z",
+      end: null,
+      allDay: false,
+      metadata: { location: "North Campus" },
+    };
+    const withoutMeta: CalendarEvent = {
+      id: "m2",
+      title: "Without meta",
+      start: "2026-09-15T16:00:00.000Z",
+      end: null,
+      allDay: false,
+    };
+    expectTypeOf(withMeta.metadata).toEqualTypeOf<
+      import("../../src").JsonObject | undefined
+    >();
+    expectTypeOf(withoutMeta).toMatchTypeOf<CalendarEvent>();
+  });
 });

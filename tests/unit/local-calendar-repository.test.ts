@@ -44,4 +44,40 @@ describe("LocalCalendarEventRepository", () => {
       await repository.list({ start: "2026-09-02T21:00:00.000Z" }),
     ).toHaveLength(0);
   });
+
+  it("preserves repository-owned metadata across core updates", async () => {
+    const storage = new MapStorage();
+    const repository = new LocalCalendarEventRepository({
+      storage,
+      seedEvents: [
+        {
+          id: "seed-meta",
+          title: "Project Review",
+          start: "2026-09-15T16:00:00.000Z",
+          end: "2026-09-15T17:00:00.000Z",
+          allDay: false,
+          metadata: {
+            location: "North Campus",
+            attendees: ["Sarah Chen"],
+          },
+        },
+      ],
+    });
+
+    const updated = await repository.update("seed-meta", {
+      title: "Final Project Review",
+    });
+
+    expect(updated.metadata).toEqual({
+      location: "North Campus",
+      attendees: ["Sarah Chen"],
+    });
+    expect(await repository.get("seed-meta")).toMatchObject({
+      title: "Final Project Review",
+      metadata: {
+        location: "North Campus",
+        attendees: ["Sarah Chen"],
+      },
+    });
+  });
 });

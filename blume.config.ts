@@ -40,7 +40,7 @@ export default defineConfig({
   },
   content: {
     root: "docs",
-    exclude: ["**/DX-AUDIT.md", "**/_*", "**/.*"],
+    exclude: ["**/DX-AUDIT.md", "**/audits/**", "**/_*", "**/.*"],
   },
   // Docs shell is already "FullCalendar WebMCP · Protocol Tooling", so don't
   // nest the same product name again under Integrations in the sidebar.
