@@ -18,7 +18,7 @@ The integration is designed to adapt to your application—not the other way aro
 ### 1. Install the package
 
 ```package-install
-npm install protocoltooling
+npm install @protocoltooling/fullcalendar
 ```
 
 ### 2. Wrap your existing API in CalendarEventRepository
@@ -26,7 +26,7 @@ npm install protocoltooling
 Create an adapter that delegates to your existing API service or data fetching functions:
 
 ```ts services/calendar-adapter.ts
-import type { CalendarEventRepository } from "protocoltooling";
+import type { CalendarEventRepository } from "@protocoltooling/fullcalendar";
 import * as api from "./events-api";
 
 export const calendarRepository: CalendarEventRepository = {
@@ -61,7 +61,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { useCallback, useRef, useState, useEffect } from "react";
-import { useFullCalendarWebMCP, type CalendarEvent } from "protocoltooling";
+import { useFullCalendarWebMCP, type CalendarEvent } from "@protocoltooling/fullcalendar";
 import { calendarRepository } from "../services/calendar-adapter";
 
 export function CalendarView() {

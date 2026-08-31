@@ -11,10 +11,10 @@ It registers standard calendar tools on the browser's model context while leavin
 
 FullCalendar WebMCP is a React integration that connects FullCalendar to WebMCP (Web Model Context Protocol). AI agents running in WebMCP-capable browsers can query views, list events, and perform calendar mutations through your existing application.
 
-FullCalendar WebMCP is currently distributed through the `protocoltooling` npm package:
+FullCalendar WebMCP is published as `@protocoltooling/fullcalendar`:
 
 ```package-install
-npm install protocoltooling
+npm install @protocoltooling/fullcalendar
 ```
 
 ## Who publishes it?
@@ -28,7 +28,7 @@ You add one React hook—[`useFullCalendarWebMCP`](/integrations/fullcalendar/re
 ```tsx
 import { useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
-import { useFullCalendarWebMCP } from "protocoltooling";
+import { useFullCalendarWebMCP } from "@protocoltooling/fullcalendar";
 
 export function CalendarView() {
   const calendarRef = useRef<FullCalendar>(null);

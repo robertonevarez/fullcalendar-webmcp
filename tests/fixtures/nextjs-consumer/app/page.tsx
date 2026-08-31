@@ -9,7 +9,7 @@ import {
   useFullCalendarWebMCP,
   type CalendarEvent,
   type CalendarEventRepository,
-} from "protocoltooling";
+} from "@protocoltooling/fullcalendar";
 
 // Host Server Action simulation
 async function fetchSessionsAction(): Promise<CalendarEvent[]> {

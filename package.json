@@ -1,7 +1,10 @@
 {
-  "name": "protocoltooling",
+  "name": "@protocoltooling/fullcalendar",
   "version": "0.1.0",
-  "description": "WebMCP tools for FullCalendar in React",
+  "description": "Add WebMCP tools to FullCalendar React applications.",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "webmcp",
     "fullcalendar",
@@ -41,6 +44,7 @@
     "dev": "vite",
     "build": "npm run build:lib && vite build",
     "build:lib": "tsup",
+    "prepublishOnly": "npm run build:lib",
     "docs:dev": "blume dev",
     "docs:build": "blume build",
     "docs:check": "blume check",

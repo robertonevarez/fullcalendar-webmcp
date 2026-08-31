@@ -5,7 +5,7 @@ import {
   useFullCalendarWebMCP,
   type CalendarEvent,
   type CalendarEventRepository,
-} from "protocoltooling";
+} from "@protocoltooling/fullcalendar";
 
 const sampleRepository: CalendarEventRepository = {
   async list() {

@@ -18,5 +18,6 @@
     "ignoreDeprecations": "6.0",
     "types": ["vite/client", "vitest/globals", "webmcp-types"]
   },
-  "include": ["src", "tests", "example", "scripts"]
+  "include": ["src", "tests", "example", "scripts"],
+  "exclude": ["tests/fixtures"]
 }

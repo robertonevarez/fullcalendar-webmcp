@@ -27,7 +27,7 @@ export interface Appointment {
 Create pure transformation functions to convert between your domain model and [`CalendarEvent`](/integrations/fullcalendar/reference/types#calendarevent):
 
 ```ts adapters/transformers.ts
-import type { CalendarEvent, CreateCalendarEventInput } from "protocoltooling";
+import type { CalendarEvent, CreateCalendarEventInput } from "@protocoltooling/fullcalendar";
 import type { Appointment } from "../types/domain";
 
 export function appointmentToCalendarEvent(app: Appointment): CalendarEvent {
@@ -58,7 +58,7 @@ export function calendarInputToAppointmentPayload(
 Use these functions in your repository adapter:
 
 ```ts adapters/appointment-repository.ts
-import type { CalendarEventRepository } from "protocoltooling";
+import type { CalendarEventRepository } from "@protocoltooling/fullcalendar";
 import { appointmentApi } from "../api/appointments";
 import {
   appointmentToCalendarEvent,
@@ -115,7 +115,7 @@ Because the repository is created within your application code, you can capture 
 ```tsx
 import { useMemo, useRef } from "react";
 import FullCalendar from "@fullcalendar/react";
-import { useFullCalendarWebMCP } from "protocoltooling";
+import { useFullCalendarWebMCP } from "@protocoltooling/fullcalendar";
 
 export function RoomCalendar({ clinicRoom, doctorId }: Props) {
   const calendarRef = useRef<FullCalendar>(null);

@@ -19,7 +19,7 @@ run("npm run build:lib");
 // 2. Pack tarball
 run("npm pack");
 
-const tarballName = "protocoltooling-0.1.0.tgz";
+const tarballName = "protocoltooling-fullcalendar-0.1.0.tgz";
 const tarballPath = path.join(rootDir, tarballName);
 
 if (!fs.existsSync(tarballPath)) {

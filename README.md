@@ -1,24 +1,26 @@
-# Protocol Tooling — FullCalendar WebMCP
+# FullCalendar WebMCP
 
-The `protocoltooling` npm package distributes the **FullCalendar WebMCP** integration from **Protocol Tooling**.
+**FullCalendar WebMCP** is published by **Protocol Tooling**.
 
 It exposes standard WebMCP calendar tools (`calendar_get_context`, `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`) over existing FullCalendar React instances and host persistence without altering the application's UI, mutation workflows, or database architecture.
 
 ## Installation
 
-### Once Published to npm
 ```bash
-npm install protocoltooling
+npm install @protocoltooling/fullcalendar
 ```
 
 ### Local / Tarball Installation (Development)
+
 ```bash
 npm pack
-npm install /path/to/protocoltooling-0.1.0.tgz
+npm install /path/to/protocoltooling-fullcalendar-0.1.0.tgz
 ```
 
 ### Peer Dependencies
+
 Ensure host peer dependencies are installed:
+
 - `react`: `>=17 <20`
 - `@fullcalendar/react`: `^6.0.0 || ^7.0.0`
 
@@ -33,7 +35,7 @@ import {
   useFullCalendarWebMCP,
   type CalendarEvent,
   type CalendarEventRepository,
-} from "protocoltooling";
+} from "@protocoltooling/fullcalendar";
 
 export function MyCalendar() {
   const calendarRef = useRef<FullCalendar>(null);
@@ -74,7 +76,7 @@ import type {
   CalendarEventRepository,
   CreateCalendarEventInput,
   UpdateCalendarEventInput,
-} from "protocoltooling";
+} from "@protocoltooling/fullcalendar";
 
 export const eventRepository: CalendarEventRepository = {
   async list(query?: CalendarEventQuery, options?: { signal?: AbortSignal }): Promise<CalendarEvent[]> {
@@ -99,9 +101,9 @@ export const eventRepository: CalendarEventRepository = {
 
 ## Persistence Model
 
-> **Protocol Tooling does not persist calendar events itself. The host application's persistence remains authoritative.**
+> **FullCalendar WebMCP does not persist calendar events itself. The host application's persistence remains authoritative.**
 
-Agent mutations and human interactions (e.g. dragging, resizing, modal editing) converge on the host application's authoritative persistence. Protocol Tooling maintains no secondary event ledger.
+Agent mutations and human interactions (e.g. dragging, resizing, modal editing) converge on the host application's authoritative persistence. The integration maintains no secondary event ledger.
 
 ---
 
@@ -121,6 +123,14 @@ Agent mutations and human interactions (e.g. dragging, resizing, modal editing) 
 - **Client Lifecycle:** Tool registration occurs inside `useEffect` via an `AbortController`. React Strict Mode replay and unmount cleanup properly unregister tools with zero orphaned state.
 - **Delayed Runtime:** Automatically waits for late-injected WebMCP runtime if not immediately present at mount time.
 - **React Server Components (RSC):** The package entry includes the `'use client';` directive for seamless import into Next.js App Router client components.
+
+---
+
+## Package migration
+
+Previous package: `protocoltooling`  
+Current package: `@protocoltooling/fullcalendar`  
+The old package is deprecated.
 
 ---
 

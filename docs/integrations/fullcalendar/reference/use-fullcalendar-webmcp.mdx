@@ -8,7 +8,7 @@ Primary React hook connecting a FullCalendar instance to the browser's WebMCP mo
 ## Signature
 
 ```ts
-import { useFullCalendarWebMCP } from "protocoltooling";
+import { useFullCalendarWebMCP } from "@protocoltooling/fullcalendar";
 
 function useFullCalendarWebMCP(options: FullCalendarWebMCPOptions): void;
 ```
@@ -45,7 +45,7 @@ function useFullCalendarWebMCP(options: FullCalendarWebMCPOptions): void;
 ```tsx
 import FullCalendar from "@fullcalendar/react";
 import { useCallback, useRef, useState } from "react";
-import { useFullCalendarWebMCP, type CalendarEvent } from "protocoltooling";
+import { useFullCalendarWebMCP, type CalendarEvent } from "@protocoltooling/fullcalendar";
 import { eventRepository } from "./events-service";
 
 export function Calendar() {

@@ -8,15 +8,15 @@ sidebar:
 Follow this guide to add the FullCalendar WebMCP integration to an existing FullCalendar React application.
 
 :::note
-FullCalendar WebMCP is currently distributed through the `protocoltooling` npm package.
+FullCalendar WebMCP is published as `@protocoltooling/fullcalendar`.
 :::
 
 <Steps>
   <Step title="Install package">
-    Install `protocoltooling` from npm.
+    Install `@protocoltooling/fullcalendar` from npm.
 
     ```package-install
-    npm install protocoltooling
+    npm install @protocoltooling/fullcalendar
     ```
 
     Ensure your project includes the required peer dependencies:
@@ -28,7 +28,7 @@ FullCalendar WebMCP is currently distributed through the `protocoltooling` npm p
     Create an adapter object that implements [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository). These methods should call whatever persistence your application already uses (REST API, GraphQL, Server Actions, Supabase, or ORM).
 
     ```ts api-adapter.ts
-    import type { CalendarEventRepository } from "protocoltooling";
+    import type { CalendarEventRepository } from "@protocoltooling/fullcalendar";
     import { api } from "./my-api-client";
 
     export const eventRepository: CalendarEventRepository = {
@@ -61,7 +61,7 @@ FullCalendar WebMCP is currently distributed through the `protocoltooling` npm p
     import {
       useFullCalendarWebMCP,
       type CalendarEvent,
-    } from "protocoltooling";
+    } from "@protocoltooling/fullcalendar";
     import { eventRepository } from "./api-adapter";
 
     export function MyCalendar() {
@@ -119,7 +119,7 @@ import {
   useFullCalendarWebMCP,
   type CalendarEvent,
   type CalendarEventRepository,
-} from "protocoltooling";
+} from "@protocoltooling/fullcalendar";
 
 const memoryEvents: CalendarEvent[] = [
   {

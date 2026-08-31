@@ -1,6 +1,12 @@
 # Developer Experience (DX) Audit: `protocoltooling@0.1.0`
 
-This document records friction points, awkward explanations, and ergonomic hurdles discovered while authoring the public developer documentation for `protocoltooling@0.1.0`.
+This document records friction points, awkward explanations, and ergonomic hurdles discovered while authoring the public developer documentation for the FullCalendar WebMCP release formerly published as `protocoltooling@0.1.0`.
+
+## Package migration
+
+Previous package: `protocoltooling`  
+Current package: `@protocoltooling/fullcalendar`  
+The old package is deprecated.
 
 ---
 
@@ -64,7 +70,7 @@ This document records friction points, awkward explanations, and ergonomic hurdl
   It creates ambiguity between:
   1. Organization / Publisher (`Protocol Tooling`)
   2. Integration / Product (`FullCalendar WebMCP`)
-  3. npm Distribution Package (`protocoltooling@0.1.0`)
+  3. npm Distribution Package (`@protocoltooling/fullcalendar@0.1.0`; previously `protocoltooling@0.1.0`)
   and would make future integrations difficult to document consistently.
 - **Resolution:**
   Adopted the clear two-tier model:
@@ -72,7 +78,7 @@ This document records friction points, awkward explanations, and ergonomic hurdl
   Protocol Tooling (Organization)
   └── FullCalendar WebMCP (Integration)
   ```
-  with the integration currently distributed through `protocoltooling@0.1.0`. This is a documentation taxonomy fix that does not require changing the current public API.
+  with the integration published as `@protocoltooling/fullcalendar@0.1.0` (previously `protocoltooling@0.1.0`, now deprecated). This is a documentation taxonomy fix that does not require changing the current public API.
 
 ---
 
