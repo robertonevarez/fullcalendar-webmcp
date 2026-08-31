@@ -2,8 +2,25 @@
   "name": "protocoltooling",
   "version": "0.1.0",
   "description": "WebMCP tools for FullCalendar in React",
+  "keywords": [
+    "webmcp",
+    "fullcalendar",
+    "react",
+    "mcp",
+    "model-context-protocol",
+    "calendar",
+    "ai-agents"
+  ],
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robertonevarez/protocoltooling.git"
+  },
+  "homepage": "https://github.com/robertonevarez/protocoltooling#readme",
+  "bugs": {
+    "url": "https://github.com/robertonevarez/protocoltooling/issues"
+  },
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -44,6 +61,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.1.1",
+    "blume": "^1.5.3",
     "eslint": "10.0.1",
     "globals": "17.11.0",
     "jsdom": "30.0.1",

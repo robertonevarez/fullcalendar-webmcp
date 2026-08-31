@@ -140,7 +140,7 @@ npm run lint
 # Build package tarball and test in external Vite and Next.js consumers
 npm run test:pack
 
-# Run Phase 0 interactive dev harness
+# Run interactive dev example
 npm run dev
 ```
 

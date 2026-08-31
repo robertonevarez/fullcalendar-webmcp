@@ -3,7 +3,7 @@ import globals from "globals";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "dist-example", ".vercel", "tests/fixtures"] },
+  { ignores: ["dist", "dist-example", ".vercel", "tests/fixtures", ".blume", ".blume-verify", ".astro"] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
