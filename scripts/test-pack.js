@@ -65,6 +65,11 @@ if (unexpected.length > 0) {
 }
 console.log("✓ Tarball contents verified: pure package artifact with zero leaks.");
 
+// 3b. Runtime smoke against the packed dist (not TypeScript source)
+console.log("\n--- Packed artifact tool smoke ---");
+run(`node ./scripts/smoke-packed-tools.mjs "${tarballName}"`);
+console.log("✓ Packed artifact tool smoke passed!");
+
 // 4. Test Consumer A: Vite Consumer (React 19 + FullCalendar React v7)
 console.log("\n--- Testing Consumer A: Vite + React 19 + FullCalendar v7 ---");
 const viteConsumerDir = path.join(rootDir, "tests/fixtures/vite-consumer");
