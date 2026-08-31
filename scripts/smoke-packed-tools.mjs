@@ -310,7 +310,9 @@ try {
     throw new Error("calendar_delete_event left residual events");
   }
 
-  root.unmount();
+  await consumerReact.act(async () => {
+    root.unmount();
+  });
   console.log("✓ Packed artifact smoke passed (six tools + one-arg + sequence).");
 } finally {
   fs.rmSync(workDir, { recursive: true, force: true });
