@@ -1,6 +1,6 @@
 # FullCalendar WebMCP — WebMCP Challenge
 
-FullCalendar WebMCP is a Protocol Tooling integration developed during the WebMCP Challenge submission period, August 25–September 3, 2026.
+FullCalendar WebMCP was developed during the WebMCP Challenge submission period, August 25–September 3, 2026.
 
 This page keeps challenge-specific testing and provenance out of the main developer path.
 
