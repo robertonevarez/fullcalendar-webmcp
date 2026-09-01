@@ -1,13 +1,25 @@
 ---
 title: Repository Contract
-description: Learn how CalendarEventRepository connects WebMCP calendar tools to your existing API or database with list, get, create, update, and delete.
+description: Connect WebMCP calendar tools to your existing API or database with list, get, create, update, and delete.
 ---
 
-WebMCP calendar tools call an object you provide. That object implements [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository)—five methods that wrap your existing API or database.
+WebMCP calendar tools call an object you provide — [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) with five methods that wrap your existing API or database.
 
-You pass it as the `events` option to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp).
+Pass it as the `events` option to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp).
 
 Authorization and authentication are host-owned. The repository must enforce the same rules for agent and UI traffic. See [Security](/integrations/fullcalendar/concepts/security).
+
+## One source of truth
+
+FullCalendar WebMCP does not store events. Human UI edits and agent tool calls both go through your repository. After an agent mutation, `onEventsChanged` refreshes the UI from that same source.
+
+```text
+Human (FullCalendar UI) ──┐
+                          ├──→ your persistence ──→ onEventsChanged ──→ FullCalendar
+Agent (WebMCP tools) ─────┘
+```
+
+Reject a repository promise and the tool fails — no second copy of events to drift out of sync.
 
 ## Methods
 
@@ -61,10 +73,10 @@ export interface CalendarEventQuery {
 
 ## Cancellation
 
-Every method accepts an optional `{ signal?: AbortSignal }`. Forward it to `fetch` when you want aborted agent calls to cancel in-flight requests. Skip it until you need it.
+Every method accepts an optional `{ signal?: AbortSignal }`. Forward it to `fetch` when you want aborted agent calls to cancel in-flight requests.
 
 ## Any backend
 
-REST, Server Actions, Supabase, Prisma, GraphQL, or an in-memory store for prototypes all work—as long as the same operations serve humans and agents.
+REST, Server Actions, Supabase, Prisma, GraphQL, or an in-memory store for prototypes all work — as long as the same operations serve humans and agents.
 
-For domain mapping and optional metadata, see [Custom event models](/integrations/fullcalendar/guides/custom-event-model). For why the host stays authoritative, see [Persistence](/integrations/fullcalendar/concepts/persistence).
+For domain mapping and optional metadata, see [Custom event models](/integrations/fullcalendar/guides/custom-event-model).

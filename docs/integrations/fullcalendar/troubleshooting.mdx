@@ -43,7 +43,7 @@ The hook retries registration every 250 ms if the runtime appears after mount.
 
 **Cause:** Your repository writes only to React state or another in-memory store.
 
-**Fix:** Implement `create` / `update` / `delete` against your real API or database. FullCalendar WebMCP does not store events. See [Persistence](/integrations/fullcalendar/concepts/persistence).
+**Fix:** Implement `create` / `update` / `delete` against your real API or database. FullCalendar WebMCP does not store events. See [Repository](/integrations/fullcalendar/concepts/repository).
 
 **Verify:** Create an event via the agent, hard-reload, and confirm it is still listed.
 

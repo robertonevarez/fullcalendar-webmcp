@@ -3,7 +3,7 @@ title: Overview
 description: Add WebMCP calendar tools to an existing FullCalendar React app without replacing your backend, database, or calendar UI.
 ---
 
-Add a WebMCP interface to an existing FullCalendar React application—without replacing your backend, database, state management, or FullCalendar setup.
+Expose FullCalendar workflows to WebMCP agents in an existing React app — without replacing your backend, database, or calendar UI.
 
 ```package-install
 npm install @protocoltooling/fullcalendar
@@ -29,22 +29,11 @@ Agent ⇄ WebMCP tools ⇄ your repository ⇄ your DB / API / state
                          FullCalendar
 ```
 
-Your app remains the source of truth. FullCalendar WebMCP never becomes a second event ledger.
-
-See [Security](/integrations/fullcalendar/concepts/security) for authentication boundaries, authorization, and least-privilege tool exposure.
-
-See [Agent tool workflows](/integrations/fullcalendar/concepts/agent-tools) for how agents should compose the six tools.
+Your app remains the source of truth. See [Repository](/integrations/fullcalendar/concepts/repository) for the persistence model and [Security](/integrations/fullcalendar/concepts/security) for auth boundaries.
 
 ## What you get
 
-Six tools agents can call:
-
-- `calendar_get_context`
-- `calendar_list_events`
-- `calendar_get_event`
-- `calendar_create_event`
-- `calendar_update_event`
-- `calendar_delete_event`
+Six structured calendar tools for read/create/update/delete workflows. See [Agent tool workflows](/integrations/fullcalendar/concepts/agent-tools) for the tool list and common compositions.
 
 ## Next step
 

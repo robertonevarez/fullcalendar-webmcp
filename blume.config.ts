@@ -53,7 +53,6 @@ export default defineConfig({
         label: "Concepts",
         items: [
           "/integrations/fullcalendar/concepts/repository",
-          "/integrations/fullcalendar/concepts/persistence",
           "/integrations/fullcalendar/concepts/webmcp",
           "/integrations/fullcalendar/concepts/agent-tools",
           "/integrations/fullcalendar/concepts/security",
@@ -92,7 +91,7 @@ export default defineConfig({
   redirects: [
     { from: "/quickstart", to: "/integrations/fullcalendar/quickstart" },
     { from: "/concepts/repository", to: "/integrations/fullcalendar/concepts/repository" },
-    { from: "/concepts/persistence", to: "/integrations/fullcalendar/concepts/persistence" },
+    { from: "/concepts/persistence", to: "/integrations/fullcalendar/concepts/repository" },
     { from: "/concepts/webmcp", to: "/integrations/fullcalendar/concepts/webmcp" },
     { from: "/guides/existing-app", to: "/integrations/fullcalendar/guides/existing-app" },
     { from: "/guides/nextjs", to: "/integrations/fullcalendar/guides/nextjs" },

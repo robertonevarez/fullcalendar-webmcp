@@ -5,7 +5,7 @@ description: Verify FullCalendar WebMCP tool discovery, event reads and mutation
 
 Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart) when you want a fuller smoke test. The [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify) section is the canonical first-time path (Chrome flag → DevTools WebMCP panel → Run tool).
 
-Before production, also review the [Security checklist](/integrations/fullcalendar/concepts/security#host-application-checklist).
+Before production, also review the [Security checklist](/integrations/fullcalendar/concepts/security#checklist).
 
 ## Done when (package integration)
 
@@ -20,56 +20,11 @@ These checks prove the package + repository wiring from the Quickstart. They do 
 
 ## Steps
 
-<Steps>
-  <Step title="Enable WebMCP and open the calendar">
-    In Chrome, enable `chrome://flags/#enable-webmcp-testing`, relaunch, and load your calendar on `http://localhost`.
-  </Step>
+Follow [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify) for the canonical registration and smoke-test path. Then run create, update, and delete from DevTools and confirm:
 
-  <Step title="Confirm tool registration in DevTools">
-    Open **DevTools → Application → WebMCP**. Under **Available Tools**, confirm:
-
-    - `calendar_get_context`
-    - `calendar_list_events`
-    - `calendar_get_event`
-    - `calendar_create_event`
-    - `calendar_update_event`
-    - `calendar_delete_event`
-  </Step>
-
-  <Step title="Read context">
-    In Available Tools, open `calendar_get_context` → **Run tool**. Confirm `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the UI.
-  </Step>
-
-  <Step title="List events">
-    Run `calendar_list_events` with empty input. Confirm the returned list matches what FullCalendar shows.
-  </Step>
-
-  <Step title="Create a test event">
-    Run `calendar_create_event`:
-
-    ```json
-    {
-      "title": "Agent Test Meeting",
-      "start": "2026-09-05T14:00:00Z",
-      "end": "2026-09-05T15:00:00Z"
-    }
-    ```
-
-    Confirm status **Completed** and a returned `event` with a non-empty `id`.
-  </Step>
-
-  <Step title="Confirm UI refresh">
-    The new event should appear without a manual page reload (`onEventsChanged` ran).
-  </Step>
-
-  <Step title="Confirm durable persistence">
-    Hard-reload the page. The test event should still be present.
-  </Step>
-
-  <Step title="Delete the test event">
-    Run `calendar_delete_event` with the event’s id. Confirm `{ "deleted": true, "event": { … } }` (deleted-event snapshot) and that the event leaves the UI immediately.
-  </Step>
-</Steps>
+- UI updates without manual refresh (`onEventsChanged`)
+- Hard reload retains mutations
+- `calendar_delete_event` returns `{ deleted: true, event }` with the pre-delete snapshot
 
 ## Optional: host human and agent convergence
 
