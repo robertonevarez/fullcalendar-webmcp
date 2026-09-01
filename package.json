@@ -2,6 +2,7 @@
   "name": "@protocoltooling/fullcalendar",
   "version": "0.3.0",
   "description": "Add WebMCP tools to FullCalendar React applications.",
+  "author": "Roberto Nevarez",
   "publishConfig": {
     "access": "public"
   },
@@ -9,10 +10,9 @@
     "webmcp",
     "fullcalendar",
     "react",
-    "mcp",
-    "model-context-protocol",
     "calendar",
-    "ai-agents"
+    "ai-agents",
+    "browser-tools"
   ],
   "type": "module",
   "license": "MIT",
@@ -20,7 +20,7 @@
     "type": "git",
     "url": "git+https://github.com/robertonevarez/protocoltooling.git"
   },
-  "homepage": "https://github.com/robertonevarez/protocoltooling#readme",
+  "homepage": "https://protocoltooling.com/integrations/fullcalendar",
   "bugs": {
     "url": "https://github.com/robertonevarez/protocoltooling/issues"
   },
