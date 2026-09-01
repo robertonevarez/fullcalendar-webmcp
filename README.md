@@ -1,103 +1,63 @@
-# FullCalendar WebMCP
+# Protocol Tooling
 
-Add WebMCP calendar tools to an existing FullCalendar React application. Keep your backend, database, and FullCalendar setup.
+Make existing web interfaces agent-ready with WebMCP.
 
-Protocol Tooling is an **adapter layer** — it registers browser WebMCP tools and routes agent reads and writes through your `CalendarEventRepository`. It does not authenticate users, store events, or authorize mutations. Your backend remains authoritative.
+Protocol Tooling adds structured browser tools to established UI components without replacing their interface, backend, or data model. The first integration, `@protocoltooling/fullcalendar`, lets people and agents work against the same FullCalendar state.
+
+[Live demo](https://protocoltooling.com/demo) · [Documentation](https://protocoltooling.com/integrations/fullcalendar) · [WebMCP Challenge notes](./CHALLENGE.md)
+
+## Install
 
 ```bash
 npm install @protocoltooling/fullcalendar
 ```
 
-## Minimal integration
-
 ```tsx
 useFullCalendarWebMCP({
   calendarRef,
-  events: repository, // list / get / create / update / delete
+  events: repository,
   onEventsChanged: refreshEvents,
 });
 ```
 
-```tsx
-import FullCalendar from "@fullcalendar/react";
-import { useCallback, useRef, useState } from "react";
-import {
-  useFullCalendarWebMCP,
-  type CalendarEvent,
-  type CalendarEventRepository,
-} from "@protocoltooling/fullcalendar";
+Your repository stays authoritative. Protocol Tooling registers WebMCP tools and routes agent reads and writes through the same persistence layer your app already uses.
 
-const repository: CalendarEventRepository = {
-  /* wire to your API */
-};
-
-export function MyCalendar() {
-  const calendarRef = useRef<FullCalendar>(null);
-  const [events, setEvents] = useState<CalendarEvent[]>([]);
-
-  const refreshEvents = useCallback(async () => {
-    setEvents(await repository.list());
-  }, []);
-
-  useFullCalendarWebMCP({
-    calendarRef,
-    events: repository,
-    onEventsChanged: refreshEvents,
-  });
-
-  return (
-    <FullCalendar
-      ref={calendarRef}
-      events={events.map((event) => ({
-        ...event,
-        end: event.end ?? undefined,
-      }))}
-    />
-  );
-}
-```
-
-## WebMCP tools
-
-Six tools agents can call:
+## Agent tools
 
 | Tool | Purpose |
-|---|---|
-| `calendar_get_context` | Anchor relative dates; read viewport/timezones |
-| `calendar_list_events` | Search/discover persisted events |
-| `calendar_get_event` | Fetch one event by stable id |
-| `calendar_create_event` | Create a persisted event |
-| `calendar_update_event` | Partial update of one event |
-| `calendar_delete_event` | Permanently delete one event |
+| --- | --- |
+| `calendar_get_context` | Read time, timezone, view, and visible range |
+| `calendar_list_events` | Search persisted events |
+| `calendar_get_event` | Read one event by stable id |
+| `calendar_create_event` | Create an event |
+| `calendar_update_event` | Update an event |
+| `calendar_delete_event` | Delete an event |
 
-Tools return **structured domain state** (events, ids, time context) — not conversational messages. The consuming agent phrases results for the user.
+Tools return structured domain state. The consuming agent handles the conversation.
 
-Optional `capabilities` limits which tools register (defense in depth; not a substitute for server-side authorization).
+## Shared state
 
-## Documentation
+```text
+Person ───────────────┐
+                     ↓
+              FullCalendar UI
+                     ↓
+             host repository
+                     ↑
+WebMCP agent → Protocol Tooling
+```
 
-Full docs: [protocoltooling.com/integrations/fullcalendar](https://protocoltooling.com/integrations/fullcalendar)
+A person can drag or resize an event, then an agent can read the updated state. An agent can create or reschedule an event, and the same change appears in the human interface.
 
-- [Quickstart](https://protocoltooling.com/integrations/fullcalendar/quickstart)
-- [Security model](https://protocoltooling.com/integrations/fullcalendar/concepts/security)
-- [Agent workflows](https://protocoltooling.com/integrations/fullcalendar/concepts/agent-tools)
-- [WebMCP tools reference](https://protocoltooling.com/integrations/fullcalendar/concepts/webmcp)
+The demo intentionally uses browser-local persistence so every visitor gets an isolated, resettable workspace. Production apps can connect the same repository contract to their existing API and database.
 
-## Peer dependencies
+## Security boundary
 
-- `react`: `>=17 <20`
-- `@fullcalendar/react`: `^6.0.0 || ^7.0.0`
+Protocol Tooling does not authenticate users, store events, or authorize mutations. The host application remains responsible for authentication, authorization, and persistence.
 
-## Persistence and metadata
+Optional `capabilities` can limit which WebMCP tools are registered. This is defense in depth, not a replacement for server-side authorization.
 
-Your repository is authoritative. FullCalendar WebMCP does not store events.
-
-Optional `metadata` on `CalendarEvent` is host-selected, JSON-safe, and read-only through WebMCP writes. FullCalendar `extendedProps` are never exposed automatically.
-
-## Package migration
-
-Previous package: `protocoltooling` (deprecated)  
-Current package: `@protocoltooling/fullcalendar`
+Host-selected event `metadata` is JSON-safe and read-only through WebMCP writes. FullCalendar `extendedProps` are never exposed automatically.
 
 ## Development
 
@@ -107,10 +67,14 @@ npm test
 npm run typecheck
 npm run lint
 npm run test:pack
-npm run docs:dev
+npm run docs:build
 ```
 
-Local example: `npm run dev` (Vite demo in `example/`).
+Local example:
+
+```bash
+npm run dev
+```
 
 ## License
 
