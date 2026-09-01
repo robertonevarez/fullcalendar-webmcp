@@ -86,15 +86,71 @@ FullCalendar React **v6** uses `useRef<FullCalendar>(null)` and `import dayGridP
 
 ## Verify
 
-You are done when all of the following are true:
+Use this **Chrome local** path. It does not require an AI agent to prove registration and tool execution.
 
-1. Open the calendar in a **WebMCP-capable** browser or agent runtime.
-2. Confirm these tools are registered: `calendar_get_context`, `calendar_list_events`, `calendar_get_event`, `calendar_create_event`, `calendar_update_event`, `calendar_delete_event`.
-3. Ask the agent to list visible events — results match what the UI shows.
-4. Ask the agent to create or move a test event — the calendar updates without a manual refresh.
-5. Hard-reload the page — the change is still there (your repository persisted it).
+### 1. Enable WebMCP in Chrome
 
-If a step fails, see [Troubleshooting](/integrations/fullcalendar/troubleshooting) or the longer [Testing](/integrations/fullcalendar/guides/testing) checklist.
+1. Open `chrome://flags/#enable-webmcp-testing`
+2. Set **WebMCP Testing** to **Enabled**
+3. Relaunch Chrome
+
+See Chrome’s [WebMCP docs](https://developer.chrome.com/docs/ai/webmcp) for origin-trial and production notes. Local development uses the flag above.
+
+### 2. Load your calendar
+
+Run your app and open the calendar page on `http://localhost` (or another origin-isolated secure context).
+
+### 3. Confirm the six tools registered
+
+1. Open **Chrome DevTools**
+2. Open the **Application** panel
+3. In the sidebar, select **WebMCP**
+4. Under **Available Tools**, confirm these names are listed:
+
+   - `calendar_get_context`
+   - `calendar_list_events`
+   - `calendar_get_event`
+   - `calendar_create_event`
+   - `calendar_update_event`
+   - `calendar_delete_event`
+
+**You are done with registration when** all six appear in **Available Tools**.
+
+If the list is empty, see [Troubleshooting](/integrations/fullcalendar/troubleshooting#the-agent-cannot-see-calendar-tools). Chrome’s panel docs: [Debug WebMCP tools](https://developer.chrome.com/docs/devtools/application/webmcp).
+
+### 4. Run one read and one write from DevTools
+
+Still in **Application → WebMCP → Available Tools**:
+
+1. Open `calendar_list_events` → **Run tool** (leave filters empty).  
+   **Observable result:** status **Completed**; returned `events` match what FullCalendar shows.
+2. Open `calendar_create_event` → **Run tool** with:
+
+   ```json
+   {
+     "title": "Agent Test Meeting",
+     "start": "2026-09-05T14:00:00Z",
+     "end": "2026-09-05T15:00:00Z"
+   }
+   ```
+
+   **Observable result:** status **Completed**; returned `event.id` is non-empty; the event appears on the calendar **without** a manual page refresh (`onEventsChanged` ran).
+
+### 5. Confirm host persistence
+
+Hard-reload the page.
+
+**You are done when** the test event is still on the calendar (your repository persisted it).
+
+### Optional: natural-language agent check
+
+Install Chrome’s [Model Context Tool Inspector](https://developer.chrome.com/docs/ai/webmcp#imitate-agent-chat-with-the-inspector-extension) and prompt:
+
+> List the events on this calendar, then create a 30-minute event titled “WebMCP smoke test” tomorrow at 10:00 in the browser’s timezone.
+
+**Observable result:** the inspector shows tool calls to `calendar_list_events` / `calendar_create_event`, and the calendar UI updates.
+
+For a longer checklist, see [Testing](/integrations/fullcalendar/guides/testing).
 
 ## Next steps
 

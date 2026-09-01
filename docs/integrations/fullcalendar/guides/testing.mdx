@@ -3,26 +3,28 @@ title: Testing
 description: Verify FullCalendar WebMCP tool discovery, event reads and mutations, UI refresh, and durable host persistence with a done-when checklist.
 ---
 
-Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart) when you want a fuller smoke test.
+Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart) when you want a fuller smoke test. The [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify) section is the canonical first-time path (Chrome flag → DevTools WebMCP panel → Run tool).
 
-## Done when
+## Done when (package integration)
 
-- [ ] Six `calendar_*` tools are registered in a WebMCP-capable browser
-- [ ] `calendar_get_context` matches the on-screen view and timezones
-- [ ] `calendar_list_events` matches visible events
-- [ ] Agent create/update/delete updates the UI without a manual refresh
-- [ ] Hard reload keeps agent mutations (host persistence works)
-- [ ] A human edit in FullCalendar is visible to `calendar_get_event`
+These checks prove the package + repository wiring from the Quickstart. They do **not** require FullCalendar drag/resize handlers.
+
+- [ ] Chrome WebMCP enabled (`chrome://flags/#enable-webmcp-testing`) and calendar loaded on `localhost`
+- [ ] **Application → WebMCP → Available Tools** lists all six `calendar_*` tools
+- [ ] Manual `calendar_get_context` matches the on-screen view and timezones
+- [ ] Manual `calendar_list_events` matches visible events
+- [ ] Manual `calendar_create_event` / `calendar_update_event` / `calendar_delete_event` update the UI without a manual refresh
+- [ ] Hard reload keeps agent (tool) mutations — host persistence works
 
 ## Steps
 
 <Steps>
-  <Step title="Open in a WebMCP environment">
-    Load your calendar in a browser or runtime that supports WebMCP.
+  <Step title="Enable WebMCP and open the calendar">
+    In Chrome, enable `chrome://flags/#enable-webmcp-testing`, relaunch, and load your calendar on `http://localhost`.
   </Step>
 
-  <Step title="Confirm tool registration">
-    Check that these tools are present:
+  <Step title="Confirm tool registration in DevTools">
+    Open **DevTools → Application → WebMCP**. Under **Available Tools**, confirm:
 
     - `calendar_get_context`
     - `calendar_list_events`
@@ -33,15 +35,15 @@ Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart)
   </Step>
 
   <Step title="Read context">
-    Call `calendar_get_context`. Confirm `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the UI.
+    In Available Tools, open `calendar_get_context` → **Run tool**. Confirm `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the UI.
   </Step>
 
   <Step title="List events">
-    Call `calendar_list_events`. Confirm the list matches what FullCalendar shows.
+    Run `calendar_list_events` with empty input. Confirm the returned list matches what FullCalendar shows.
   </Step>
 
   <Step title="Create a test event">
-    Call `calendar_create_event`:
+    Run `calendar_create_event`:
 
     ```json
     {
@@ -51,7 +53,7 @@ Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart)
     }
     ```
 
-    Confirm the tool returns an `event` with a non-empty `id`.
+    Confirm status **Completed** and a returned `event` with a non-empty `id`.
   </Step>
 
   <Step title="Confirm UI refresh">
@@ -62,13 +64,21 @@ Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart)
     Hard-reload the page. The test event should still be present.
   </Step>
 
-  <Step title="Confirm human and agent share persistence">
-    Drag or edit the test event in the FullCalendar UI, then call `calendar_get_event` with its id. The tool should return the updated times.
-  </Step>
-
   <Step title="Delete the test event">
-    Call `calendar_delete_event`. Confirm `{ "deleted": true }` and that the event leaves the UI immediately.
+    Run `calendar_delete_event` with the event’s id. Confirm `{ "deleted": true }` and that the event leaves the UI immediately.
   </Step>
 </Steps>
 
-If a step fails, use [Troubleshooting](/integrations/fullcalendar/troubleshooting).
+## Optional: host human and agent convergence
+
+FullCalendar WebMCP does **not** automatically persist drag, resize, or other FullCalendar UI edits. The Quickstart does not wire `eventDrop` / `eventResize`. Those handlers are **host** code.
+
+If your app already persists human edits through the **same** repository (see [Existing app → Persist human edits](/integrations/fullcalendar/guides/existing-app#persist-human-edits)), optionally verify convergence:
+
+1. Drag or resize a test event in the FullCalendar UI (your host handler must call `repository.update`).
+2. In DevTools WebMCP, run `calendar_get_event` with that event’s id.
+3. Confirm the tool returns the updated times.
+
+If this fails but agent tools work, the package integration is still fine — wire human callbacks to the repository.
+
+If a required step fails, use [Troubleshooting](/integrations/fullcalendar/troubleshooting).

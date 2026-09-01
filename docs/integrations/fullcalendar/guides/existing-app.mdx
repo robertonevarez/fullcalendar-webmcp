@@ -80,6 +80,36 @@ export function CalendarView() {
 
 Then follow [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify).
 
+## Persist human edits
+
+FullCalendar WebMCP does **not** listen to FullCalendar drag/resize/edit callbacks. If humans can move events in the UI, your app must persist those changes through the same repository agents use:
+
+```tsx
+<FullCalendar
+  ref={calendarRef}
+  editable
+  eventDrop={async (info) => {
+    await repository.update(info.event.id, {
+      start: info.event.start!.toISOString(),
+      end: info.event.end?.toISOString() ?? null,
+      allDay: info.event.allDay,
+    });
+    await refreshEvents();
+  }}
+  eventResize={async (info) => {
+    await repository.update(info.event.id, {
+      start: info.event.start!.toISOString(),
+      end: info.event.end?.toISOString() ?? null,
+      allDay: info.event.allDay,
+    });
+    await refreshEvents();
+  }}
+  {/* ... */}
+/>
+```
+
+Optional convergence check: after a human drag, run `calendar_get_event` in DevTools WebMCP and confirm the times match. See [Testing → Optional host convergence](/integrations/fullcalendar/guides/testing#optional-host-human-and-agent-convergence).
+
 ## Related
 
 - [Custom event models](/integrations/fullcalendar/guides/custom-event-model) — domain mapping and metadata

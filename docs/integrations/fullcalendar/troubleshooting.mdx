@@ -9,13 +9,20 @@ Symptom-oriented fixes. For each issue: cause, fix, then verify.
 
 ## The agent cannot see calendar tools
 
-**Cause:** The page is not running in a WebMCP-capable environment, or `document.modelContext` is not available yet.
+**Cause:** Chrome WebMCP is not enabled, `document.modelContext` is unavailable, or registration failed.
 
 **Fix:**
 
-- Open the app in a browser/runtime that supports WebMCP (or has the WebMCP extension enabled).
-- In DevTools, check `document.modelContext`.
-- Pass `onRegistrationError` to surface duplicate-name or registration failures:
+1. Enable local WebMCP: `chrome://flags/#enable-webmcp-testing` → **Enabled** → relaunch Chrome ([Chrome WebMCP docs](https://developer.chrome.com/docs/ai/webmcp)).
+2. Load the calendar on `http://localhost` (secure, origin-isolated context).
+3. Open **DevTools → Application → WebMCP** and check **Available Tools** ([panel docs](https://developer.chrome.com/docs/devtools/application/webmcp)).
+4. In the console, `document.modelContext` should be defined. Optionally run:
+
+```js
+(await document.modelContext.getTools()).map((t) => t.name)
+```
+
+5. Pass `onRegistrationError` to surface duplicate-name or registration failures:
 
 ```tsx
 useFullCalendarWebMCP({
@@ -28,7 +35,7 @@ useFullCalendarWebMCP({
 
 The hook retries registration every 250 ms if the runtime appears after mount.
 
-**Verify:** The six `calendar_*` tools appear in the model context after the calendar mounts.
+**Verify:** All six `calendar_*` tools appear under **Application → WebMCP → Available Tools**.
 
 ---
 
