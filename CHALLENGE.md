@@ -44,16 +44,16 @@ FullCalendar WebMCP remains an adapter layer: the host application owns authenti
 
 Representative commits:
 
-- [`58f5083`](https://github.com/robertonevarez/protocoltooling/commit/58f508361f4bb73c4b35cba7cfff3114cb0883a2) — WebMCP execute-callback compatibility and regression coverage
-- [`0d45db4`](https://github.com/robertonevarez/protocoltooling/commit/0d45db4f537c1b59abdf9f0b38a88a5e9641f463) — six-tool acceptance and packed-artifact smoke tests
-- [`8ce0d0e`](https://github.com/robertonevarez/protocoltooling/commit/8ce0d0edc0d32c4e0f3403821c4220e6d13a8bae) — read-only host-selected event metadata
-- [`6028d94`](https://github.com/robertonevarez/protocoltooling/commit/6028d9482934e7d41e27d08db8f79c79d7e773ca) — security, capability registration, agent contracts, and result semantics
-- [`24bfd38`](https://github.com/robertonevarez/protocoltooling/commit/24bfd38c7b3f08be37b2b1254d1278a5d13b7128) — `@protocoltooling/fullcalendar` 0.3.0 release
-- [`3449609`](https://github.com/robertonevarez/protocoltooling/commit/3449609f31fb678ceda6278dac9af962ba0fc659) — live demo exposed at `protocoltooling.com/demo`
+- [`58f5083`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/58f508361f4bb73c4b35cba7cfff3114cb0883a2) — WebMCP execute-callback compatibility and regression coverage
+- [`0d45db4`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/0d45db4f537c1b59abdf9f0b38a88a5e9641f463) — six-tool acceptance and packed-artifact smoke tests
+- [`8ce0d0e`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/8ce0d0edc0d32c4e0f3403821c4220e6d13a8bae) — read-only host-selected event metadata
+- [`6028d94`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/6028d9482934e7d41e27d08db8f79c79d7e773ca) — security, capability registration, agent contracts, and result semantics
+- [`24bfd38`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/24bfd38c7b3f08be37b2b1254d1278a5d13b7128) — `@protocoltooling/fullcalendar` 0.3.0 release
+- [`3449609`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/3449609f31fb678ceda6278dac9af962ba0fc659) — live demo exposed at `protocoltooling.com/demo`
 
 The companion demo repository contains the judge-facing FullCalendar surface and its human/agent mutation feedback:
 
-https://github.com/robertonevarez/protocoltooling-demo
+https://github.com/robertonevarez/fullcalendar-webmcp-demo
 
 ## Local verification
 
