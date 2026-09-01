@@ -6,7 +6,7 @@ const { config } = data;
 ---
 
 <PageLayout
-  site={{ title: "FullCalendar WebMCP", description: "Add WebMCP calendar tools to an existing FullCalendar React app." }}
+  site={{ title: "Protocol Tooling", description: config.description }}
   logo={{ alt: "", text: "", href: "/" }}
   banner={config.banner}
   analytics={config.analytics}
@@ -18,65 +18,31 @@ const { config } = data;
   siteUrl={config.site}
   ogEnabled={config.og.enabled}
   page={{
-    title: "FullCalendar WebMCP",
-    description: "Add WebMCP calendar tools to an existing FullCalendar React app by Roberto Nevarez.",
+    title: "Protocol Tooling",
+    description: "Protocol Tooling builds integrations that make existing web software available to AI agents through open standards such as WebMCP.",
     route: "/",
   }}
 >
   <div class="mx-auto max-w-content px-6 pt-16 pb-24 lg:px-8">
-    <header class="mb-12">
-      <div class="inline-flex items-center gap-2 rounded-full border border-border bg-muted/30 px-3 py-1 text-xs text-muted-foreground mb-6">
-        <span>by Roberto Nevarez</span>
-        <span class="text-border">•</span>
-        <span>MIT Licensed</span>
-      </div>
-      <h1 class="text-4xl font-medium tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-        FullCalendar WebMCP
+    <header class="mb-14">
+      <h1 class="text-4xl font-medium tracking-tighter text-foreground sm:text-5xl">
+        Protocol Tooling
       </h1>
-      <p class="mt-4 text-xl tracking-tight text-muted-foreground sm:text-2xl max-w-2xl">
-        Add WebMCP calendar tools to an existing FullCalendar React app without replacing your UI, backend, or data model.
+      <p class="mt-4 text-xl tracking-tight text-muted-foreground">
+        Agent interfaces for the existing web.
       </p>
     </header>
 
-    <div class="mb-14 rounded-xl border border-border bg-muted/20 p-5 sm:p-6">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-            Install Package
-          </div>
-          <code class="text-base sm:text-lg font-mono font-medium text-foreground selection:bg-primary/20">
-            npm install @protocoltooling/fullcalendar
-          </code>
-        </div>
-        <div class="flex flex-wrap items-center gap-3 pt-2 sm:pt-0">
-          <a
-            href="/integrations/fullcalendar"
-            class="inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 no-underline"
-          >
-            Documentation
-          </a>
-          <a
-            href="/demo"
-            class="inline-flex items-center justify-center rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted/40 no-underline"
-          >
-            Live Demo
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 mb-16">
+    <div class="mt-8">
       <a
         href="/integrations/fullcalendar"
-        class="group rounded-xl border border-border p-6 text-inherit no-underline transition-all hover:border-foreground/40 hover:bg-muted/10"
+        class="group flex flex-col justify-between gap-1.5 border-b border-border py-4 text-inherit no-underline transition-opacity sm:flex-row sm:items-baseline sm:gap-6"
       >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium text-foreground tracking-tight group-hover:text-primary">
-            Documentation
-          </h2>
+        <span class="inline-flex items-center gap-1.5 text-base sm:text-lg font-medium text-foreground tracking-tight group-hover:opacity-75 transition-opacity">
+          <span>FullCalendar WebMCP</span>
           <svg
             aria-hidden="true"
-            class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+            class="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -86,107 +52,11 @@ const { config } = data;
           >
             <path d="m9 18 6-6-6-6" />
           </svg>
-        </div>
-        <p class="text-sm text-muted-foreground leading-relaxed">
-          Quickstart guide, repository adapter contract, WebMCP capability controls, and complete TypeScript API reference.
-        </p>
-      </a>
-
-      <a
-        href="/demo"
-        class="group rounded-xl border border-border p-6 text-inherit no-underline transition-all hover:border-foreground/40 hover:bg-muted/10"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium text-foreground tracking-tight group-hover:text-primary">
-            Live Demo
-          </h2>
-          <svg
-            aria-hidden="true"
-            class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </div>
-        <p class="text-sm text-muted-foreground leading-relaxed">
-          Interactive FullCalendar demo where human UI interactions and AI WebMCP agent operations read and write through the same state.
-        </p>
-      </a>
-
-      <a
-        href="https://github.com/robertonevarez/fullcalendar-webmcp"
-        class="group rounded-xl border border-border p-6 text-inherit no-underline transition-all hover:border-foreground/40 hover:bg-muted/10"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium text-foreground tracking-tight group-hover:text-primary">
-            GitHub Repository
-          </h2>
-          <svg
-            aria-hidden="true"
-            class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </div>
-        <p class="text-sm text-muted-foreground leading-relaxed">
-          Open-source repository, full test suites, clean-room consumer validation fixtures, and CI workflows.
-        </p>
-      </a>
-
-      <a
-        href="https://github.com/robertonevarez/fullcalendar-webmcp/blob/main/CHALLENGE.md"
-        class="group rounded-xl border border-border p-6 text-inherit no-underline transition-all hover:border-foreground/40 hover:bg-muted/10"
-      >
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-medium text-foreground tracking-tight group-hover:text-primary">
-            Challenge Notes
-          </h2>
-          <svg
-            aria-hidden="true"
-            class="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="m9 18 6-6-6-6" />
-          </svg>
-        </div>
-        <p class="text-sm text-muted-foreground leading-relaxed">
-          WebMCP Challenge submission provenance, sample evaluation prompts, and security architecture details.
-        </p>
+        </span>
+        <span class="text-base sm:text-lg text-muted-foreground tracking-tight">
+          WebMCP tools for FullCalendar in React
+        </span>
       </a>
     </div>
-
-    <section class="border-t border-border pt-12">
-      <h2 class="text-xl font-medium tracking-tight text-foreground mb-4">
-        Architecture
-      </h2>
-      <div class="rounded-xl border border-border bg-muted/10 p-6 font-mono text-sm leading-relaxed text-foreground overflow-x-auto">
-        <pre><code>Person ───────────────┐
-                     ↓
-              FullCalendar UI
-                     ↓
-             host repository
-                     ↑
-WebMCP agent → FullCalendar WebMCP</code></pre>
-      </div>
-      <p class="mt-4 text-sm text-muted-foreground leading-relaxed">
-        The host application remains authoritative for authentication, authorization, and persistence. FullCalendar WebMCP registers six native browser tools via <code class="font-mono text-xs">document.modelContext.registerTool</code> so AI agents can inspect and manage calendar events seamlessly.
-      </p>
-    </section>
   </div>
 </PageLayout>
