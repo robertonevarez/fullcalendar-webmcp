@@ -117,7 +117,10 @@ describe("P0.2 WebMCP tool contract acceptance", () => {
         });
         await expect(
           executeOneArg(tool, { id: "one-arg-event" }),
-        ).resolves.toEqual({ deleted: true, id: "one-arg-event" });
+        ).resolves.toMatchObject({
+          deleted: true,
+          event: { id: "one-arg-event", title: "Seed" },
+        });
         expect(await repository.get("one-arg-event")).toBeNull();
       }
     },
@@ -200,7 +203,10 @@ describe("P0.2 WebMCP tool contract acceptance", () => {
         onEventsChanged.mockClear();
         await expect(
           context.executeTool("calendar_delete_event", { id: "per-tool-event" }),
-        ).resolves.toEqual({ deleted: true, id: "per-tool-event" });
+        ).resolves.toMatchObject({
+          deleted: true,
+          event: { id: "per-tool-event", title: "Seed" },
+        });
         expect(onEventsChanged).toHaveBeenCalledOnce();
       }
     },

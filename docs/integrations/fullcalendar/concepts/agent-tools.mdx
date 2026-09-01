@@ -1,0 +1,183 @@
+---
+title: Agent Tool Workflows
+description: How autonomous agents discover, choose, and compose FullCalendar WebMCP calendar tools with minimal correct tool use.
+---
+
+This page explains how agents should use the six WebMCP calendar tools. Tool **descriptions and input schemas** registered at runtime are the canonical agent contract; this page summarizes workflows integrators and agent authors should expect.
+
+For security boundaries, capability exposure, and trust annotations, see [Security](/integrations/fullcalendar/concepts/security). For input/output field reference, see [WebMCP tools](/integrations/fullcalendar/concepts/webmcp).
+
+## Design principle: tools are not the assistant
+
+Tools return **structured calendar state** — events, ids, time context — not conversational confirmations. The consuming agent converts that state into user-facing language.
+
+```text
+Protocol Tooling → structured domain result → consuming agent → natural-language response
+```
+
+There are no `message`, `summary`, or `naturalResponse` fields in tool results. That separation is intentional.
+
+## Tool roles
+
+| Tool | Role | Mutates persistence? |
+|---|---|---|
+| `calendar_get_context` | Anchor relative dates; read viewport/timezones | No |
+| `calendar_list_events` | Search/discover persisted events | No |
+| `calendar_get_event` | Fetch one event by known stable id | No |
+| `calendar_create_event` | Create a new persisted event | Yes |
+| `calendar_update_event` | Partial update of one existing event | Yes |
+| `calendar_delete_event` | Permanently remove one existing event | Yes |
+
+## Relative dates
+
+When the user says **today**, **tomorrow**, **Wednesday**, **next week**, **this afternoon**, or similar:
+
+1. Call `calendar_get_context` to read `now`, timezones, and visible range.
+2. Convert the intent into explicit ISO 8601 date-times **with offsets**.
+3. Call list/create/update as needed.
+
+Skip step 1 when every datetime is already explicit with offsets and no relative interpretation is required.
+
+`calendar_get_context` does **not** return persisted events — use `calendar_list_events` for schedule questions.
+
+## Stable event ids
+
+Mutation tools (`update`, `delete`) and `calendar_get_event` require a **stable id** from the host — never an event title.
+
+Obtain ids from:
+
+- `calendar_list_events` results
+- `calendar_get_event` / prior create/update/delete results
+- The host application (if already known)
+
+Do not invent ids from titles.
+
+## Search-before-mutation
+
+When the user refers to an event naturally ("my dentist appointment", "meeting with Sarah"):
+
+```text
+calendar_get_context   (if relative dates matter)
+        ↓
+calendar_list_events   (disambiguate; use text and/or date filters)
+        ↓
+calendar_update_event or calendar_delete_event
+```
+
+Use `calendar_get_event` only when you need to re-read one id's authoritative fields and list results are insufficient — avoid unnecessary tool chains.
+
+**Never** update or delete from an ambiguous multi-match list without disambiguation.
+
+## Date-range query boundaries
+
+For `calendar_list_events`:
+
+- `start` — **inclusive** lower bound
+- `end` — **exclusive** upper bound
+- Single calendar day → set `end` to the **start of the following day**
+- Omit filters to broaden results
+- `text` — case-insensitive title substring
+
+Event field semantics differ: on create/update, `start` is inclusive event start and `end` is **exclusive** event end.
+
+## Common workflows
+
+### "What's on my calendar tomorrow?"
+
+```text
+calendar_get_context → calendar_list_events
+```
+
+### "Schedule lunch tomorrow at noon"
+
+```text
+calendar_get_context → calendar_create_event
+```
+
+### "Move my dentist appointment tomorrow to 4"
+
+```text
+calendar_get_context → calendar_list_events → calendar_update_event
+```
+
+### "Delete my meeting with Sarah"
+
+```text
+calendar_list_events → identify exact event → calendar_delete_event
+```
+
+### "Change event abc123 to 3 PM" (id and time already explicit)
+
+```text
+calendar_update_event
+```
+
+## Result semantics
+
+Successful tools return domain facts only. The consuming agent decides phrasing.
+
+### `calendar_get_context`
+
+Returns `now`, `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange`. Sufficient for relative-date resolution; no persisted events.
+
+### `calendar_list_events`
+
+Returns `{ events: CalendarEvent[] }`. Zero matches is `{ events: [] }` — sufficient for the agent to report no matching events. Multiple matches are ordinary domain data; the agent disambiguates. No `ambiguous`, `recommendedAction`, or conversational flags.
+
+### `calendar_get_event`
+
+Returns `{ event: CalendarEvent | null }`. `null` means no persisted event for that id — not a conversational error envelope.
+
+### `calendar_create_event`
+
+Returns `{ event }` with the **repository-authoritative** persisted record: host-assigned `id`, normalized timestamps, and any host-selected `metadata` the repository attaches. The tool does not echo raw input verbatim when the repository normalizes fields.
+
+### `calendar_update_event`
+
+Returns `{ event }` representing the **post-update** authoritative state. Omitted input fields remain reflected from the repository output, not reconstructed by the agent.
+
+### `calendar_delete_event`
+
+Returns `{ deleted: true, event }` where `event` is a snapshot of the deleted resource **read immediately before removal** (via `repository.get`). This preserves title, times, all-day state, and host-selected metadata for natural confirmations after the record is gone.
+
+The snapshot reflects pre-delete read semantics. If `get` returns no event, the tool fails before delete and does not report success. If `delete` fails, the error propagates and `onEventsChanged` is not called.
+
+### Illustrative downstream phrasing (not tool output)
+
+Structured result → possible agent response:
+
+| Tool result | Agent may say |
+|---|---|
+| `{ event: { title: "Dentist", start: "…T22:00:00.000Z" } }` after update | "Done — your dentist appointment is now at 4 PM." |
+| `{ deleted: true, event: { title: "Sarah Meeting", start: "…" } }` | "I removed your 2 PM meeting with Sarah." |
+| `{ events: [] }` after searching "dentist" | "I couldn't find a dentist appointment on your calendar." |
+
+## Metadata in results
+
+- Optional on read and mutation results when the repository projects it
+- JSON-safe and host-selected
+- Not writable through create/update tool inputs
+- Treat as **untrusted** where tools carry `untrustedContentHint`
+- Protocol Tooling never auto-exposes FullCalendar `extendedProps`
+
+## Errors
+
+Repository failures propagate as tool execution errors. Protocol Tooling does not convert failures into successful results or add a normalized error-code envelope. Host backends remain authoritative; agents interpret thrown errors conversationally.
+
+Common outcomes:
+
+- **Not found** — delete when `get` returns null; update/create failures from host
+- **Forbidden / validation** — host repository throws; mutation does not refresh UI
+
+## Capability-dependent availability
+
+Hosts may register a subset of tools via `capabilities` (see [Security](/integrations/fullcalendar/concepts/security#capability-exposure)). Tool availability can differ by user/session role. Missing tools are not registered — agents should not assume all six are always present.
+
+`calendar_get_context` remains available even when `read: false`.
+
+## Related
+
+- [WebMCP tools reference](/integrations/fullcalendar/concepts/webmcp)
+- [Security](/integrations/fullcalendar/concepts/security)
+- [Custom event model / metadata](/integrations/fullcalendar/guides/custom-event-model)
+- [Testing checklist](/integrations/fullcalendar/guides/testing)

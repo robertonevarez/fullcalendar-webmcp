@@ -283,7 +283,8 @@ try {
   });
   if (
     oneArgDeleted.deleted !== true ||
-    oneArgDeleted.id !== "packed-smoke-event" ||
+    oneArgDeleted.event?.id !== "packed-smoke-event" ||
+    oneArgDeleted.event?.title !== "Packed OneArg Updated" ||
     events.size !== 0
   ) {
     throw new Error("one-arg calendar_delete_event did not delete the event");

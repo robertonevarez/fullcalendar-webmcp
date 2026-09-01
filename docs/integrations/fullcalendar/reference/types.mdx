@@ -236,8 +236,18 @@ export interface FullCalendarWebMCPOptions {
   calendarRef: RefObject<FullCalendarHandle | null>;
   events: CalendarEventRepository;
   onEventsChanged: () => unknown | Promise<unknown>;
+  capabilities?: FullCalendarWebMCPCapabilities;
   onRegistrationError?: (error: unknown) => void;
 }
 ```
 
-For more details on implementing these interfaces, see [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) and the [Repository Contract](/integrations/fullcalendar/concepts/repository).
+```ts
+export interface FullCalendarWebMCPCapabilities {
+  read?: boolean;
+  create?: boolean;
+  update?: boolean;
+  delete?: boolean;
+}
+```
+
+For more details on implementing these interfaces, see [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository), the [Repository Contract](/integrations/fullcalendar/concepts/repository), and [Security](/integrations/fullcalendar/concepts/security).

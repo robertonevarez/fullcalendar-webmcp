@@ -5,6 +5,7 @@ export type {
   CalendarEventRepository,
   CreateCalendarEventInput,
   FullCalendarHandle,
+  FullCalendarWebMCPCapabilities,
   FullCalendarWebMCPOptions,
   JsonObject,
   JsonPrimitive,

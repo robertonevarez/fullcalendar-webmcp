@@ -108,11 +108,38 @@ export interface FullCalendarHandle {
 }
 
 /**
+ * Controls which WebMCP calendar tools are registered at runtime.
+ *
+ * Disabled capabilities omit the corresponding tools entirely — they are not
+ * registered and cannot be discovered or invoked. This is defense in depth /
+ * least-privilege exposure only; the host repository and backend remain
+ * authoritative for authorization.
+ *
+ * `calendar_get_context` is always registered regardless of `read`, because it
+ * exposes viewport/timezone context rather than persisted event records.
+ */
+export interface FullCalendarWebMCPCapabilities {
+  /** Register `calendar_list_events` and `calendar_get_event`. Default: true. */
+  read?: boolean;
+  /** Register `calendar_create_event`. Default: true. */
+  create?: boolean;
+  /** Register `calendar_update_event`. Default: true. */
+  update?: boolean;
+  /** Register `calendar_delete_event`. Default: true. */
+  delete?: boolean;
+}
+
+/**
  * Options for the useFullCalendarWebMCP hook.
  */
 export interface FullCalendarWebMCPOptions {
   calendarRef: RefObject<FullCalendarHandle | null>;
   events: CalendarEventRepository;
   onEventsChanged: () => unknown | Promise<unknown>;
+  /**
+   * Optional least-privilege tool exposure. Omitted fields default to enabled.
+   * Does not replace server-side authorization in the host repository/backend.
+   */
+  capabilities?: FullCalendarWebMCPCapabilities;
   onRegistrationError?: (error: unknown) => void;
 }

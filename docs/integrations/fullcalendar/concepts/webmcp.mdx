@@ -5,6 +5,10 @@ description: Reference for the six WebMCP calendar tools FullCalendar WebMCP reg
 
 FullCalendar WebMCP registers six tools on the browser’s WebMCP model context (`document.modelContext`).
 
+For authentication boundaries, authorization, capability exposure, trust annotations, and data minimization, see [Security](/integrations/fullcalendar/concepts/security).
+
+For agent workflow patterns, relative-date handling, and tool-selection guidance, see [Agent tool workflows](/integrations/fullcalendar/concepts/agent-tools).
+
 ## Tools
 
 ### `calendar_get_context`
@@ -64,12 +68,14 @@ Write schemas reject `metadata`. Host-owned metadata is preserved by your reposi
 
 ### `calendar_delete_event`
 
-Deletes an event by id.
+Permanently deletes an event by id.
 
-**Returns:** `{ "deleted": true, "id": string }`
+**Returns:** `{ "deleted": true, "event": CalendarEvent }` — `event` is a snapshot read immediately before removal (title, times, optional metadata preserved for agent confirmation).
 
 ## Lifecycle
 
 On mount, [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) registers the tools (and polls briefly if the WebMCP runtime appears late). On unmount, it unregisters them. React Strict Mode double-mount is handled cleanly.
+
+Optional `capabilities` limit which tools register — see [Security](/integrations/fullcalendar/concepts/security#capability-exposure).
 
 Verify with the [Testing](/integrations/fullcalendar/guides/testing) checklist.

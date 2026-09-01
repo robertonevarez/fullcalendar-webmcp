@@ -37,6 +37,11 @@ function useFullCalendarWebMCP(options: FullCalendarWebMCPOptions): void;
       required: false,
       description: "Called if tool registration fails (for example duplicate tool names).",
     },
+    capabilities: {
+      type: "FullCalendarWebMCPCapabilities",
+      required: false,
+      description: "Least-privilege tool exposure. Disabled capabilities omit tools from registration. Does not replace backend authorization. See Security.",
+    },
   }}
 />
 
@@ -82,4 +87,4 @@ export function Calendar() {
 - **Late WebMCP runtime:** If `document.modelContext` is missing at mount, the hook polls every 250 ms until it appears or the component unmounts.
 - **Fresh options:** Tool handlers always use the latest `events` repository and callbacks without re-registering on every render.
 
-See [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository), [Types](/integrations/fullcalendar/reference/types), and [Troubleshooting](/integrations/fullcalendar/troubleshooting).
+See [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository), [Types](/integrations/fullcalendar/reference/types), [Security](/integrations/fullcalendar/concepts/security), and [Troubleshooting](/integrations/fullcalendar/troubleshooting).

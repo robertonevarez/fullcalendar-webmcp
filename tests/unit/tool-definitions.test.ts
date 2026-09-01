@@ -124,7 +124,10 @@ describe("calendar WebMCP tools", () => {
 
     await expect(
       executeOneArg(byName.calendar_delete_event, { id: "shim-event" }),
-    ).resolves.toEqual({ deleted: true, id: "shim-event" });
+    ).resolves.toMatchObject({
+      deleted: true,
+      event: { id: "shim-event", title: "Shim Updated" },
+    });
 
     expect(await repository.get("shim-event")).toBeNull();
   });
@@ -178,8 +181,10 @@ describe("calendar WebMCP tools", () => {
 
     const deleted = (await context.executeTool("calendar_delete_event", {
       id: "boundary-event",
-    })) as { deleted: boolean; id: string };
-    expect(deleted).toEqual({ deleted: true, id: "boundary-event" });
+    })) as { deleted: boolean; event: CalendarEvent };
+    expect(deleted.deleted).toBe(true);
+    expect(deleted.event.id).toBe("boundary-event");
+    expect(deleted.event.title).toBe("Boundary Updated");
 
     expect(onEventsChanged).toHaveBeenCalledTimes(3);
   });

@@ -425,8 +425,10 @@ describe("Protocol Tooling independent integration (Next.js / Server Actions / D
     // Delete it through WebMCP
     const deleteResult = (await context.execute("calendar_delete_event", {
       id: createdId,
-    })) as { deleted: boolean; id: string };
+    })) as { deleted: boolean; event: CalendarEvent };
     expect(deleteResult.deleted).toBe(true);
+    expect(deleteResult.event.id).toBe(createdId);
+    expect(deleteResult.event.title).toContain("Highway Maneuvers");
 
     // UI reflects deletion
     await act(async () => {});

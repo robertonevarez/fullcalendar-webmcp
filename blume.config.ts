@@ -55,6 +55,8 @@ export default defineConfig({
           "/integrations/fullcalendar/concepts/repository",
           "/integrations/fullcalendar/concepts/persistence",
           "/integrations/fullcalendar/concepts/webmcp",
+          "/integrations/fullcalendar/concepts/agent-tools",
+          "/integrations/fullcalendar/concepts/security",
         ],
       },
       {
@@ -80,7 +82,8 @@ export default defineConfig({
     popular: [
       { label: "Overview", href: "/integrations/fullcalendar" },
       { label: "Quickstart", href: "/integrations/fullcalendar/quickstart" },
-      { label: "Verify / Testing", href: "/integrations/fullcalendar/guides/testing" },
+      { label: "Security", href: "/integrations/fullcalendar/concepts/security" },
+      { label: "Agent workflows", href: "/integrations/fullcalendar/concepts/agent-tools" },
       { label: "Troubleshooting", href: "/integrations/fullcalendar/troubleshooting" },
       { label: "Custom event models", href: "/integrations/fullcalendar/guides/custom-event-model" },
       { label: "useFullCalendarWebMCP", href: "/integrations/fullcalendar/reference/use-fullcalendar-webmcp" },

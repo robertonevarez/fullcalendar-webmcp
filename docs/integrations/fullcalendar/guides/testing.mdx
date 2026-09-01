@@ -5,6 +5,8 @@ description: Verify FullCalendar WebMCP tool discovery, event reads and mutation
 
 Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart) when you want a fuller smoke test. The [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify) section is the canonical first-time path (Chrome flag → DevTools WebMCP panel → Run tool).
 
+Before production, also review the [Security checklist](/integrations/fullcalendar/concepts/security#host-application-checklist).
+
 ## Done when (package integration)
 
 These checks prove the package + repository wiring from the Quickstart. They do **not** require FullCalendar drag/resize handlers.
@@ -65,7 +67,7 @@ These checks prove the package + repository wiring from the Quickstart. They do 
   </Step>
 
   <Step title="Delete the test event">
-    Run `calendar_delete_event` with the event’s id. Confirm `{ "deleted": true }` and that the event leaves the UI immediately.
+    Run `calendar_delete_event` with the event’s id. Confirm `{ "deleted": true, "event": { … } }` (deleted-event snapshot) and that the event leaves the UI immediately.
   </Step>
 </Steps>
 
