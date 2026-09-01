@@ -1,74 +1,54 @@
 ---
 title: Overview
-description: Add WebMCP calendar tools to an existing FullCalendar React application while keeping your backend, database, and state in control.
+description: Add WebMCP calendar tools to an existing FullCalendar React app without replacing your backend, database, or calendar UI.
 ---
 
-**FullCalendar WebMCP** is an integration published by **Protocol Tooling** that makes FullCalendar React applications agent-ready using WebMCP.
-
-It registers standard calendar tools on the browser's model context while leaving your existing persistence, backend, database, and state management in control.
-
-## What is it?
-
-FullCalendar WebMCP is a React integration that connects FullCalendar to WebMCP (Web Model Context Protocol). AI agents running in WebMCP-capable browsers can query views, list events, and perform calendar mutations through your existing application.
-
-FullCalendar WebMCP is published as `@protocoltooling/fullcalendar`:
+Add a WebMCP interface to an existing FullCalendar React application—without replacing your backend, database, state management, or FullCalendar setup.
 
 ```package-install
 npm install @protocoltooling/fullcalendar
 ```
 
-## Who publishes it?
+## How it fits your app
 
-FullCalendar WebMCP is built and published by **Protocol Tooling** as part of its suite of agent interfaces for existing web software.
+You keep ownership of event persistence. The integration registers calendar tools in the browser and routes agent reads and writes through your existing operations:
 
-## What does it change?
-
-You add one React hook—[`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp)—and connect it to your existing event operations via a [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) adapter object.
-
-```tsx
-import { useRef } from "react";
-import FullCalendar from "@fullcalendar/react";
-import { useFullCalendarWebMCP } from "@protocoltooling/fullcalendar";
-
-export function CalendarView() {
-  const calendarRef = useRef<FullCalendar>(null);
-
-  useFullCalendarWebMCP({
-    calendarRef,
-    events: eventRepository,
-    onEventsChanged: refetchEvents,
-  });
-
-  return (
-    <FullCalendar
-      ref={calendarRef}
-      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
-    />
-  );
-}
+```ts
+useFullCalendarWebMCP({
+  calendarRef,
+  events: repository, // your list / get / create / update / delete
+  onEventsChanged: refreshEvents,
+});
 ```
 
-## What does it not change?
+```text
+Agent ⇄ WebMCP tools ⇄ your repository ⇄ your DB / API / state
+                              ↓
+                       onEventsChanged
+                              ↓
+                         FullCalendar
+```
 
-The FullCalendar WebMCP integration does not replace your backend or database:
+Your app remains the source of truth. FullCalendar WebMCP never becomes a second event ledger.
 
-- **Keep your FullCalendar setup:** Use your existing plugins, custom views, themes, and event renderers.
-- **Keep your backend & database:** FullCalendar WebMCP does not store events. Your API or database remains the single source of truth. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
-- **Keep your state management:** Human interactions and AI agent actions converge on the same persistence layer and trigger your existing data refresh logic.
+## What you get
 
-## Next steps
+Six tools agents can call:
+
+- `calendar_get_context`
+- `calendar_list_events`
+- `calendar_get_event`
+- `calendar_create_event`
+- `calendar_update_event`
+- `calendar_delete_event`
+
+## Next step
 
 <CardGroup cols={2}>
   <Card title="Quickstart" href="/integrations/fullcalendar/quickstart" icon="rocket">
-    Add WebMCP tools to your FullCalendar React app in minutes.
+    Install, connect your repository, register the hook, and verify.
   </Card>
-  <Card title="Concepts" href="/integrations/fullcalendar/concepts/repository" icon="book-open">
-    Understand the repository contract and persistence model.
-  </Card>
-  <Card title="Existing App Guide" href="/integrations/fullcalendar/guides/existing-app" icon="layers">
-    Step-by-step instructions for integrating into an existing codebase.
-  </Card>
-  <Card title="API Reference" href="/integrations/fullcalendar/reference/use-fullcalendar-webmcp" icon="code">
-    Detailed reference for hooks, interfaces, and TypeScript types.
+  <Card title="Existing app" href="/integrations/fullcalendar/guides/existing-app" icon="layers">
+    Drop the integration into a calendar you already ship.
   </Card>
 </CardGroup>

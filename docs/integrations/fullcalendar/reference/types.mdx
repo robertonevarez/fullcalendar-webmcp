@@ -3,7 +3,7 @@ title: Public Types
 description: Comprehensive TypeScript type and interface definitions exported by `@protocoltooling/fullcalendar` for the FullCalendar WebMCP integration.
 ---
 
-The `@protocoltooling/fullcalendar` package exports the following TypeScript interfaces and types for the FullCalendar WebMCP integration.
+Public TypeScript types exported by `@protocoltooling/fullcalendar`.
 
 ```ts
 import type {
@@ -24,7 +24,7 @@ import type {
 
 ## `CalendarEvent`
 
-Normalized calendar event model.
+Core event model returned by your repository and by list/get tools.
 
 ```ts
 export interface CalendarEvent {
@@ -38,39 +38,39 @@ export interface CalendarEvent {
 }
 ```
 
-> `metadata` is explicitly selected by the host repository. Protocol Tooling does **not** automatically expose FullCalendar `extendedProps`. Metadata is **read-only** at the WebMCP write boundary (create/update tool schemas reject it).
+Add `metadata` when agents need context beyond the core fields. You choose exactly what is exposed. Metadata is **read-only** through WebMCP writes. Protocol Tooling never exposes FullCalendar `extendedProps` automatically.
 
 <TypeTable
   type={{
     id: {
       type: "string",
       required: true,
-      description: "Unique, stable identifier assigned by the host application.",
+      description: "Stable id assigned by your application.",
     },
     title: {
       type: "string",
       required: true,
-      description: "Human-readable event title.",
+      description: "Event title.",
     },
     start: {
       type: "string",
       required: true,
-      description: "Event start date-time as an ISO 8601 string with an explicit timezone offset.",
+      description: "Start as ISO 8601 with an explicit timezone offset.",
     },
     end: {
       type: "string | null",
       required: true,
-      description: "Exclusive event end date-time as an ISO 8601 string with offset, or null.",
+      description: "End as ISO 8601 with offset, or null when there is no end.",
     },
     allDay: {
       type: "boolean",
       required: true,
-      description: "Whether the event is an all-day event.",
+      description: "Whether the event is all-day.",
     },
     metadata: {
       type: "JsonObject",
       required: false,
-      description: "Host-selected JSON-safe projection for agents. Omit to expose nothing beyond core fields.",
+      description: "Optional JSON-safe fields for agents. Omit to expose only core fields.",
     },
   }}
 />

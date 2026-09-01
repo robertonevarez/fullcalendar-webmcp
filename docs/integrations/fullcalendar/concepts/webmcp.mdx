@@ -1,76 +1,75 @@
 ---
 title: WebMCP Tools
-description: Detailed overview of the six standard calendar tools registered by FullCalendar WebMCP on the browser model context and their lifecycle.
+description: Reference for the six WebMCP calendar tools FullCalendar WebMCP registers, including inputs, returns, and browser registration lifecycle.
 ---
 
-WebMCP (Web Model Context Protocol) enables browser-based web applications to expose structured tools directly to AI agents.
+FullCalendar WebMCP registers six tools on the browser’s WebMCP model context (`document.modelContext`).
 
-The FullCalendar WebMCP integration automatically registers six calendar tools on `document.modelContext`.
+## Tools
 
-## The 6 calendar tools
+### `calendar_get_context`
 
-### 1. `calendar_get_context`
-- **Purpose:** Read current time, timezones, and active calendar viewport. AI agents call this before resolving relative dates (such as "this Wednesday" or "tomorrow morning").
-- **Inputs:** None (`{}`).
-- **Returns:**
-  ```json
-  {
-    "now": "2026-09-01T14:30:00.000Z",
-    "browserTimeZone": "America/Denver",
-    "fullCalendarTimeZone": "local",
-    "view": "dayGridMonth",
-    "visibleRange": {
-      "start": "2026-08-30T06:00:00.000Z",
-      "end": "2026-10-04T06:00:00.000Z"
-    }
+Returns current time, timezones, and the active viewport. Agents should call this before resolving relative dates (“tomorrow at 2pm”).
+
+**Input:** `{}`
+
+**Returns:**
+
+```json
+{
+  "now": "2026-09-01T14:30:00.000Z",
+  "browserTimeZone": "America/Denver",
+  "fullCalendarTimeZone": "local",
+  "view": "dayGridMonth",
+  "visibleRange": {
+    "start": "2026-08-30T06:00:00.000Z",
+    "end": "2026-10-04T06:00:00.000Z"
   }
-  ```
+}
+```
 
-### 2. `calendar_list_events`
-- **Purpose:** List persisted calendar events within an optional time range or matching a title search substring.
-- **Inputs:**
-  - `start` (string, optional): Inclusive ISO 8601 lower bound.
-  - `end` (string, optional): Exclusive ISO 8601 upper bound.
-  - `text` (string, optional): Case-insensitive title substring.
-- **Returns:** `{ "events": CalendarEvent[] }` (may include optional host-selected `metadata`)
+### `calendar_list_events`
 
-### 3. `calendar_get_event`
-- **Purpose:** Retrieve a single persisted calendar event by its stable ID.
-- **Inputs:**
-  - `id` (string, required): The stable event ID.
-- **Returns:** `{ "event": CalendarEvent | null }` (may include optional host-selected `metadata`)
+Lists persisted events, optionally filtered by range or title.
 
-### 4. `calendar_create_event`
-- **Purpose:** Create and persist a new calendar event.
-- **Inputs:**
-  - `title` (string, required): Event title.
-  - `start` (string, required): Start date-time in ISO 8601 with timezone offset (e.g. `2026-09-02T10:00:00-06:00`).
-  - `end` (string | null, optional): End date-time in ISO 8601 with timezone offset.
-  - `allDay` (boolean, optional): Whether the event is all-day.
-- **Returns:** `{ "event": CalendarEvent }`
-- **Note:** Write schemas reject `metadata` (`additionalProperties: false`).
+**Input:** optional `start`, `end`, `text`
 
-### 5. `calendar_update_event`
-- **Purpose:** Update selected fields on an existing calendar event.
-- **Inputs:**
-  - `id` (string, required): The stable event ID.
-  - `title`, `start`, `end`, `allDay` (optional): Fields to update. At least one field must be provided.
-- **Returns:** `{ "event": CalendarEvent }`
-- **Note:** Write schemas reject `metadata`; host-owned metadata is preserved by the repository across core updates.
+**Returns:** `{ "events": CalendarEvent[] }` (may include host `metadata`)
 
-### 6. `calendar_delete_event`
-- **Purpose:** Delete a persisted calendar event by its ID.
-- **Inputs:**
-  - `id` (string, required): The stable event ID.
-- **Returns:** `{ "deleted": true, "id": string }`
+### `calendar_get_event`
 
----
+Fetches one event by id.
 
-## Browser runtime lifecycle
+**Input:** `id` (required)
 
-1. **Mount:** When your calendar component mounts, [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) checks for `document.modelContext`. If the WebMCP runtime is injected slightly later by the browser, the hook automatically polls until it is available.
-2. **Registration:** Tools are registered with an internal `AbortController`.
-3. **Execution:** When a tool executes, latest options and repository references are invoked without triggering unnecessary component re-renders or tool re-registrations.
-4. **Unmount & Cleanup:** When the calendar component unmounts, the abort controller unregisters all tools cleanly with zero orphaned browser state.
+**Returns:** `{ "event": CalendarEvent | null }`
 
-For testing these tools in action, see the [Testing Guide](/integrations/fullcalendar/guides/testing) and the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
+### `calendar_create_event`
+
+Creates and persists an event.
+
+**Input:** `title`, `start` (ISO 8601 with offset), optional `end`, optional `allDay`
+
+**Returns:** `{ "event": CalendarEvent }`
+
+Write schemas reject `metadata`.
+
+### `calendar_update_event`
+
+Updates fields on an existing event. At least one of `title`, `start`, `end`, `allDay` is required.
+
+**Returns:** `{ "event": CalendarEvent }`
+
+Write schemas reject `metadata`. Host-owned metadata is preserved by your repository across core-field updates.
+
+### `calendar_delete_event`
+
+Deletes an event by id.
+
+**Returns:** `{ "deleted": true, "id": string }`
+
+## Lifecycle
+
+On mount, [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) registers the tools (and polls briefly if the WebMCP runtime appears late). On unmount, it unregisters them. React Strict Mode double-mount is handled cleanly.
+
+Verify with the [Testing](/integrations/fullcalendar/guides/testing) checklist.
