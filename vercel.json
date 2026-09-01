@@ -2,5 +2,19 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "buildCommand": "blume build",
-  "outputDirectory": "dist"
+  "outputDirectory": "dist",
+  "rewrites": [
+    {
+      "source": "/demo",
+      "destination": "https://protocoltooling-demo.vercel.app/demo"
+    },
+    {
+      "source": "/demo/",
+      "destination": "https://protocoltooling-demo.vercel.app/demo"
+    },
+    {
+      "source": "/demo/:path*",
+      "destination": "https://protocoltooling-demo.vercel.app/demo/:path*"
+    }
+  ]
 }
