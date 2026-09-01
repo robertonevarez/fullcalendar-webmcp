@@ -1,6 +1,6 @@
-# WebMCP Challenge
+# FullCalendar WebMCP — WebMCP Challenge
 
-Protocol Tooling was developed during the WebMCP Challenge submission period, August 25–September 3, 2026.
+FullCalendar WebMCP is a Protocol Tooling integration developed during the WebMCP Challenge submission period, August 25–September 3, 2026.
 
 This page keeps challenge-specific testing and provenance out of the main developer path.
 
@@ -38,7 +38,7 @@ https://protocoltooling.com/demo?reset=1
 
 Tool descriptions include usage guidance, stable-id rules, date semantics, ambiguity handling, and mutation boundaries. Read tools mark returned event content as untrusted. Mutation capabilities can be limited by the host.
 
-The package remains an adapter layer: the host application owns authentication, authorization, persistence, and business rules.
+FullCalendar WebMCP remains an adapter layer: the host application owns authentication, authorization, persistence, and business rules.
 
 ## Submission-period work
 
@@ -67,4 +67,4 @@ npm run test:pack
 npm run docs:build
 ```
 
-The package is MIT licensed. The challenge submission should use this repository as the primary public source repository because it contains the WebMCP registration and tool implementation.
+The package is MIT licensed. This repository contains the FullCalendar WebMCP registration and tool implementation and should be used as the primary public source repository for the challenge submission.

@@ -1,8 +1,8 @@
-# Protocol Tooling
+# FullCalendar WebMCP
 
-Make existing web interfaces agent-ready with WebMCP.
+Add WebMCP calendar tools to an existing FullCalendar React app.
 
-Protocol Tooling adds structured browser tools to established UI components without replacing their interface, backend, or data model. The first integration, `@protocoltooling/fullcalendar`, lets people and agents work against the same FullCalendar state.
+FullCalendar WebMCP is a [Protocol Tooling](https://protocoltooling.com) integration. It exposes structured browser tools without replacing your calendar UI, backend, database, or application state.
 
 [Live demo](https://protocoltooling.com/demo) · [Documentation](https://protocoltooling.com/integrations/fullcalendar) · [WebMCP Challenge notes](./CHALLENGE.md)
 
@@ -20,7 +20,7 @@ useFullCalendarWebMCP({
 });
 ```
 
-Your repository stays authoritative. Protocol Tooling registers WebMCP tools and routes agent reads and writes through the same persistence layer your app already uses.
+Your repository stays authoritative. FullCalendar WebMCP routes agent reads and writes through the same persistence layer your app already uses.
 
 ## Agent tools
 
@@ -44,16 +44,16 @@ Person ───────────────┐
                      ↓
              host repository
                      ↑
-WebMCP agent → Protocol Tooling
+WebMCP agent → FullCalendar WebMCP
 ```
 
 A person can drag or resize an event, then an agent can read the updated state. An agent can create or reschedule an event, and the same change appears in the human interface.
 
-The demo intentionally uses browser-local persistence so every visitor gets an isolated, resettable workspace. Production apps can connect the same repository contract to their existing API and database.
+The demo uses browser-local persistence so every visitor gets an isolated, resettable workspace. Production apps can connect the same repository contract to their existing API and database.
 
 ## Security boundary
 
-Protocol Tooling does not authenticate users, store events, or authorize mutations. The host application remains responsible for authentication, authorization, and persistence.
+FullCalendar WebMCP does not authenticate users, store events, or authorize mutations. The host application remains responsible for authentication, authorization, and persistence.
 
 Optional `capabilities` can limit which WebMCP tools are registered. This is defense in depth, not a replacement for server-side authorization.
 
@@ -78,4 +78,4 @@ npm run dev
 
 ## License
 
-MIT
+MIT © 2026 Roberto Nevarez
