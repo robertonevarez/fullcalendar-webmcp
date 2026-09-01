@@ -1,8 +1,8 @@
 import { defineConfig } from "blume";
 
 export default defineConfig({
-  title: "FullCalendar WebMCP · Protocol Tooling",
-  description: "Protocol Tooling builds integrations that make existing web software available to AI agents through open standards such as WebMCP.",
+  title: "FullCalendar WebMCP",
+  description: "Add WebMCP calendar tools to existing FullCalendar React apps without replacing their UI, backend, or data model.",
   deployment: {
     site: "https://protocoltooling.com",
   },
@@ -42,8 +42,6 @@ export default defineConfig({
     root: "docs",
     exclude: ["**/DX-AUDIT.md", "**/audits/**", "**/_*", "**/.*"],
   },
-  // Docs shell is already "FullCalendar WebMCP · Protocol Tooling", so don't
-  // nest the same product name again under Integrations in the sidebar.
   navigation: {
     sidebar: [
       "/integrations/fullcalendar",
