@@ -11,6 +11,11 @@ function run(command, cwd = rootDir) {
   execSync(command, { cwd, stdio: "inherit" });
 }
 
+function installFixture(cwd) {
+  fs.rmSync(path.join(cwd, "node_modules"), { recursive: true, force: true });
+  run("npm install --package-lock=false", cwd);
+}
+
 console.log("=== Phase 2: Package Tarball & External Consumer Validation ===");
 
 // 1. Build library
@@ -73,14 +78,14 @@ console.log("✓ Packed artifact tool smoke passed!");
 // 4. Test Consumer A: Vite Consumer (React 19 + FullCalendar React v7)
 console.log("\n--- Testing Consumer A: Vite + React 19 + FullCalendar v7 ---");
 const viteConsumerDir = path.join(rootDir, "tests/fixtures/vite-consumer");
-run("npm install", viteConsumerDir);
+installFixture(viteConsumerDir);
 run("npm run build", viteConsumerDir);
 console.log("✓ Consumer A (Vite + React 19 + FullCalendar v7) built successfully!");
 
 // 5. Test Consumer B: Next.js 16 App Router (React 19 + FullCalendar React v6 + Server Actions)
 console.log("\n--- Testing Consumer B: Next.js 16 + React 19 + FullCalendar v6 ---");
 const nextConsumerDir = path.join(rootDir, "tests/fixtures/nextjs-consumer");
-run("npm install", nextConsumerDir);
+installFixture(nextConsumerDir);
 run("npm run build", nextConsumerDir);
 console.log("✓ Consumer B (Next.js 16 App Router + FullCalendar v6) built successfully!");
 
