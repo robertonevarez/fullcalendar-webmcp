@@ -1,106 +1,117 @@
 ---
 title: Existing App
-description: Step-by-step guide for adding FullCalendar WebMCP to an existing FullCalendar React setup without modifying your UI or backend architecture.
+description: Step-by-step guide to add FullCalendar WebMCP to a FullCalendar React app you already ship without changing your UI or backend.
 ---
 
-If you already have a working React application with FullCalendar, adding FullCalendar WebMCP takes only a few minutes.
+If FullCalendar already runs in your React app, add WebMCP without changing your plugins, themes, or backend.
 
-The integration is designed to adapt to your application—not the other way around.
+## Keep as-is
 
-## What to keep unchanged
+- FullCalendar plugins, views, and renderers
+- API routes, database, and auth
+- React state, React Query, SWR, or similar
 
-- **Your FullCalendar options:** Plugins (dayGrid, timeGrid, list, interaction), header toolbars, custom date click handlers, and event content renderers remain exactly as they are.
-- **Your backend and database:** Keep your existing API endpoints, database tables, and authentication checks. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
-- **Your state management:** Keep your React state, React Query / SWR hooks, or Redux store.
-
-## Step-by-step integration
-
-### 1. Install the package
+## 1. Install
 
 ```package-install
 npm install @protocoltooling/fullcalendar
 ```
 
-### 2. Wrap your existing API in CalendarEventRepository
+## 2. Wrap your API
 
-Create an adapter that delegates to your existing API service or data fetching functions:
-
-```ts services/calendar-adapter.ts
+```ts
 import type { CalendarEventRepository } from "@protocoltooling/fullcalendar";
 import * as api from "./events-api";
 
-export const calendarRepository: CalendarEventRepository = {
-  async list(query) {
-    return api.fetchEvents(query);
-  },
-  async get(id) {
-    return api.fetchEventById(id);
-  },
-  async create(input) {
-    return api.createEvent(input);
-  },
-  async update(id, input) {
-    return api.updateEvent(id, input);
-  },
-  async delete(id) {
-    await api.deleteEvent(id);
-  },
+export const repository: CalendarEventRepository = {
+  list: (query) => api.fetchEvents(query),
+  get: (id) => api.fetchEventById(id),
+  create: (input) => api.createEvent(input),
+  update: (id, input) => api.updateEvent(id, input),
+  delete: (id) => api.deleteEvent(id),
 };
 ```
 
-### 3. Add calendarRef and call the hook
+## 3. Register the hook
 
-In your calendar component:
-1. Create a `calendarRef` with `useRef`.
-2. Pass `calendarRef` to `<FullCalendar ref={calendarRef} ... />`.
-3. Call [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) with your repository and your existing data refetch function.
-
-```tsx components/CalendarView.tsx
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import interactionPlugin from "@fullcalendar/interaction";
-import { useCallback, useRef, useState, useEffect } from "react";
-import { useFullCalendarWebMCP, type CalendarEvent } from "@protocoltooling/fullcalendar";
-import { calendarRepository } from "../services/calendar-adapter";
+```tsx
+import FullCalendar, { type CalendarRef } from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/react/daygrid";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useFullCalendarWebMCP,
+  type CalendarEvent,
+} from "@protocoltooling/fullcalendar";
+import { repository } from "../services/calendar-adapter";
 
 export function CalendarView() {
-  const calendarRef = useRef<FullCalendar>(null);
+  const calendarRef = useRef<CalendarRef>(null);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
 
-  // Your existing fetch function
-  const refreshData = useCallback(async () => {
-    const data = await calendarRepository.list();
-    setEvents(data);
+  const refreshEvents = useCallback(async () => {
+    setEvents(await repository.list());
   }, []);
 
   useEffect(() => {
-    void refreshData();
-  }, [refreshData]);
+    void refreshEvents();
+  }, [refreshEvents]);
 
-  // Connect WebMCP tools
   useFullCalendarWebMCP({
     calendarRef,
-    events: calendarRepository,
-    onEventsChanged: refreshData,
+    events: repository,
+    onEventsChanged: refreshEvents,
   });
 
   return (
     <FullCalendar
       ref={calendarRef}
-      plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+      plugins={[dayGridPlugin]}
       initialView="dayGridMonth"
-      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
-      editable={true}
-      selectable={true}
-      // Your existing event click / drag handlers work as normal
+      events={events.map((event) => ({
+        ...event,
+        end: event.end ?? undefined,
+      }))}
+      editable
+      selectable
     />
   );
 }
 ```
 
-## Related reading
+Then follow [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify).
 
-- **[Custom Event Models](/integrations/fullcalendar/guides/custom-event-model):** Map custom domain models (e.g. sessions, bookings) to calendar events.
-- **[Testing Guide](/integrations/fullcalendar/guides/testing):** Verify that tools and UI mutations work as expected.
-- **[Troubleshooting](/integrations/fullcalendar/troubleshooting):** Review common integration pitfalls and ref type solutions.
+## Persist human edits
+
+FullCalendar WebMCP does **not** listen to FullCalendar drag/resize/edit callbacks. If humans can move events in the UI, your app must persist those changes through the same repository agents use:
+
+```tsx
+<FullCalendar
+  ref={calendarRef}
+  editable
+  eventDrop={async (info) => {
+    await repository.update(info.event.id, {
+      start: info.event.start!.toISOString(),
+      end: info.event.end?.toISOString() ?? null,
+      allDay: info.event.allDay,
+    });
+    await refreshEvents();
+  }}
+  eventResize={async (info) => {
+    await repository.update(info.event.id, {
+      start: info.event.start!.toISOString(),
+      end: info.event.end?.toISOString() ?? null,
+      allDay: info.event.allDay,
+    });
+    await refreshEvents();
+  }}
+  {/* ... */}
+/>
+```
+
+Optional convergence check: after a human drag, run `calendar_get_event` in DevTools WebMCP and confirm the times match. See [Testing → Optional host convergence](/integrations/fullcalendar/guides/testing#optional-host-human-and-agent-convergence).
+
+## Related
+
+- [Custom event models](/integrations/fullcalendar/guides/custom-event-model) — domain mapping and metadata
+- [Next.js](/integrations/fullcalendar/guides/nextjs) — App Router patterns
+- [Troubleshooting](/integrations/fullcalendar/troubleshooting)

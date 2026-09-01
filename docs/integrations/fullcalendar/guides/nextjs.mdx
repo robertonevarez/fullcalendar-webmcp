@@ -1,21 +1,15 @@
 ---
 title: Next.js
-description: Learn how to use FullCalendar WebMCP with Next.js App Router and Pages Router with client components, server actions, and full SSR safety.
+description: Use FullCalendar WebMCP with Next.js App Router client components, server actions, and SSR-safe registration of calendar tools.
 ---
 
-The FullCalendar WebMCP integration works seamlessly in Next.js applications, including the Next.js App Router and Pages Router.
+Use the hook in a Client Component. The package entry includes `'use client'`. Module load does not touch `window` or `document`, so SSR stays safe. Your repository can call Server Actions or Route Handlers.
 
-## Supported characteristics
+This guide uses FullCalendar React **v6** import paths (`@fullcalendar/daygrid`). For v7, import plugins from `@fullcalendar/react/daygrid` and type the ref as `CalendarRef`.
 
-- **Client Component:** The [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) hook runs in client components. The package entry bundle automatically includes the `'use client';` directive.
-- **SSR Safe:** The integration does not access browser globals (`window`, `document`) at module evaluation time. Next.js server-side rendering (SSR) and static generation (prerendering) execute without throwing errors.
-- **Server Actions & API Routes:** Your [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) implementation can call Next.js Server Actions, Route Handlers (`app/api/...`), or ORM-backed services directly.
+## App Router
 
-## App Router example
-
-Create a client component for your calendar and connect it to your server actions or API:
-
-```tsx app/calendar/calendar-client.tsx
+```tsx
 "use client";
 
 import FullCalendar from "@fullcalendar/react";
@@ -42,33 +36,24 @@ export function CalendarClient({
   const [events, setEvents] = useState<CalendarEvent[]>(initialEvents);
 
   const repository: CalendarEventRepository = {
-    async list(query) {
-      return fetchEventsAction(query);
-    },
-    async get(id) {
+    list: (query) => fetchEventsAction(query),
+    get: async (id) => {
       const all = await fetchEventsAction();
-      return all.find((e) => e.id === id) ?? null;
+      return all.find((event) => event.id === id) ?? null;
     },
-    async create(input) {
-      return createEventAction(input);
-    },
-    async update(id, input) {
-      return updateEventAction(id, input);
-    },
-    async delete(id) {
-      await deleteEventAction(id);
-    },
+    create: (input) => createEventAction(input),
+    update: (id, input) => updateEventAction(id, input),
+    delete: (id) => deleteEventAction(id),
   };
 
-  const refetch = useCallback(async () => {
-    const updated = await fetchEventsAction();
-    setEvents(updated);
+  const refreshEvents = useCallback(async () => {
+    setEvents(await fetchEventsAction());
   }, []);
 
   useFullCalendarWebMCP({
     calendarRef,
     events: repository,
-    onEventsChanged: refetch,
+    onEventsChanged: refreshEvents,
   });
 
   return (
@@ -76,28 +61,25 @@ export function CalendarClient({
       ref={calendarRef}
       plugins={[dayGridPlugin]}
       initialView="dayGridMonth"
-      events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
+      events={events.map((event) => ({
+        ...event,
+        end: event.end ?? undefined,
+      }))}
     />
   );
 }
 ```
 
-Then render it from a server component page:
+Server page:
 
-```tsx app/calendar/page.tsx
+```tsx
 import { CalendarClient } from "./calendar-client";
 import { fetchEventsAction } from "./actions";
 
 export default async function CalendarPage() {
   const events = await fetchEventsAction();
-
-  return (
-    <main className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Team Schedule</h1>
-      <CalendarClient initialEvents={events} />
-    </main>
-  );
+  return <CalendarClient initialEvents={events} />;
 }
 ```
 
-For general integration steps, see the [Existing App Guide](/integrations/fullcalendar/guides/existing-app) and [Repository Contract](/integrations/fullcalendar/concepts/repository).
+For the shared golden path, see [Quickstart](/integrations/fullcalendar/quickstart).

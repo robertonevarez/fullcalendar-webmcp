@@ -1,13 +1,21 @@
 ---
 title: Repository Contract
-description: Understand the CalendarEventRepository contract and learn how FullCalendar WebMCP connects tools to your existing event persistence.
+description: Learn how CalendarEventRepository connects WebMCP calendar tools to your existing API or database with list, get, create, update, and delete.
 ---
 
-The repository contract connects WebMCP calendar tools to your application's data layer.
+WebMCP calendar tools call an object you provide. That object implements [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository)—five methods that wrap your existing API or database.
 
-Instead of writing to FullCalendar's internal memory or requiring a specific database, the FullCalendar WebMCP integration talks to an object implementing the [`CalendarEventRepository`](/integrations/fullcalendar/reference/calendar-event-repository) interface.
+You pass it as the `events` option to [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp).
 
-## The interface
+## Methods
+
+| Method | Purpose |
+|---|---|
+| `list` | Return events, optionally filtered by range or title text |
+| `get` | Return one event by id, or `null` |
+| `create` | Persist a new event and return it with its id |
+| `update` | Apply changes and return the updated event |
+| `delete` | Remove an event by id |
 
 ```ts
 export interface CalendarEventRepository {
@@ -39,53 +47,22 @@ export interface CalendarEventRepository {
 }
 ```
 
-## Method breakdown
-
-| Method | Plain language purpose |
-|---|---|
-| `list` | Read calendar events, optionally filtered by date range or title text. |
-| `get` | Read a single calendar event by its stable event ID. |
-| `create` | Persist a new event and return the saved event with its assigned ID. |
-| `update` | Apply changes to an existing event and return the updated event. |
-| `delete` | Permanently remove an event by ID. |
-
-### Query filtering in `list`
-
-The `list` method receives an optional [`CalendarEventQuery`](/integrations/fullcalendar/reference/types#calendareventquery):
+## Filters on `list`
 
 ```ts
 export interface CalendarEventQuery {
-  start?: string; // Inclusive ISO 8601 string
-  end?: string;   // Exclusive ISO 8601 string
-  text?: string;  // Case-insensitive title search substring
+  start?: string; // inclusive ISO 8601
+  end?: string;   // exclusive ISO 8601
+  text?: string;  // case-insensitive title substring
 }
 ```
 
-When an agent requests events for a specific week or searches for a meeting title, the integration passes those criteria directly to your `list` implementation.
+## Cancellation
 
-### Cancellation with `AbortSignal`
+Every method accepts an optional `{ signal?: AbortSignal }`. Forward it to `fetch` when you want aborted agent calls to cancel in-flight requests. Skip it until you need it.
 
-Every repository method accepts an optional `{ signal?: AbortSignal }` parameter.
+## Any backend
 
-When a WebMCP request is aborted by the client browser or agent runtime, the integration signals cancellation. If your backend uses `fetch`, you can forward the signal directly:
+REST, Server Actions, Supabase, Prisma, GraphQL, or an in-memory store for prototypes all work—as long as the same operations serve humans and agents.
 
-```ts
-async list(query, { signal } = {}) {
-  const params = new URLSearchParams(query as Record<string, string>);
-  const res = await fetch(`/api/events?${params}`, { signal });
-  return res.json();
-}
-```
-
-## Backend agnostic
-
-The FullCalendar WebMCP integration works with any data source:
-
-- REST APIs (`fetch`, Axios)
-- Next.js Server Actions (see the [Next.js Guide](/integrations/fullcalendar/guides/nextjs))
-- Supabase / PostgreSQL
-- Prisma / Drizzle ORM
-- GraphQL queries & mutations
-- Browser `localStorage` (for prototypes)
-
-For mapping custom domain entities to events, see the [Custom Event Models Guide](/integrations/fullcalendar/guides/custom-event-model). To learn how changes converge durably, see the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
+For domain mapping and optional metadata, see [Custom event models](/integrations/fullcalendar/guides/custom-event-model). For why the host stays authoritative, see [Persistence](/integrations/fullcalendar/concepts/persistence).

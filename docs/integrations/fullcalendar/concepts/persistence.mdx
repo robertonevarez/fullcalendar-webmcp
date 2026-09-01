@@ -1,41 +1,35 @@
 ---
 title: Persistence Model
-description: Learn why FullCalendar WebMCP never stores your calendar events and how human and agent mutations converge on your backend database.
+description: Learn why FullCalendar WebMCP never stores events and how human UI edits and agent tool calls share one persistence source of truth.
 ---
 
-The most important architectural rule in FullCalendar WebMCP is simple:
+FullCalendar WebMCP does not store calendar events. Your API or database remains the only ledger.
 
-> **FullCalendar WebMCP does not own your events.**
+## One source of truth
 
-It does not create a secondary database, maintain a local event ledger, or cache state separately from your application.
-
-## Single source of truth
-
-Human users interacting with FullCalendar (e.g. clicking, dragging, modal editing) and AI agents invoking WebMCP tools converge on the exact same backend and database.
+Human edits in FullCalendar and agent tool calls both go through your persistence. After an agent mutation, `onEventsChanged` refreshes the UI from that same source.
 
 ```mermaid
 flowchart TD
-    Human["Human Interaction (FullCalendar UI)"] --> Backend["Your Existing Persistence (API / Database)"]
-    Agent["AI Agent (WebMCP Tools)"] --> Backend
-    Backend --> Refresh["onEventsChanged / State Refetch"]
-    Refresh --> UI["Updated FullCalendar UI"]
+    Human["Human (FullCalendar UI)"] --> Backend["Your persistence"]
+    Agent["Agent (WebMCP tools)"] --> Backend
+    Backend --> Refresh["onEventsChanged"]
+    Refresh --> UI["FullCalendar UI"]
 ```
 
-## Why this matters
+## Why this shape
 
-1. **No data synchronization bugs:** Because the integration does not keep its own copy of your event list, there is no risk of agent edits diverging from human edits.
-2. **Durability across reloads:** Every mutation made by an agent ([`calendar_create_event`, `calendar_update_event`, `calendar_delete_event`](/integrations/fullcalendar/concepts/webmcp)) goes straight to your authoritative storage. When the user reloads the page, all changes persist.
-3. **Existing validation rules apply:** If your backend rejects an invalid event time, your repository method rejects the promise. The WebMCP tool reports the failure to the agent immediately.
+- No second copy of events to drift out of sync
+- Agent changes survive reload when your repository persists them
+- Your existing validation and auth keep applying—reject the promise and the tool fails
 
-## The mutation lifecycle
+## What happens on a mutation
 
-When an agent changes an event, the following steps occur:
+1. Agent calls e.g. `calendar_create_event`
+2. The integration calls your `events.create`
+3. Your backend saves the event and returns a `CalendarEvent`
+4. The integration calls `onEventsChanged`
+5. Your component reloads events into FullCalendar
+6. The tool returns the saved event to the agent
 
-1. **Agent calls WebMCP tool:** e.g. `calendar_create_event`.
-2. **Integration invokes repository:** Calls [`events.create(input)`](/integrations/fullcalendar/reference/calendar-event-repository#createinput-options).
-3. **Host application persists event:** Your API creates the record in your database and returns the created `CalendarEvent`.
-4. **Integration triggers UI refresh:** Calls your `onEventsChanged` callback.
-5. **React updates FullCalendar:** Your component refetches the latest event array from your backend and passes it to FullCalendar.
-6. **Agent receives confirmation:** The tool returns the created event object back to the browser model context.
-
-For concrete integration steps, see the [Existing App Guide](/integrations/fullcalendar/guides/existing-app) or the [Repository Contract](/integrations/fullcalendar/concepts/repository).
+See [Quickstart](/integrations/fullcalendar/quickstart) to wire this up, or [Repository contract](/integrations/fullcalendar/concepts/repository) for the method shapes.

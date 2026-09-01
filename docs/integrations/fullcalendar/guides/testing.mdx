@@ -1,19 +1,31 @@
 ---
 title: Testing
-description: Step-by-step 9-point verification checklist to test WebMCP calendar tool discovery, querying, mutation, durable persistence, and UI updates.
+description: Verify FullCalendar WebMCP tool discovery, event reads and mutations, UI refresh, and durable host persistence with a done-when checklist.
 ---
 
-Follow this checklist to verify that your FullCalendar WebMCP integration is functioning properly.
+Use this checklist after the [Quickstart](/integrations/fullcalendar/quickstart) when you want a fuller smoke test. The [Quickstart → Verify](/integrations/fullcalendar/quickstart#verify) section is the canonical first-time path (Chrome flag → DevTools WebMCP panel → Run tool).
 
-## Integration verification checklist
+## Done when (package integration)
+
+These checks prove the package + repository wiring from the Quickstart. They do **not** require FullCalendar drag/resize handlers.
+
+- [ ] Chrome WebMCP enabled (`chrome://flags/#enable-webmcp-testing`) and calendar loaded on `localhost`
+- [ ] **Application → WebMCP → Available Tools** lists all six `calendar_*` tools
+- [ ] Manual `calendar_get_context` matches the on-screen view and timezones
+- [ ] Manual `calendar_list_events` matches visible events
+- [ ] Manual `calendar_create_event` / `calendar_update_event` / `calendar_delete_event` update the UI without a manual refresh
+- [ ] Hard reload keeps agent (tool) mutations — host persistence works
+
+## Steps
 
 <Steps>
-  <Step title="1. Open in a WebMCP environment">
-    Open your application in a browser or runtime that supports WebMCP (e.g. Chrome with WebMCP flags enabled or an agentic browser).
+  <Step title="Enable WebMCP and open the calendar">
+    In Chrome, enable `chrome://flags/#enable-webmcp-testing`, relaunch, and load your calendar on `http://localhost`.
   </Step>
 
-  <Step title="2. Confirm tool registration">
-    Verify that the six [WebMCP calendar tools](/integrations/fullcalendar/concepts/webmcp) appear in your browser's model context:
+  <Step title="Confirm tool registration in DevTools">
+    Open **DevTools → Application → WebMCP**. Under **Available Tools**, confirm:
+
     - `calendar_get_context`
     - `calendar_list_events`
     - `calendar_get_event`
@@ -22,16 +34,17 @@ Follow this checklist to verify that your FullCalendar WebMCP integration is fun
     - `calendar_delete_event`
   </Step>
 
-  <Step title="3. Test calendar_get_context">
-    Invoke `calendar_get_context`. Verify that the returned `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the currently displayed FullCalendar view.
+  <Step title="Read context">
+    In Available Tools, open `calendar_get_context` → **Run tool**. Confirm `browserTimeZone`, `fullCalendarTimeZone`, `view`, and `visibleRange` match the UI.
   </Step>
 
-  <Step title="4. Test calendar_list_events">
-    Invoke `calendar_list_events`. Confirm that the returned list matches the events currently displayed on your calendar.
+  <Step title="List events">
+    Run `calendar_list_events` with empty input. Confirm the returned list matches what FullCalendar shows.
   </Step>
 
-  <Step title="5. Create a test event via tool">
-    Invoke `calendar_create_event` with a test title and timestamp:
+  <Step title="Create a test event">
+    Run `calendar_create_event`:
+
     ```json
     {
       "title": "Agent Test Meeting",
@@ -39,26 +52,33 @@ Follow this checklist to verify that your FullCalendar WebMCP integration is fun
       "end": "2026-09-05T15:00:00Z"
     }
     ```
-    Confirm that the tool returns a valid `event` with a non-empty `id`.
+
+    Confirm status **Completed** and a returned `event` with a non-empty `id`.
   </Step>
 
-  <Step title="6. Verify UI update">
-    Confirm that the new event immediately appears on the FullCalendar UI without requiring a manual page refresh. This verifies that `onEventsChanged` was called and refreshed your React state.
+  <Step title="Confirm UI refresh">
+    The new event should appear without a manual page reload (`onEventsChanged` ran).
   </Step>
 
-  <Step title="7. Verify durable persistence">
-    Hard-reload the browser page. Confirm that the test event remains visible on the calendar. This proves that your repository persisted the event to your database.
+  <Step title="Confirm durable persistence">
+    Hard-reload the page. The test event should still be present.
   </Step>
 
-  <Step title="8. Test human-to-agent synchronization">
-    Move or edit the test event directly in the FullCalendar UI (e.g. drag to a new time). Then call `calendar_get_event` with the event's ID. Confirm that the tool returns the updated timestamp.
-  </Step>
-
-  <Step title="9. Test calendar_delete_event">
-    Invoke `calendar_delete_event` with the event's ID. Confirm that the tool returns `{ "deleted": true }` and that the event is immediately removed from the FullCalendar UI.
+  <Step title="Delete the test event">
+    Run `calendar_delete_event` with the event’s id. Confirm `{ "deleted": true }` and that the event leaves the UI immediately.
   </Step>
 </Steps>
 
-:::tip
-If any step fails, consult our [Troubleshooting Guide](/integrations/fullcalendar/troubleshooting) for diagnosis and solutions.
-:::
+## Optional: host human and agent convergence
+
+FullCalendar WebMCP does **not** automatically persist drag, resize, or other FullCalendar UI edits. The Quickstart does not wire `eventDrop` / `eventResize`. Those handlers are **host** code.
+
+If your app already persists human edits through the **same** repository (see [Existing app → Persist human edits](/integrations/fullcalendar/guides/existing-app#persist-human-edits)), optionally verify convergence:
+
+1. Drag or resize a test event in the FullCalendar UI (your host handler must call `repository.update`).
+2. In DevTools WebMCP, run `calendar_get_event` with that event’s id.
+3. Confirm the tool returns the updated times.
+
+If this fails but agent tools work, the package integration is still fine — wire human callbacks to the repository.
+
+If a required step fails, use [Troubleshooting](/integrations/fullcalendar/troubleshooting).

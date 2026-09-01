@@ -1,102 +1,155 @@
 ---
 title: Troubleshooting
-description: Solutions and diagnosis steps for common FullCalendar WebMCP questions, missing tools, state refresh issues, and TypeScript ref mismatches.
+description: "Fix common FullCalendar WebMCP issues: missing tools, lost changes after refresh, TypeScript refs, relative dates, and metadata."
 sidebar:
   order: 5
 ---
 
-Solutions to common questions and edge cases when integrating FullCalendar WebMCP.
+Symptom-oriented fixes. For each issue: cause, fix, then verify.
 
-## Tools do not appear in the browser
+## The agent cannot see calendar tools
 
-### Cause
-The current browser environment does not support WebMCP or has not initialized `document.modelContext`.
+**Cause:** Chrome WebMCP is not enabled, `document.modelContext` is unavailable, or registration failed.
 
-### Solution
-- Ensure you are running in a browser that supports WebMCP (or has WebMCP extension/runtime enabled).
-- Check `window.document.modelContext` in your browser DevTools console.
-- [`useFullCalendarWebMCP`](/integrations/fullcalendar/reference/use-fullcalendar-webmcp) automatically retries registration every 250 ms if the runtime is injected after page load. If registration fails due to duplicate tool names, provide `onRegistrationError` to log the underlying error:
+**Fix:**
+
+1. Enable local WebMCP: `chrome://flags/#enable-webmcp-testing` → **Enabled** → relaunch Chrome ([Chrome WebMCP docs](https://developer.chrome.com/docs/ai/webmcp)).
+2. Load the calendar on `http://localhost` (secure, origin-isolated context).
+3. Open **DevTools → Application → WebMCP** and check **Available Tools** ([panel docs](https://developer.chrome.com/docs/devtools/application/webmcp)).
+4. In the console, `document.modelContext` should be defined. Optionally run:
+
+```js
+(await document.modelContext.getTools()).map((t) => t.name)
+```
+
+5. Pass `onRegistrationError` to surface duplicate-name or registration failures:
 
 ```tsx
 useFullCalendarWebMCP({
   calendarRef,
-  events,
-  onEventsChanged: refetch,
-  onRegistrationError: (err) => console.error("WebMCP registration failed:", err),
+  events: repository,
+  onEventsChanged: refreshEvents,
+  onRegistrationError: (error) => console.error(error),
 });
 ```
 
+The hook retries registration every 250 ms if the runtime appears after mount.
+
+**Verify:** All six `calendar_*` tools appear under **Application → WebMCP → Available Tools**.
+
 ---
 
-## Agent mutations succeed, but calendar does not refresh
+## Events appear but changes disappear after refresh
 
-### Cause
-`onEventsChanged` was not passed, or it does not trigger a React state update in your calendar component.
+**Cause:** Your repository writes only to React state or another in-memory store.
 
-### Solution
-Ensure `onEventsChanged` refetches data from your backend and updates the `events` state passed to FullCalendar:
+**Fix:** Implement `create` / `update` / `delete` against your real API or database. FullCalendar WebMCP does not store events. See [Persistence](/integrations/fullcalendar/concepts/persistence).
+
+**Verify:** Create an event via the agent, hard-reload, and confirm it is still listed.
+
+---
+
+## The calendar updates but my database does not
+
+**Cause:** `onEventsChanged` refreshes UI from a cache or local copy that does not match what you persisted—or `create`/`update` returned success without writing.
+
+**Fix:** Make repository methods await the durable write, then have `onEventsChanged` reload from that same source of truth.
+
+**Verify:** After an agent mutation, query your database (or API) directly and confirm the row changed.
+
+---
+
+## Agent mutations succeed, but the calendar does not refresh
+
+**Cause:** `onEventsChanged` is missing or does not update the `events` prop passed to `<FullCalendar />`.
+
+**Fix:**
 
 ```tsx
-const reloadEvents = useCallback(async () => {
-  const latestEvents = await eventRepository.list();
-  setEvents(latestEvents);
+const refreshEvents = useCallback(async () => {
+  setEvents(await repository.list());
 }, []);
 
 useFullCalendarWebMCP({
   calendarRef,
-  events: eventRepository,
-  onEventsChanged: reloadEvents, // [!code highlight]
+  events: repository,
+  onEventsChanged: refreshEvents,
 });
 ```
 
----
-
-## Event disappears after page reload
-
-### Cause
-Your `CalendarEventRepository` implementation did not persist the event durably to a backend or database.
-
-### Solution
-FullCalendar WebMCP does not store events itself. Ensure `events.create`, `events.update`, and `events.delete` write to your persistent database or API, not just in-memory component state. See the [Persistence Model](/integrations/fullcalendar/concepts/persistence).
+**Verify:** Create an event via the agent and confirm it appears without a manual page reload.
 
 ---
 
-## FullCalendar ref TypeScript error
+## Relative dates resolve incorrectly
 
-### Cause
-FullCalendar React v6 uses a class instance (`RefObject<FullCalendar | null>`), whereas FullCalendar React v7 uses a functional component handle (`RefObject<CalendarRef | null>`).
+**Cause:** The agent scheduled “tomorrow at 2pm” without calling `calendar_get_context` or without using ISO-8601 timestamps that include a timezone offset.
 
-### Solution
+**Fix:** Prefer agents that call `calendar_get_context` first, then emit offsets such as `2026-09-02T14:00:00-06:00` or `Z`.
 
-**In FullCalendar React v6:**
-```tsx
-import FullCalendar from "@fullcalendar/react";
-const calendarRef = useRef<FullCalendar>(null);
-```
+**Verify:** `calendar_get_context` returns `browserTimeZone`, `fullCalendarTimeZone`, `now`, and `visibleRange` that match the on-screen view.
 
-**In FullCalendar React v7:**
+---
+
+## Metadata does not appear
+
+**Cause:** The repository omits `metadata` on `CalendarEvent`, or you expected FullCalendar `extendedProps` to be exposed automatically.
+
+**Fix:** Project only the fields you want agents to see when mapping to `CalendarEvent`. Protocol Tooling never copies `extendedProps` for you. Metadata is read-only on writes. See [Custom event models](/integrations/fullcalendar/guides/custom-event-model#metadata).
+
+**Verify:** `calendar_get_event` / `calendar_list_events` include your `metadata` object; create/update tool inputs reject `metadata`.
+
+---
+
+## WebMCP tools register twice
+
+**Cause:** Multiple mounted calendars each call `useFullCalendarWebMCP`, or a previous registration did not clean up (less common with the built-in abort cleanup).
+
+**Fix:** Register once per page (or scope to a single calendar instance). Avoid mounting two hooked calendars that both register the same tool names. Use `onRegistrationError` to log conflicts.
+
+**Verify:** Only one set of `calendar_*` tools is listed; remounting the component does not leave duplicates.
+
+---
+
+## FullCalendar ref or plugin import TypeScript error
+
+**Cause:** FullCalendar React v6 and v7 use different ref types and plugin import paths.
+
+**Fix:**
+
+**v7 (default in Quickstart)**
+
 ```tsx
 import FullCalendar, { type CalendarRef } from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/react/daygrid";
 const calendarRef = useRef<CalendarRef>(null);
 ```
 
-The [`FullCalendarHandle`](/integrations/fullcalendar/reference/types#fullcalendarhandle) interface is structurally compatible with both versions.
+**v6**
+
+```tsx
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+const calendarRef = useRef<FullCalendar>(null);
+```
+
+[`FullCalendarHandle`](/integrations/fullcalendar/reference/types#fullcalendarhandle) is structurally compatible with both ref shapes.
+
+**Verify:** Typecheck passes and `calendar_get_context` returns the active view.
 
 ---
 
 ## Event `end: null` vs `end: undefined`
 
-### Cause
-`CalendarEvent` standardizes `end` as `string | null` for events without an end time, while FullCalendar props accept `string | undefined`.
+**Cause:** `CalendarEvent.end` is `string | null` for JSON/DB clarity; FullCalendar’s prop types often prefer `undefined`.
 
-### Solution
-When passing events directly to FullCalendar's `events` prop in strict TypeScript mode:
+**Fix:**
 
 ```tsx
-<FullCalendar
-  ref={calendarRef}
-  events={events.map((e) => ({ ...e, end: e.end ?? undefined }))}
-/>
+events={events.map((event) => ({
+  ...event,
+  end: event.end ?? undefined,
+}))}
 ```
 
-For complete step-by-step verification, see the [Testing Guide](/integrations/fullcalendar/guides/testing).
+**Verify:** Typecheck succeeds with strict null checks enabled.

@@ -80,10 +80,10 @@ export default defineConfig({
     popular: [
       { label: "Overview", href: "/integrations/fullcalendar" },
       { label: "Quickstart", href: "/integrations/fullcalendar/quickstart" },
-      { label: "Repository Contract", href: "/integrations/fullcalendar/concepts/repository" },
-      { label: "Persistence Model", href: "/integrations/fullcalendar/concepts/persistence" },
-      { label: "WebMCP Tools", href: "/integrations/fullcalendar/concepts/webmcp" },
-      { label: "API Reference: useFullCalendarWebMCP", href: "/integrations/fullcalendar/reference/use-fullcalendar-webmcp" },
+      { label: "Verify / Testing", href: "/integrations/fullcalendar/guides/testing" },
+      { label: "Troubleshooting", href: "/integrations/fullcalendar/troubleshooting" },
+      { label: "Custom event models", href: "/integrations/fullcalendar/guides/custom-event-model" },
+      { label: "useFullCalendarWebMCP", href: "/integrations/fullcalendar/reference/use-fullcalendar-webmcp" },
     ],
   },
   redirects: [
