@@ -74,13 +74,11 @@ describe("agent-facing tool contract", () => {
   });
 
   describe("calendar_list_events", () => {
-    it("identifies discovery/search and range boundary semantics", () => {
+    it("identifies discovery/search and tool-selection boundaries", () => {
       const text = toolText("calendar_list_events");
       mentions(
         text,
         "discovery",
-        "inclusive",
-        "exclusive",
         "calendar_get_event",
         "calendar_get_context",
         "stable id",

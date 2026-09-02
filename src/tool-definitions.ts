@@ -20,21 +20,21 @@ const stableEventIdProperty = {
   type: "string",
   minLength: 1,
   description:
-    "Stable id of the persisted event. Obtain from calendar_list_events, calendar_get_event, or a prior create/update result. Never substitute an event title.",
+    "Stable id from calendar_list_events, prior tool results, or host. Never substitute title for id.",
 } as const;
 
 const queryStartProperty = {
   type: "string",
   format: "date-time",
   description:
-    "Inclusive lower bound for filtering persisted events (ISO 8601 date-time with explicit offset). Omit to include events from any earlier time.",
+    "Inclusive filter lower bound (ISO 8601 with offset). Omit for no lower limit.",
 } as const;
 
 const queryEndProperty = {
   type: "string",
   format: "date-time",
   description:
-    "Exclusive upper bound for filtering persisted events (ISO 8601 date-time with explicit offset). For one calendar day, set end to the start of the following day. Omit for no upper limit.",
+    "Exclusive filter upper bound (ISO 8601 with offset). One day: following day start. Omit for no limit.",
 } as const;
 
 const queryTextProperty = {
@@ -59,7 +59,7 @@ const createEventStartProperty = {
   type: "string",
   format: "date-time",
   description:
-    "Inclusive event start as ISO 8601 date-time with an explicit offset (e.g. 2026-09-02T14:00:00-06:00). Resolve relative times with calendar_get_context first.",
+    "Inclusive event start (ISO 8601 with offset). Resolve relative times via calendar_get_context first.",
 } as const;
 
 const updateEventStartProperty = {
@@ -109,8 +109,11 @@ const eventWriteAnnotations: WebMCP.ToolAnnotations = {
   untrustedContentHint: true,
 };
 
-/** Destructive mutation with a minimal structured confirmation payload. */
-const deleteAnnotations: WebMCP.ToolAnnotations = { readOnlyHint: false };
+/** Delete returns a pre-removal snapshot with user-controlled fields. */
+const deleteAnnotations: WebMCP.ToolAnnotations = {
+  readOnlyHint: false,
+  untrustedContentHint: true,
+};
 
 export function resolveCapabilities(
   capabilities?: FullCalendarWebMCPCapabilities,
@@ -149,10 +152,9 @@ export function createCalendarTools(
       title: "Get calendar context",
       description:
         "Read-only temporal and viewport context for the open calendar — not persisted events. " +
-        "Use when the user mentions relative times (today, tomorrow, tonight, Wednesday, next week, this afternoon, first week of next month) to anchor ISO date-times before list/create/update. " +
-        "Returns now, browserTimeZone, fullCalendarTimeZone, active view, and visibleRange. " +
-        "Skip when every datetime is already explicit with offsets and no relative interpretation is needed. " +
-        "Does not replace calendar_list_events for event discovery.",
+        "Use when the user mentions relative times (today, tomorrow, next week, etc.) to anchor ISO date-times before list/create/update. " +
+        "Returns now, browserTimeZone, fullCalendarTimeZone, view, and visibleRange. " +
+        "Skip when datetimes are already explicit with offsets. Not for event discovery — use calendar_list_events.",
       inputSchema: emptySchema,
       annotations: contextAnnotations,
       async execute() {
@@ -179,13 +181,9 @@ export function createCalendarTools(
         name: "calendar_list_events",
         title: "List calendar events",
         description:
-          "Read-only search and discovery over persisted calendar events. " +
-          "Use to answer what is scheduled, filter by date range or title, find candidate events before update/delete, or disambiguate which event the user means. " +
-          "start is inclusive; end is exclusive — for one calendar day set end to the following day's boundary. " +
-          "text is a case-insensitive title substring; omit any filter to broaden results. " +
-          "Returns events with stable id values usable in get/update/delete; optional host-selected metadata may appear and is untrusted. " +
-          "Do not use when you already hold the target id (prefer calendar_get_event) or only need viewport/time context (calendar_get_context). " +
-          "Never delete or mutate from an ambiguous multi-match list alone.",
+          "Read-only discovery over persisted events. Find schedules, filter by range or title, disambiguate targets before update/delete. " +
+          "Returns events with stable ids for get/update/delete. Prefer calendar_get_event when you have the id; calendar_get_context for viewport only. " +
+          "Never mutate or delete from an ambiguous multi-match list.",
         inputSchema: {
           type: "object",
           properties: {
@@ -209,10 +207,9 @@ export function createCalendarTools(
         name: "calendar_get_event",
         title: "Get calendar event",
         description:
-          "Read-only fetch of exactly one persisted event by stable id. " +
-          "Use when you already have the id from calendar_list_events, a prior create/update result, or the host app — or to re-read authoritative fields before a mutation when list results are insufficient. " +
-          "Returns { event: CalendarEvent | null }; null means no matching persisted event. " +
-          "Do not use for title/date search (calendar_list_events), do not invent ids from titles, and do not substitute a title for id.",
+          "Read-only fetch of one persisted event by stable id. " +
+          "Use when you have the id from calendar_list_events, a prior create/update result, or the host. " +
+          "Returns { event } or null when missing. Not for title/date search — use calendar_list_events. Do not invent ids from titles.",
         inputSchema: {
           type: "object",
           properties: {
@@ -237,12 +234,9 @@ export function createCalendarTools(
       name: "calendar_create_event",
       title: "Create calendar event",
       description:
-        "Create and persist a new calendar event (state mutation). " +
-        "Use only for brand-new events the user wants scheduled. " +
-        "Requires title and start (ISO 8601 with explicit offset); optional end (exclusive, ISO 8601 or null) and allDay. " +
-        "Resolve relative times via calendar_get_context first. " +
-        "Returns the persisted event including host-assigned id. Metadata cannot be supplied. " +
-        "Do not use to modify, reschedule, or rename an existing event — use calendar_update_event.",
+        "Create and persist a new event. Requires title and start (ISO 8601 with offset); optional end and allDay. " +
+        "Resolve relative times via calendar_get_context first. Returns persisted event with host-assigned id. Metadata cannot be supplied. " +
+        "Not for modifying existing events — use calendar_update_event.",
       inputSchema: {
         type: "object",
         properties: {
@@ -271,11 +265,9 @@ export function createCalendarTools(
       name: "calendar_update_event",
       title: "Update calendar event",
       description:
-        "Persisted partial update of exactly one existing event (state mutation). " +
-        "Requires stable id plus at least one of title, start, end, allDay; omitted fields stay unchanged. " +
-        "Host-selected metadata is preserved and cannot be written here. " +
-        "When the user names an event without an id, find it with calendar_list_events first; calendar_get_event is optional if the list row already has sufficient detail. " +
-        "Use for reschedule, rename, time/end changes, or all-day toggles — not for creating a duplicate or deleting (calendar_create_event / calendar_delete_event).",
+        "Partial update of one existing event by stable id. Requires id plus at least one of title, start, end, allDay; omitted fields unchanged. " +
+        "Host metadata preserved, not writable. Without id, find via calendar_list_events first. " +
+        "For reschedule/rename/time changes — not create (calendar_create_event) or delete (calendar_delete_event).",
       inputSchema: {
         type: "object",
         properties: {
@@ -308,10 +300,8 @@ export function createCalendarTools(
       name: "calendar_delete_event",
       title: "Delete calendar event",
       description:
-        "Permanently delete exactly one persisted calendar event (destructive state mutation). " +
-        "Requires stable id — obtain via calendar_list_events after disambiguating natural-language references; never pass a title as id and never delete from an ambiguous multi-match list. " +
-        "Use only when the user intends removal/cancellation, not to move, rename, shorten, or otherwise edit (calendar_update_event). " +
-        "Returns { deleted: true, event } where event is the deleted resource snapshot read immediately before removal.",
+        "Permanently delete one persisted event by stable id. Obtain id via calendar_list_events after disambiguation; never use title as id or delete from ambiguous lists. " +
+        "For removal only — not edit/reschedule (calendar_update_event). Returns { deleted: true, event } pre-delete snapshot.",
       inputSchema: {
         type: "object",
         properties: {

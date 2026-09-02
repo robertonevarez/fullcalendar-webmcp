@@ -154,7 +154,10 @@ describe("WebMCP security hardening", () => {
         readOnlyHint: false,
         untrustedContentHint: true,
       });
-      expect(byName.calendar_delete_event).toEqual({ readOnlyHint: false });
+      expect(byName.calendar_delete_event).toEqual({
+        readOnlyHint: false,
+        untrustedContentHint: true,
+      });
     });
   });
 
