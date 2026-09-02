@@ -1,6 +1,6 @@
 {
   "name": "@protocoltooling/fullcalendar",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Add WebMCP tools to FullCalendar React applications.",
   "author": "Roberto Nevarez",
   "publishConfig": {
