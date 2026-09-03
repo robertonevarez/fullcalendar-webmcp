@@ -3,18 +3,30 @@
   "framework": null,
   "buildCommand": "blume build",
   "outputDirectory": "dist",
-  "rewrites": [
+  "redirects": [
     {
       "source": "/demo",
-      "destination": "https://protocoltooling-demo.vercel.app/demo"
-    },
-    {
-      "source": "/demo/",
-      "destination": "https://protocoltooling-demo.vercel.app/demo"
+      "destination": "/integrations/fullcalendar/demo",
+      "permanent": true
     },
     {
       "source": "/demo/:path*",
-      "destination": "https://protocoltooling-demo.vercel.app/demo/:path*"
+      "destination": "/integrations/fullcalendar/demo/:path*",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/integrations/fullcalendar/demo",
+      "destination": "https://protocoltooling-demo.vercel.app/integrations/fullcalendar/demo"
+    },
+    {
+      "source": "/integrations/fullcalendar/demo/",
+      "destination": "https://protocoltooling-demo.vercel.app/integrations/fullcalendar/demo"
+    },
+    {
+      "source": "/integrations/fullcalendar/demo/:path*",
+      "destination": "https://protocoltooling-demo.vercel.app/integrations/fullcalendar/demo/:path*"
     }
   ]
 }
