@@ -6,7 +6,7 @@ This page keeps challenge-specific testing and provenance out of the main develo
 
 ## Try the project
 
-Live demo: https://protocoltooling.com/demo
+Live demo: https://protocoltooling.com/integrations/fullcalendar/demo
 
 Use ChatGPT's in-app browser or Chrome 149+ with WebMCP enabled.
 
@@ -22,7 +22,7 @@ For the strongest shared-state test, move an event manually in the calendar and 
 Reset the demo at any time:
 
 ```text
-https://protocoltooling.com/demo?reset=1
+https://protocoltooling.com/integrations/fullcalendar/demo?reset=1
 ```
 
 ## WebMCP implementation
@@ -49,7 +49,7 @@ Representative commits:
 - [`8ce0d0e`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/8ce0d0edc0d32c4e0f3403821c4220e6d13a8bae) — read-only host-selected event metadata
 - [`6028d94`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/6028d9482934e7d41e27d08db8f79c79d7e773ca) — security, capability registration, agent contracts, and result semantics
 - [`24bfd38`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/24bfd38c7b3f08be37b2b1254d1278a5d13b7128) — `@protocoltooling/fullcalendar` 0.3.0 release
-- [`3449609`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/3449609f31fb678ceda6278dac9af962ba0fc659) — live demo exposed at `protocoltooling.com/demo`
+- [`3449609`](https://github.com/robertonevarez/fullcalendar-webmcp/commit/3449609f31fb678ceda6278dac9af962ba0fc659) — live demo originally exposed at `protocoltooling.com/demo`
 
 The companion demo repository contains the judge-facing FullCalendar surface and its human/agent mutation feedback:
 
