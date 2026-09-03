@@ -4,7 +4,7 @@ Add WebMCP calendar tools to an existing FullCalendar React app.
 
 FullCalendar WebMCP exposes structured browser tools without replacing your calendar UI, backend, database, or application state.
 
-[Live demo](https://protocoltooling.com/demo) · [Documentation](https://protocoltooling.com/integrations/fullcalendar) · [WebMCP Challenge notes](./CHALLENGE.md)
+[Live demo](https://protocoltooling.com/integrations/fullcalendar/demo) · [Documentation](https://protocoltooling.com/integrations/fullcalendar) · [WebMCP Challenge notes](./CHALLENGE.md)
 
 ## Install
 
